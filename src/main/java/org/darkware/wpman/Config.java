@@ -67,10 +67,6 @@ public class Config
     private Path WPCLIBinary;
 
     /* Composed Values */
-    private Path wordpressRoot;
-    private String wordpressBaseUrl;
-    private Set<Path> pluginRepositories;
-    private Set<Path> themeRepositories;
     private Map<Class<?>, Duration> refreshDurations;
     private final WPCLIFactory builder;
 
@@ -87,9 +83,6 @@ public class Config
         this.raw = new Properties();
 
         this.builder = new WPCLIFactory(this);
-
-        this.pluginRepositories = new HashSet<>();
-        this.themeRepositories = new HashSet<>();
         this.refreshDurations = new HashMap<>();
 
     }
@@ -182,7 +175,6 @@ public class Config
         if (this.raw.contains(key)) return Integer.parseInt(this.readVariable(key));
         else return defaultValue;
     }
-
 
     public Path getWPCLIBinary()
     {
