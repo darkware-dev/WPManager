@@ -18,7 +18,6 @@
 package org.darkware.wpman.cron;
 
 import com.google.common.base.Objects;
-import org.darkware.wpman.WPManager;
 import org.darkware.wpman.actions.WPCronHookExec;
 import org.darkware.wpman.data.WPCronHook;
 import org.darkware.wpman.data.WPSite;
@@ -83,7 +82,7 @@ public class WPLowLatencyCronAgent extends WPCronAgent
 
             WPCronHookExec action = new WPCronHookExec(this.getManager(), site, hook);
             int secondsUntilExec = Seconds.secondsBetween(now, hook.getNextRun()).getSeconds();
-            WPManager.log.info("Scheduling low-latency cron run for hook: {}::{}", site.getDomain(), hook.getHook());
+            WPCronAgent.log.info("Scheduling low-latency cron run for hook: {}::{}", site.getDomain(), hook.getHook());
             ScheduledFuture future = this.cronExecutor.schedule(action, secondsUntilExec, TimeUnit.SECONDS);
 
             // Don't schedule the event again
