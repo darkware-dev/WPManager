@@ -17,6 +17,7 @@
 
 package org.darkware.wpman;
 
+import org.darkware.cltools.utils.ObjectFactory;
 import org.darkware.wpman.data.WPPlugin;
 import org.darkware.wpman.wpcli.WPCLIFactory;
 import org.slf4j.Logger;
@@ -28,53 +29,70 @@ import java.lang.ref.WeakReference;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.time.Duration;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
+ * A {@code Config} object acts a facade to the raw configuration data which controls how a
+ * {@link WPManager} and composed classes should operate. The primary goal is to provide a
+ * single reference to be shared which contains the raw data, supplies utility methods for
+ * extracting that data, and supports methods of notifying other objects of changes in the
+ * configuration.
+ *
  * @author jeff
  * @since 2016-01-24
  */
 public class Config
 {
+    /**
+     * Build a configuration variable key (ie: name) from a set of parts. Each part is required
+     * to be "full". Combining the parts {@code foo} and {@code bar} will result in {@code foo.bar}
+     * and not {@code foobar}. However, parts are allowed to be "compound". Combining
+     * {@code foo.bar} and {@code baz} is legal and produces the expected result: {@code far.bar.baz}.
+     *
+     * @param parts The parts to combine.
+     * @return A String containing the combined parts formatted as a configuration key.
+     */
     public static String buildKey(String ... parts)
     {
         if (parts.length == 1) return parts[0];
         if (parts.length == 0) return null;
-        return Arrays.asList(parts).stream().map(p -> p.toString()).collect(Collectors.joining("."));
+        return Arrays.asList(parts).stream().collect(Collectors.joining("."));
     }
 
     private static Set<String> trueWords = new HashSet<>(Arrays.asList(new String[] { "yes", "true", "1", "allow" }));
+
+    /**
+     * Translates a {@code String} into a boolean using a library of expected values. The translation is
+     * not case sensitive and whitespace is ignored.
+     *
+     * @param word The word to translate
+     * @return {@code true} if the word matches a recognized "true" word, {@code false} if it does not.
+     */
     protected static boolean translateBoolean(String word)
     {
-        if (Config.trueWords.contains(word.toLowerCase())) return true;
-        else return false;
+        return Config.trueWords.contains(word.trim().toLowerCase());
     }
 
     private static final Logger log = LoggerFactory.getLogger("Config");
 
     private final Properties raw;
-
     private Path WPCLIBinary;
 
     /* Composed Values */
-    private Map<Class<?>, Duration> refreshDurations;
     private final WPCLIFactory builder;
 
     /* Helper fields */
-
     private final Set<WeakReference<ConfigListener>> listeners;
 
-
+    /**
+     * Create a new {@code Config} facade. The global configuration will be loaded with derived defaults.
+     */
     public Config()
     {
         super();
@@ -83,20 +101,23 @@ public class Config
         this.raw = new Properties();
 
         this.builder = new WPCLIFactory(this);
-        this.refreshDurations = new HashMap<>();
-
     }
 
-    protected void setDefaults()
-    {
-
-    }
-
+    /**
+     * Register an object for notifications when configuration data changes.
+     *
+     * @param listener The object to notify on changes.
+     */
     public void addListener(ConfigListener listener)
     {
         this.listeners.add(new WeakReference<>(listener));
     }
 
+    /**
+     * Notify all listeners that configuration data has changed. If you know that several values are
+     * going to change, it's more efficient to wait until all changes are complete before calling
+     * this method, as some objects may re-initialize themselves when configuration changes.
+     */
     protected void notifyChange()
     {
         Iterator<WeakReference<ConfigListener>> listenerIterator = this.listeners.iterator();
@@ -109,12 +130,21 @@ public class Config
         }
     }
 
+    /**
+     * Load configuration data from the supplied {@code Path}.
+     *
+     * @param configPath The top-level directory of a management target.
+     */
     public void load(Path configPath)
     {
+        Config.log.info("Loading configuration: {}", configPath);
         try
         {
-            Config.log.info("Loading configuration: {}", configPath);
-            InputStream propStream = Channels.newInputStream(FileChannel.open(configPath, StandardOpenOption.READ));
+            // Config sources
+            Path configData = configPath.resolve("config.properties");
+
+            Config.log.info("Reading configuration: {}", configData);
+            InputStream propStream = Channels.newInputStream(FileChannel.open(configData, StandardOpenOption.READ));
 
             this.raw.load(propStream);
             this.refreshComposedInfo();
@@ -126,38 +156,99 @@ public class Config
         }
     }
 
+    /**
+     * Rebuild or update any locally stored values that are based on raw configuration.
+     */
     protected void refreshComposedInfo()
     {
-        this.setWPCLIBinary(Paths.get(this.getConfigValue("wpcli.bin")));
+
     }
 
+    /**
+     * Fetch a configuration value based on the given key parts.
+     *
+     * @param parts The parts of the configuration key to fetch.
+     * @return The value as a {@code String} or {@code null} if the key does not exist.
+     */
     public String getConfigValue(String ... parts)
     {
+        if (parts.length < 1) throw new IllegalArgumentException("Configuration key cannot be empty");
         return this.raw.getProperty(Config.buildKey(parts));
     }
 
-    public String readVariable(final String var)
+    /**
+     * Fetch a configuration value for the given key. If the key does not exist, an
+     * exception is thrown.
+     *
+     * @param key The configuration key to fetch.
+     * @return The value as a {@code String}.
+     * @throws MissingConfigurationException If the key does not exist.
+     */
+    public String readVariable(final String key) throws MissingConfigurationException
     {
-        String value = this.readVariable(var, null);
-        if (value == null) throw new MissingConfigurationException(var);
+        String value = this.readVariable(key, null);
+        if (value == null) throw new MissingConfigurationException(key);
 
         return value;
     }
 
-    public String readVariable(final String var, String defaultValue)
+    /**
+     * Fetch a configuration value for the given key. If the key does not exist, the
+     * supplied default value is returned.
+     *
+     * @param key The configuration key to fetch.
+     * @param defaultValue The default value to use if the key isn't found.
+     * @return The value or default as a {@code String}
+     */
+    public String readVariable(final String key, String defaultValue)
     {
-        if (var == null || var.length() < 1) throw new IllegalConfigurationException("Attempt to fetch configuration with empty variable name.");
-        if (!this.raw.contains(var)) return defaultValue;
-        return this.raw.getProperty(var);
+        if (key == null || key.length() < 1) throw new IllegalConfigurationException("Attempt to fetch configuration with empty variable name.");
+        if (!this.raw.contains(key)) return defaultValue;
+        return this.raw.getProperty(key);
     }
 
-    public boolean readVariable(final String var, final boolean defaultValue)
+    /**
+     * Fetch a configuration value for the given key. If the key does not exist, the
+     * supplied default value is returned.
+     *
+     * @param key The configuration key to fetch.
+     * @param defaultValue The default value to use if the key isn't found.
+     * @return The value or default as a {@code boolean}
+     */
+    public boolean readVariable(final String key, final boolean defaultValue)
     {
-        String value = this.readVariable(var, null);
+        String value = this.readVariable(key, null);
         if (value == null) return defaultValue;
         else return Config.translateBoolean(value);
     }
 
+    /**
+     * Fetch a configuration value for the given key. If the key does not exist, the
+     * supplied default value is returned.
+     *
+     * @param key The configuration key to fetch.
+     * @param defaultValue The default value to use if the key isn't found.
+     * @return The value or default as a {@code boolean}
+     */
+    public <T> T readVariable(final String key, final T defaultValue)
+    {
+        if (key == null || key.length() < 1) throw new IllegalConfigurationException("Attempt to fetch configuration with empty variable name.");
+        if (this.raw.contains(key)) return defaultValue;
+
+        return ObjectFactory.fromString(this.raw.getProperty(key), (Class<T>)defaultValue.getClass());
+    }
+
+    /**
+     * Fetch a configuration value for a specific plugin. This is a specialized case of
+     * {@link #readVariable(String, String)} with built-in translation of the base configuration
+     * key for the given plugin. Whenever possible, the plugin-specific methods should be preferred
+     * over the generic forms to adapt for any future configuration refactoring.
+     *
+     * @param plugin The {@code WPPlugin} to fetch configuration for.
+     * @param subvar The plugin-specific configuration key fragment to fetch.
+     * @param defaultValue The default value to use if the key is not found.
+     * @return The value of the appropriate configuration key, or the default.
+     */
     public String getPluginConfig(final WPPlugin plugin, final String subvar, String defaultValue)
     {
         String key = Config.buildKey("plugin", plugin.getId(), subvar);
@@ -167,6 +258,17 @@ public class Config
         else return defaultValue;
     }
 
+    /**
+     * Fetch a configuration value for a specific plugin. This is a specialized case of
+     * {@link #readVariable(String, String)} with built-in translation of the base configuration
+     * key for the given plugin. Whenever possible, the plugin-specific methods should be preferred
+     * over the generic forms to adapt for any future configuration refactoring.
+     *
+     * @param plugin The {@code WPPlugin} to fetch configuration for.
+     * @param subvar The plugin-specific configuration key fragment to fetch.
+     * @param defaultValue The default value to use if the key is not found.
+     * @return The value of the appropriate configuration key, or the default.
+     */
     public int getPluginConfig(final WPPlugin plugin, final String subvar, int defaultValue)
     {
         String key = Config.buildKey("plugin", plugin.getId(), subvar);
@@ -176,11 +278,33 @@ public class Config
         else return defaultValue;
     }
 
+    /**
+     * Fetch a configuration value for a specific plugin. This is a specialized case of
+     * {@link #readVariable(String, String)} with built-in translation of the base configuration
+     * key for the given plugin. Whenever possible, the plugin-specific methods should be preferred
+     * over the generic forms to adapt for any future configuration refactoring.
+     *
+     * @param plugin The {@code WPPlugin} to fetch configuration for.
+     * @param subvar The plugin-specific configuration key fragment to fetch.
+     * @param defaultValue The default value to use if the key is not found.
+     * @return The value of the appropriate configuration key, or the default.
+     */
+    public boolean getPluginConfig(final WPPlugin plugin, final String subvar, boolean defaultValue)
+    {
+        String key = Config.buildKey("plugin", plugin.getId(), subvar);
+
+        //TODO: This gets double-checked. It'd be nice to not pay that cost.
+        if (this.raw.contains(key)) return Config.translateBoolean(this.readVariable(key));
+        else return defaultValue;
+    }
+
+    @Deprecated
     public Path getWPCLIBinary()
     {
         return this.WPCLIBinary;
     }
 
+    @Deprecated
     public void setWPCLIBinary(final Path WPCLIBinary)
     {
         Config.log.debug("Using WP-CLI at: {}", WPCLIBinary);
