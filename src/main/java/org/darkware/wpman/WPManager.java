@@ -17,11 +17,6 @@
 
 package org.darkware.wpman;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPActionService;
 import org.darkware.wpman.actions.WPCronHookExec;
@@ -41,18 +36,8 @@ import org.darkware.wpman.wpcli.WPCLIFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * The {@code WPManager} is the central agent of the WPManager package. It represents the central controller
@@ -105,21 +90,25 @@ public class WPManager extends Thread
 
         this.configPath = configPath;
 
+        // Create a new context
         this.context = ContextManager.local();
+        ContextManager.attach(this.context);
 
+        // Register this manager
         context.registerInstance(this);
 
         this.config = new Config();
         context.registerInstance(this.config);
-        context.registerInstance(this.config.getBuilder());
 
-        this.data = new WPData();
-        context.registerInstance(this.data);
+        this.builder = new WPCLIFactory(this.config);
+        context.registerInstance(this.builder);
 
         this.dataManager = new WPDataManager();
         context.registerInstance(this.dataManager);
 
-        this.builder = this.config.getBuilder();
+        this.data = new WPData();
+        context.registerInstance(this.data);
+
         this.actionService = new WPActionService();
     }
 
@@ -181,7 +170,14 @@ public class WPManager extends Thread
 
         this.loadConfig(this.configPath);
 
-        this.checkWPCLI();
+        Version wpcliUpdate = WPCLI.checkForUpdate();
+        if (wpcliUpdate != null)
+        {
+            WPManager.log.info("New version of WP-CLI available.");
+            //TODO: Check config to see if wP-CLI updates are allowed
+            WPCLI.update();
+        }
+        WPManager.log.info("WP Root at: {}", this.config.readVariable("wp.root"));
 
         WPData report = new WPData();
         report.refresh();
@@ -267,73 +263,4 @@ public class WPManager extends Thread
         this.actionService.scheduleAction(action);
     }
 
-    /**
-     * Check the configured WP-CLI tool to ensure that it exists and is ready for execution. This will
-     * also check to see if there is a new version of the tool. If available and not disabled by
-     * configuration, it will be automatically updated.
-     */
-    protected void checkWPCLI()
-    {
-        if (!Files.exists(this.config.getWPCLIBinary())) this.updateWPCLI();
-        else
-        {
-            WPCLI checkUpdate = this.config.getBuilder().build("cli", "check-update");
-            Version wpcliUpdate = checkUpdate.readJSON(Version.class);
-            if (wpcliUpdate != null)
-            {
-                WPManager.log.info("Updated WP-CLI available: {}", wpcliUpdate);
-                this.updateWPCLI();
-            }
-        }
-    }
-
-    /**
-     * Update the local WP-CLI tool to the most recent version.
-     */
-    public void updateWPCLI()
-    {
-        try
-        {
-            WPManager.log.info("Downloading new version of WP-CLI.");
-
-            CloseableHttpClient httpclient = HttpClients.createDefault();
-
-            URI pharURI = new URIBuilder().setScheme("http")
-                                          .setHost("raw.githubusercontent.com")
-                                          .setPath("/wp-cli/builds/gh-pages/phar/wp-cli.phar").build();
-
-            WPManager.log.info("Downloading from: {}", pharURI);
-            HttpGet downloadRequest = new HttpGet(pharURI);
-
-            CloseableHttpResponse response = httpclient.execute(downloadRequest);
-
-            WPManager.log.info("Download response: {}", response.getStatusLine());
-            WPManager.log.info("Download content type: {}", response.getFirstHeader("Content-Type").getValue());
-
-            FileChannel wpcliFile = FileChannel.open(this.config.getWPCLIBinary(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
-
-            response.getEntity().writeTo(Channels.newOutputStream(wpcliFile));
-            wpcliFile.close();
-
-            Set<PosixFilePermission> wpcliPerms = new HashSet<>();
-            wpcliPerms.add(PosixFilePermission.OWNER_READ);
-            wpcliPerms.add(PosixFilePermission.OWNER_WRITE);
-            wpcliPerms.add(PosixFilePermission.OWNER_EXECUTE);
-            wpcliPerms.add(PosixFilePermission.GROUP_READ);
-            wpcliPerms.add(PosixFilePermission.GROUP_EXECUTE);
-
-            Files.setPosixFilePermissions(this.config.getWPCLIBinary(), wpcliPerms);
-        }
-        catch (URISyntaxException e)
-        {
-            WPManager.log.error("Failure building URL for WPCLI download.", e);
-            System.exit(1);
-        }
-        catch (IOException e)
-        {
-            WPManager.log.error("Error while downloading WPCLI client.", e);
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
 }

@@ -41,6 +41,7 @@ public class WPCLIOption<T> extends WPCLIBasicOption
         super(name);
 
         this.setValue(value);
+        this.requireValue = true;
     }
 
     /**

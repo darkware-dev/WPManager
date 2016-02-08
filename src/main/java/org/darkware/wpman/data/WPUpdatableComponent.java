@@ -55,9 +55,7 @@ public abstract class WPUpdatableComponent extends WPDataComponent
         Config config = this.getManager().getConfig();
 
         this.allowUpdates = config.readVariable(Config.buildKey(this.getConfigSection(), this.getId(), "update"), true);
-        String updateLimitString = config.readVariable(Config.buildKey(this.getConfigSection(), this.getId(), "updateLimit"), null);
-        if (updateLimitString != null) this.updateLimit = new Version(updateLimitString);
-        else this.updateLimit = null;
+        this.updateLimit = config.readVariableObject(Config.buildKey(this.getConfigSection(), this.getId(), "updateLimit"), this.getVersion());
     }
 
     public final String getId()

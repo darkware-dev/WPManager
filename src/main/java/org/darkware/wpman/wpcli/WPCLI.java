@@ -21,12 +21,18 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.darkware.cltools.command.Command;
 import org.darkware.cltools.command.LineProcessReader;
 import org.darkware.cltools.command.ProcessReader;
 import org.darkware.cltools.command.StringProcessReader;
 import org.darkware.cltools.utils.CSV;
 import org.darkware.cltools.utils.FileSystemTools;
+import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.data.WPSite;
 import org.darkware.wpman.wpcli.json.DateTimeSerializer;
@@ -34,12 +40,21 @@ import org.darkware.wpman.wpcli.json.VersionSerializer;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This is a wrapper class that abstracts the execution of the somewhat famous
@@ -62,6 +77,72 @@ public class WPCLI
     {
         FileSystemTools.require(toolPath, "efrx");
         WPCLI.toolPath = toolPath;
+    }
+
+    /**
+     * Check to see if an updated version of WP-CLI is available.
+     *
+     * @return The new version, or null if no update is available.
+     */
+    public static Version checkForUpdate()
+    {
+        WPCLI updateCheck = new WPCLI("cli", "check-update");
+        updateCheck.setOption(new WPCLIFlag("allow-root"));
+        updateCheck.setOption(new WPCLIFlag("no-color"));
+
+        Version updateVersion = updateCheck.readJSON(Version.class);
+
+        return updateVersion;
+    }
+
+    /**
+     * Update the local WP-CLI tool to the most recent version.
+     */
+    public static void update()
+    {
+        try
+        {
+            WPManager.log.info("Downloading new version of WP-CLI.");
+
+            CloseableHttpClient httpclient = HttpClients.createDefault();
+
+            URI pharURI = new URIBuilder().setScheme("http")
+                                          .setHost("raw.githubusercontent.com")
+                                          .setPath("/wp-cli/builds/gh-pages/phar/wp-cli.phar").build();
+
+            WPManager.log.info("Downloading from: {}", pharURI);
+            HttpGet downloadRequest = new HttpGet(pharURI);
+
+            CloseableHttpResponse response = httpclient.execute(downloadRequest);
+
+            WPManager.log.info("Download response: {}", response.getStatusLine());
+            WPManager.log.info("Download content type: {}", response.getFirstHeader("Content-Type").getValue());
+
+            FileChannel wpcliFile = FileChannel.open(WPCLI.toolPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+
+            response.getEntity().writeTo(Channels.newOutputStream(wpcliFile));
+            wpcliFile.close();
+
+            Set<PosixFilePermission> wpcliPerms = new HashSet<>();
+            wpcliPerms.add(PosixFilePermission.OWNER_READ);
+            wpcliPerms.add(PosixFilePermission.OWNER_WRITE);
+            wpcliPerms.add(PosixFilePermission.OWNER_EXECUTE);
+            wpcliPerms.add(PosixFilePermission.GROUP_READ);
+            wpcliPerms.add(PosixFilePermission.GROUP_EXECUTE);
+
+            Files.setPosixFilePermissions(WPCLI.toolPath, wpcliPerms);
+        }
+        catch (URISyntaxException e)
+        {
+            WPManager.log.error("Failure building URL for WPCLI download.", e);
+            System.exit(1);
+        }
+        catch (IOException e)
+        {
+            WPManager.log.error("Error while downloading WPCLI client.", e);
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     private static final Gson jsonAdapter = WPCLI.createJsonAdapter();

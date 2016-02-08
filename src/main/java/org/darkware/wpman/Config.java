@@ -19,7 +19,6 @@ package org.darkware.wpman;
 
 import org.darkware.cltools.utils.ObjectFactory;
 import org.darkware.wpman.data.WPPlugin;
-import org.darkware.wpman.wpcli.WPCLIFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +28,7 @@ import java.lang.ref.WeakReference;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -84,9 +84,6 @@ public class Config
     private final Properties raw;
     private Path WPCLIBinary;
 
-    /* Composed Values */
-    private final WPCLIFactory builder;
-
     /* Helper fields */
     private final Set<WeakReference<ConfigListener>> listeners;
 
@@ -99,8 +96,6 @@ public class Config
 
         this.listeners = new HashSet<>();
         this.raw = new Properties();
-
-        this.builder = new WPCLIFactory(this);
     }
 
     /**
@@ -145,14 +140,15 @@ public class Config
 
             Config.log.info("Reading configuration: {}", configData);
             InputStream propStream = Channels.newInputStream(FileChannel.open(configData, StandardOpenOption.READ));
-
             this.raw.load(propStream);
+            propStream.close();
+
             this.refreshComposedInfo();
             this.notifyChange();
         }
         catch (IOException e)
         {
-            Config.log.error("Failure reading configuration: ", e);
+            Config.log.error("Failure reading configuration: {}", e.getLocalizedMessage());
         }
     }
 
@@ -186,7 +182,7 @@ public class Config
      */
     public String readVariable(final String key) throws MissingConfigurationException
     {
-        String value = this.readVariable(key, null);
+        String value = this.readVariable(key, (String)null);
         if (value == null) throw new MissingConfigurationException(key);
 
         return value;
@@ -200,10 +196,10 @@ public class Config
      * @param defaultValue The default value to use if the key isn't found.
      * @return The value or default as a {@code String}
      */
-    public String readVariable(final String key, String defaultValue)
+    public String readVariable(final String key, final String defaultValue)
     {
         if (key == null || key.length() < 1) throw new IllegalConfigurationException("Attempt to fetch configuration with empty variable name.");
-        if (!this.raw.contains(key)) return defaultValue;
+        if (!this.raw.containsKey(key)) return defaultValue;
         return this.raw.getProperty(key);
     }
 
@@ -217,7 +213,7 @@ public class Config
      */
     public boolean readVariable(final String key, final boolean defaultValue)
     {
-        String value = this.readVariable(key, null);
+        String value = this.readVariable(key, (String)null);
         if (value == null) return defaultValue;
         else return Config.translateBoolean(value);
     }
@@ -230,11 +226,27 @@ public class Config
      * @param defaultValue The default value to use if the key isn't found.
      * @return The value or default as a {@code boolean}
      */
-    public <T> T readVariable(final String key, final T defaultValue)
+    public Path readVariable(final String key, final Path defaultValue)
+    {
+        String value = this.readVariable(key, (String)null);
+        if (value == null) return defaultValue;
+        else return Paths.get(value);
+    }
+
+    /**
+     * Fetch a configuration value for the given key. If the key does not exist, the
+     * supplied default value is returned.
+     *
+     * @param key The configuration key to fetch.
+     * @param defaultValue The default value to use if the key isn't found.
+     * @return The value or default as a {@code boolean}
+     */
+    public <T> T readVariableObject(final String key, final T defaultValue)
     {
         if (key == null || key.length() < 1) throw new IllegalConfigurationException("Attempt to fetch configuration with empty variable name.");
-        if (this.raw.contains(key)) return defaultValue;
+        if (this.raw.containsKey(key)) return defaultValue;
 
+        if (defaultValue instanceof String) return (T)this.raw.getProperty(key);
         return ObjectFactory.fromString(this.raw.getProperty(key), (Class<T>)defaultValue.getClass());
     }
 
@@ -254,7 +266,7 @@ public class Config
         String key = Config.buildKey("plugin", plugin.getId(), subvar);
 
         //TODO: This gets double-checked. It'd be nice to not pay that cost.
-        if (this.raw.contains(key)) return this.readVariable(key);
+        if (this.raw.containsKey(key)) return this.readVariable(key);
         else return defaultValue;
     }
 
@@ -274,7 +286,7 @@ public class Config
         String key = Config.buildKey("plugin", plugin.getId(), subvar);
 
         //TODO: This gets double-checked. It'd be nice to not pay that cost.
-        if (this.raw.contains(key)) return Integer.parseInt(this.readVariable(key));
+        if (this.raw.containsKey(key)) return Integer.parseInt(this.readVariable(key));
         else return defaultValue;
     }
 
@@ -294,7 +306,7 @@ public class Config
         String key = Config.buildKey("plugin", plugin.getId(), subvar);
 
         //TODO: This gets double-checked. It'd be nice to not pay that cost.
-        if (this.raw.contains(key)) return Config.translateBoolean(this.readVariable(key));
+        if (this.raw.containsKey(key)) return Config.translateBoolean(this.readVariable(key));
         else return defaultValue;
     }
 
@@ -309,10 +321,5 @@ public class Config
     {
         Config.log.debug("Using WP-CLI at: {}", WPCLIBinary);
         this.WPCLIBinary = WPCLIBinary;
-    }
-
-    public WPCLIFactory getBuilder()
-    {
-        return this.builder;
     }
 }

@@ -19,9 +19,9 @@ package org.darkware.wpman.wpcli;
 
 import org.darkware.wpman.Config;
 import org.darkware.wpman.ConfigListener;
+import org.darkware.wpman.WPManager;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * A {@code WPCLIBuilder} is a factory class for bootstrapping the creation of {@link WPCLI}
@@ -80,7 +80,9 @@ public class WPCLIFactory implements ConfigListener
     @Override
     public void configChanged()
     {
-        this.wordpressDir = Paths.get(this.config.getConfigValue("wp.root"));
-        this.defaultUrl = this.config.getConfigValue("wp.baseurl");
+        this.wordpressDir = this.config.readVariable("wp.root", (Path)null);
+        this.defaultUrl = this.config.readVariable("wp.baseurl");
+
+        WPManager.log.info("NEW BASE DIR: {}", this.wordpressDir);
     }
 }

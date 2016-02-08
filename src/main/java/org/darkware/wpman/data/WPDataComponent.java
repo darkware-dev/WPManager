@@ -17,9 +17,7 @@
 
 package org.darkware.wpman.data;
 
-import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPComponent;
-import org.darkware.wpman.wpcli.WPCLIFactory;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.ReadableDuration;
@@ -30,15 +28,12 @@ import org.joda.time.ReadableDuration;
  */
 public abstract class WPDataComponent extends WPComponent
 {
-    private transient WPCLIFactory builder;
     private DateTime nextRefresh;
     private ReadableDuration refreshDuration;
 
     public WPDataComponent()
     {
         super();
-
-        this.builder = ContextManager.local().getContextualInstance(WPCLIFactory.class);
 
         this.expire();
         this.refreshDuration = this.loadRefreshDuration();
