@@ -39,6 +39,7 @@ public abstract class WPCLIBasicOption
         super();
 
         this.name = name;
+        this.enabled = true;
     }
 
     /**
