@@ -239,7 +239,7 @@ public class WPManager extends Thread
             if (plugin.hasUpdate())
             {
                 WPManager.log.info("Update available for plugin: {} => {}", plugin.getId(), plugin.getLatestVersion());
-                WPPluginUpdate plugUpdate = new WPPluginUpdate(this, plugin);
+                WPPluginUpdate plugUpdate = new WPPluginUpdate(plugin);
                 this.actionService.scheduleAction(plugUpdate);
             }
         }
@@ -249,7 +249,7 @@ public class WPManager extends Thread
             if (theme.hasUpdate())
             {
                 WPManager.log.info("Update available for theme: {} => {}", theme.getId(), theme.getLatestVersion());
-                WPThemeUpdate themeUpdate = new WPThemeUpdate(this, theme);
+                WPThemeUpdate themeUpdate = new WPThemeUpdate(theme);
                 this.actionService.scheduleAction(themeUpdate);
             }
         }
@@ -258,7 +258,7 @@ public class WPManager extends Thread
         {
             for (WPCronHook hook : site.getCron().getWaitingHooks())
             {
-                WPCronHookExec action = new WPCronHookExec(this, site, hook);
+                WPCronHookExec action = new WPCronHookExec(site, hook);
                 WPManager.log.info("Scheduling cron run for hook: {}::{}", site.getDomain(), hook.getHook());
                 this.actionService.scheduleAction(action);
             }

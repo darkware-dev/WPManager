@@ -15,30 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.darkware.wpman.actions;
-
-import org.darkware.wpman.data.WPPlugin;
+package org.darkware.wpman.events;
 
 /**
  * @author jeff
- * @since 2016-01-28
+ * @since 2016-02-09
  */
-public class WPPluginUpdate extends WPCLIAction
+public interface WPEvent
 {
-    private final WPPlugin plugin;
-
-    public WPPluginUpdate(final WPPlugin plugin)
-    {
-        super("plugin", "update", plugin.getId());
-
-        this.plugin = plugin;
-
-        this.getCommand().loadThemes(false);
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return "Update plugin [" + this.plugin.getId() + "]";
-    }
 }

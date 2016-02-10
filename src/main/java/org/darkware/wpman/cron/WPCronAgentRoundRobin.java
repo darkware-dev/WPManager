@@ -80,7 +80,7 @@ public class WPCronAgentRoundRobin extends WPCronAgent
     {
         for (WPCronHook hook : site.getCron().getWaitingHooks())
         {
-            WPCronHookExec action = new WPCronHookExec(this.getManager(), site, hook);
+            WPCronHookExec action = new WPCronHookExec(site, hook);
             WPManager.log.info("Scheduling cron run for hook: {}::{}", site.getDomain(), hook.getHook());
             this.getManager().scheduleAction(action);
         }

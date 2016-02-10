@@ -17,7 +17,6 @@
 
 package org.darkware.wpman.actions;
 
-import org.darkware.wpman.WPManager;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIError;
 
@@ -34,16 +33,15 @@ public abstract class WPCLIAction extends WPBasicAction
     /**
      * Creates a new {@code WPAction}.
      *
-     * @param manager The manager to associate with this action.
      * @param actionGroup The WP-CLI command group
      * @param command The WP-CLI command
      * @param args Extra command arguments
      */
-    public WPCLIAction(final WPManager manager, final String actionGroup, final String command, final String ... args)
+    public WPCLIAction(final String actionGroup, final String command, final String ... args)
     {
-        super(manager);
+        super();
 
-        this.command = manager.getBuilder().build(actionGroup, command, args);
+        this.command = this.getManager().getBuilder().build(actionGroup, command, args);
     }
 
     public WPCLI getCommand()

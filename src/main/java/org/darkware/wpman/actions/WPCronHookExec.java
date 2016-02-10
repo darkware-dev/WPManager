@@ -17,7 +17,6 @@
 
 package org.darkware.wpman.actions;
 
-import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.WPCronHook;
 import org.darkware.wpman.data.WPSite;
 import org.darkware.wpman.wpcli.WPCLIFormat;
@@ -31,9 +30,9 @@ public class WPCronHookExec extends WPCLIAction
     private final WPSite site;
     private final WPCronHook cron;
 
-    public WPCronHookExec(final WPManager manager, final WPSite site, final WPCronHook cron)
+    public WPCronHookExec(final WPSite site, final WPCronHook cron)
     {
-        super(manager, "cron", "event", "run", cron.getHook());
+        super("cron", "event", "run", cron.getHook());
 
         this.site = site;
         this.cron = cron;

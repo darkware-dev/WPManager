@@ -15,30 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.darkware.wpman.actions;
+package org.darkware.wpman.events;
 
-import org.darkware.wpman.data.WPPlugin;
+import java.nio.file.Path;
 
 /**
+ * A {@link WPEvent} sent when a configuration file has been modified.
+ *
  * @author jeff
- * @since 2016-01-28
+ * @since 2016-02-09
  */
-public class WPPluginUpdate extends WPCLIAction
+public class ConfigurationFileChange
 {
-    private final WPPlugin plugin;
+    private final Path path;
 
-    public WPPluginUpdate(final WPPlugin plugin)
+    /**
+     * Create a new configuration file change event.
+     *
+     * @param path A path to the file that changed, relative to the configuration root.
+     */
+    public ConfigurationFileChange(final Path path)
     {
-        super("plugin", "update", plugin.getId());
-
-        this.plugin = plugin;
-
-        this.getCommand().loadThemes(false);
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return "Update plugin [" + this.plugin.getId() + "]";
+        this.path = path;
     }
 }

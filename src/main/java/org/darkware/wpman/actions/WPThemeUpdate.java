@@ -17,7 +17,6 @@
 
 package org.darkware.wpman.actions;
 
-import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.WPTheme;
 
 /**
@@ -28,9 +27,9 @@ public class WPThemeUpdate extends WPCLIAction
 {
     private final WPTheme theme;
 
-    public WPThemeUpdate(final WPManager manager, final WPTheme theme)
+    public WPThemeUpdate(final WPTheme theme)
     {
-        super(manager, "theme", "update", theme.getId());
+        super("theme", "update", theme.getId());
 
         this.theme = theme;
 

@@ -23,5 +23,10 @@ package org.darkware.wpman.actions;
  */
 public interface WPAction extends Runnable
 {
+    /**
+     * Fetch a description of the goal of this action.
+     *
+     * @return The description as a {@code String}.
+     */
     String getDescription();
 }

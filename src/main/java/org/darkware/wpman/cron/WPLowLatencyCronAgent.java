@@ -80,7 +80,7 @@ public class WPLowLatencyCronAgent extends WPCronAgent
             CronEvent event = new CronEvent(site, hook);
             if (this.scheduledEvents.containsKey(event)) continue;
 
-            WPCronHookExec action = new WPCronHookExec(this.getManager(), site, hook);
+            WPCronHookExec action = new WPCronHookExec(site, hook);
             int secondsUntilExec = Seconds.secondsBetween(now, hook.getNextRun()).getSeconds();
             WPCronAgent.log.info("Scheduling low-latency cron run for hook: {}::{}", site.getDomain(), hook.getHook());
             ScheduledFuture future = this.cronExecutor.schedule(action, secondsUntilExec, TimeUnit.SECONDS);

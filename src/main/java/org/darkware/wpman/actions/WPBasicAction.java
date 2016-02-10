@@ -17,7 +17,9 @@
 
 package org.darkware.wpman.actions;
 
+import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
+import org.darkware.wpman.wpcli.WPCLIFactory;
 
 /**
  * @author jeff
@@ -27,15 +29,20 @@ public abstract class WPBasicAction implements WPAction
 {
     protected final WPManager manager;
 
-    public WPBasicAction(final WPManager manager)
+    public WPBasicAction()
     {
         super();
-        this.manager = manager;
+        this.manager = ContextManager.local().getContextualInstance(WPManager.class);
     }
 
     public WPManager getManager()
     {
         return manager;
+    }
+
+    public WPCLIFactory getWPCWpcliFactory()
+    {
+        return this.getManager().getBuilder();
     }
 
     abstract public String getDescription();
