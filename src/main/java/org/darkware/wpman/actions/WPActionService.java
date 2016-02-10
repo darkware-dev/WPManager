@@ -18,6 +18,7 @@
 package org.darkware.wpman.actions;
 
 import org.darkware.wpman.WPComponent;
+import org.darkware.wpman.agents.WPPeriodicAgent;
 import org.joda.time.Seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,11 @@ public class WPActionService extends WPComponent
 
         //TODO: Make this configurable
         this.execService = Executors.newScheduledThreadPool(4);
+    }
+
+    public void schedule(final WPPeriodicAgent agent)
+    {
+        this.execService.scheduleAtFixedRate(agent, 0, agent.getPeriod(), TimeUnit.SECONDS);
     }
 
     public void scheduleAction(final WPAction action)

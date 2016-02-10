@@ -22,6 +22,7 @@ import org.darkware.wpman.actions.WPActionService;
 import org.darkware.wpman.actions.WPCronHookExec;
 import org.darkware.wpman.actions.WPPluginUpdate;
 import org.darkware.wpman.actions.WPThemeUpdate;
+import org.darkware.wpman.agents.WPPluginSync;
 import org.darkware.wpman.cron.WPCronAgent;
 import org.darkware.wpman.cron.WPLowLatencyCronAgent;
 import org.darkware.wpman.data.Version;
@@ -31,6 +32,8 @@ import org.darkware.wpman.data.WPPlugin;
 import org.darkware.wpman.data.WPSite;
 import org.darkware.wpman.data.WPSiteTheme;
 import org.darkware.wpman.data.WPTheme;
+import org.darkware.wpman.events.WPEvent;
+import org.darkware.wpman.events.WPEventManager;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFactory;
 import org.slf4j.Logger;
@@ -60,7 +63,6 @@ public class WPManager extends Thread
     public static final Logger log = LoggerFactory.getLogger("WPManager");
 
     private final ContextManager context;
-    private final Path configPath;
 
     private final Config config;
     private final WPData data;
@@ -68,6 +70,8 @@ public class WPManager extends Thread
     private final WPActionService actionService;
     private WPCronAgent cron;
     private final WPDataManager dataManager;
+    private final ConfigWatcher configWatcher;
+    private final WPEventManager eventManager;
 
     /**
      * Creates a new {@code WPManager} reading configuration from the given path.
@@ -88,8 +92,6 @@ public class WPManager extends Thread
     {
         super();
 
-        this.configPath = configPath;
-
         // Create a new context
         this.context = ContextManager.local();
         ContextManager.attach(this.context);
@@ -97,8 +99,14 @@ public class WPManager extends Thread
         // Register this manager
         context.registerInstance(this);
 
-        this.config = new Config();
+        this.config = new Config(configPath);
         context.registerInstance(this.config);
+
+        this.configWatcher = new ConfigWatcher(configPath);
+        context.registerInstance(this.configWatcher);
+
+        this.eventManager = new WPEventManager();
+        context.registerInstance(this.eventManager);
 
         this.builder = new WPCLIFactory(this.config);
         context.registerInstance(this.builder);
@@ -160,6 +168,27 @@ public class WPManager extends Thread
         this.config.load(configPath);
     }
 
+    /**
+     * Dispatches an event for any objects that have subscribed to events of that type.
+     *
+     * @param event The event to dispatch.
+     */
+    public void dispatchEvent(final WPEvent event)
+    {
+        this.eventManager.dispatch(event);
+    }
+
+    /**
+     * Subscribes the given {@code Object} for any events it is annotated to accept.
+     *
+     * @param subscriber The object to subscribe.
+     * @see WPEventManager#register(Object)
+     */
+    public void registerForEvents(final Object subscriber)
+    {
+        this.eventManager.register(subscriber);
+    }
+
     @Override
     public void run()
     {
@@ -167,8 +196,6 @@ public class WPManager extends Thread
 
         WPManager.log.info("Attaching context.");
         ContextManager.attach(this.context);
-
-        this.loadConfig(this.configPath);
 
         Version wpcliUpdate = WPCLI.checkForUpdate();
         if (wpcliUpdate != null)
@@ -188,6 +215,13 @@ public class WPManager extends Thread
         {
             WPManager.log.info("Update available for core: {}", report.getCore().getUpdateVersion());
         }
+
+        WPManager.log.info("Starting config monitoring service.");
+        this.configWatcher.start();
+
+        // Starting up agents
+        WPPluginSync pluginSync = new WPPluginSync();
+        this.actionService.schedule(pluginSync);
 
         WPManager.log.info("Starting cron runner.");
         this.cron = new WPLowLatencyCronAgent();
