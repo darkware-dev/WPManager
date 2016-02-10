@@ -81,6 +81,7 @@ public class Config
 
     private static final Logger log = LoggerFactory.getLogger("Config");
 
+    private final Path rootPath;
     private final Properties raw;
     private Path WPCLIBinary;
 
@@ -90,12 +91,25 @@ public class Config
     /**
      * Create a new {@code Config} facade. The global configuration will be loaded with derived defaults.
      */
-    public Config()
+    public Config(final Path rootPath)
     {
         super();
 
+        this.rootPath = rootPath;
         this.listeners = new HashSet<>();
         this.raw = new Properties();
+
+        this.load(this.rootPath);
+    }
+
+    /**
+     * Fetches the root path of the configuration.
+     *
+     * @return The top level directory, as a {@code Path}.
+     */
+    public Path getRootPath()
+    {
+        return rootPath;
     }
 
     /**
@@ -125,6 +139,7 @@ public class Config
         }
     }
 
+    //TODO: This can probably be dropped to protected and have its parameter removed.
     /**
      * Load configuration data from the supplied {@code Path}.
      *
