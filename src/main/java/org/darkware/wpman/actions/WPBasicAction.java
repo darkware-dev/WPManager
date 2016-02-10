@@ -18,28 +18,28 @@
 package org.darkware.wpman.actions;
 
 import org.darkware.wpman.WPManager;
-import org.darkware.wpman.data.WPPlugin;
 
 /**
  * @author jeff
- * @since 2016-01-28
+ * @since 2016-02-10
  */
-public class WPPluginUpdate extends WPCLIAction
+public abstract class WPBasicAction implements WPAction
 {
-    private final WPPlugin plugin;
+    protected final WPManager manager;
 
-    public WPPluginUpdate(final WPManager manager, final WPPlugin plugin)
+    public WPBasicAction(final WPManager manager)
     {
-        super(manager, "plugin", "update", plugin.getId());
-
-        this.plugin = plugin;
-
-        this.getCommand().loadThemes(false);
+        super();
+        this.manager = manager;
     }
+
+    public WPManager getManager()
+    {
+        return manager;
+    }
+
+    abstract public String getDescription();
 
     @Override
-    public String getDescription()
-    {
-        return "Update plugin [" + this.plugin.getId() + "]";
-    }
+    public abstract void run();
 }

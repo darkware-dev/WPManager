@@ -24,7 +24,7 @@ import org.darkware.wpman.data.WPTheme;
  * @author jeff
  * @since 2016-01-28
  */
-public class WPThemeUpdate extends WPAction
+public class WPThemeUpdate extends WPCLIAction
 {
     private final WPTheme theme;
 
@@ -38,7 +38,7 @@ public class WPThemeUpdate extends WPAction
     }
 
     @Override
-    protected String getDescription()
+    public String getDescription()
     {
         return "Update theme [" + this.theme.getId() + "]";
     }

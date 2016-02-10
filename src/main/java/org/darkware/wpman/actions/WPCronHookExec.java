@@ -26,7 +26,7 @@ import org.darkware.wpman.wpcli.WPCLIFormat;
  * @author jeff
  * @since 2016-01-28
  */
-public class WPCronHookExec extends WPAction
+public class WPCronHookExec extends WPCLIAction
 {
     private final WPSite site;
     private final WPCronHook cron;
@@ -44,7 +44,7 @@ public class WPCronHookExec extends WPAction
     }
 
     @Override
-    protected String getDescription()
+    public String getDescription()
     {
         return "Execute cron hook [" + this.cron.getHook() + "] @ " + this.site.getDomain();
     }
