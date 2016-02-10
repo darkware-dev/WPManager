@@ -54,6 +54,7 @@ public class WPCLIFactory implements ConfigListener
 
         this.config = config;
         this.config.addListener(this);
+        this.configChanged();
     }
 
     /**
