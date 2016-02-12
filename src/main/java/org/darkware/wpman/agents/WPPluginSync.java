@@ -17,11 +17,19 @@
 
 package org.darkware.wpman.agents;
 
+import org.darkware.cltools.utils.ListFile;
+import org.darkware.wpman.Config;
 import org.darkware.wpman.WPManager;
+import org.darkware.wpman.actions.WPPluginAutoInstall;
+import org.darkware.wpman.actions.WPPluginRemove;
+import org.darkware.wpman.data.WPPlugins;
+import org.darkware.wpman.data.WPUpdatableComponent;
 import org.joda.time.Duration;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -33,30 +41,56 @@ public class WPPluginSync extends WPPeriodicAgent
 {
     private final static Path defaultPath = Paths.get("plugin.list");
 
-    private final Path pluginListPath;
-
     /**
      * Create a plugin synchronization agent.
      */
     public WPPluginSync()
     {
         super("Plugin Sync", Duration.standardMinutes(1));
-
-        this.pluginListPath = this.resolvePluginListPath();
     }
 
-    private Path resolvePluginListPath()
+    private void installPlugin(final String pluginId)
     {
-        Path pluginListPath = this.getManager().getConfig().readVariable("plugins.autoinstall", defaultPath);
+        WPManager.log.info("INSTALLING: {}", pluginId);
+        this.getManager().scheduleAction(new WPPluginAutoInstall(pluginId));
+    }
 
-        if (pluginListPath.isAbsolute()) return pluginListPath;
-        else return this.getManager().getConfig().getRootPath().resolve(pluginListPath);
+    private void removePlugin(final String pluginId)
+    {
+        WPManager.log.info("REMOVING: {}", pluginId);
+        this.getManager().scheduleAction(new WPPluginRemove(pluginId));
     }
 
     @Override
     public void executeAction()
     {
-        WPManager.log.info("Starting plugin synchronization: {}", this.pluginListPath);
+        WPManager.log.info("Starting plugin synchronization.");
 
+        // Some helpful objects
+        Config config = this.getManager().getConfig();
+        WPPlugins plugins = this.getManager().getData().getPlugins();
+
+        Path pluginListPath = config.readVariable("plugins.autoinstall", Paths.get("plugin.list"));
+        if (!pluginListPath.isAbsolute()) pluginListPath = config.getRootPath().resolve(pluginListPath);
+
+        ListFile pluginListFile = new ListFile(pluginListPath);
+        pluginListFile.setCommentTokens("#", ";", "//");
+
+        // Collect the set of installed plugin ids
+        Set<String> installedPlugins = new TreeSet<>();
+        plugins.stream().map(WPUpdatableComponent::getId).forEach(installedPlugins::add);
+
+        // Collect the set of requested plugin ids
+        Set<String> requestedPlugins = new TreeSet<>();
+        pluginListFile.stream().forEach(requestedPlugins::add);
+
+        // Install missing plugins
+        requestedPlugins.stream().filter(p -> !installedPlugins.contains(p)).forEach(this::installPlugin);
+
+        // Remove extraneous plugins
+        installedPlugins.stream().filter(p -> !requestedPlugins.contains(p)).forEach(this::removePlugin);
+
+        // Find plugins to update, ignoring any plugins scheduled for removal
+        plugins.stream().filter(WPUpdatableComponent::hasUpdate).map(WPUpdatableComponent::getId).forEach(this::installPlugin);
     }
 }
