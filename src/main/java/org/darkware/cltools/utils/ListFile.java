@@ -172,7 +172,8 @@ public class ListFile implements Iterable<String>
                     String line;
                     while ((line = reader.readLine()) != null)
                     {
-                        this.lines.add(this.stripLine(line));
+                        String data = this.stripLine(line);
+                        if (data != null) this.lines.add(data);
                     }
                 }
                 catch (IOException e)
