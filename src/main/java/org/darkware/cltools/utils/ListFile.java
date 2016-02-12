@@ -161,11 +161,8 @@ public class ListFile implements Iterable<String>
         {
             if (this.loaded.compareAndSet(false, true))
             {
-                try
+                try (BufferedReader reader = new BufferedReader(Channels.newReader(FileChannel.open(this.file, StandardOpenOption.READ), "utf-8")))
                 {
-                    FileChannel channel = FileChannel.open(this.file, StandardOpenOption.READ);
-                    BufferedReader reader = new BufferedReader(Channels.newReader(channel, "utf-8"));
-
                     // Clear the lines, just in case
                     this.lines.clear();
 
