@@ -17,6 +17,7 @@
 
 package org.darkware.wpman.actions;
 
+import org.darkware.cltools.utils.FileSystemTools;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.WPPlugin;
 import org.darkware.wpman.wpcli.WPCLI;
@@ -80,7 +81,7 @@ public class WPPluginRemove extends WPBasicAction
                 WPManager.log.warn("Plugin directory still exists: {}", pluginDir);
                 try
                 {
-                    Files.delete(pluginDir);
+                    FileSystemTools.deleteTree(pluginDir);
                 }
                 catch (IOException e)
                 {
