@@ -18,8 +18,11 @@
 package org.darkware.cltools.utils;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 /**
  * This is a collection of utility methods for performing common actions against the
@@ -119,6 +122,46 @@ public class FileSystemTools
             default:
                 throw new IllegalArgumentException("Unrecognized path test: " + test);
         }
+    }
+
+    public static void deleteTree(final Path dir) throws IOException
+    {
+        Files.walkFileTree(dir, new SimpleFileVisitor<Path>()
+        {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException
+            {
+                // Try to delete any file we walk across
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException
+            {
+                // We might have delete perms only. Give it a try.
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException ioe) throws IOException
+            {
+                // Check for an exception...
+                if (ioe == null)
+                {
+                    // Didn't fine anything. The directory should be empty. Delete it.
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+                else
+                {
+                    // Something failed downstream. Pass the exception up.
+                    throw ioe;
+                }
+            }
+        });
     }
 
     /**
