@@ -41,7 +41,7 @@ public abstract class WPDataComponent extends WPComponent
 
     public void expire()
     {
-        this.nextRefresh = DateTime.now();
+        this.nextRefresh = DateTime.now().minusSeconds(1);
     }
 
     protected Duration loadRefreshDuration()
