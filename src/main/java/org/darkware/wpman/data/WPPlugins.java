@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Stream;
 
 /**
  * @author jeff
@@ -78,5 +79,16 @@ public class WPPlugins extends WPDataComponent implements Iterable<WPPlugin>
     {
         this.checkRefresh();
         return this.plugins.values().iterator();
+    }
+
+    /**
+     * Get a stream of the currently installed plugins.
+     *
+     * @return A {@link Stream} of {@link WPPlugin}s.
+     */
+    public Stream<WPPlugin> stream()
+    {
+        this.checkRefresh();
+        return this.plugins.values().stream();
     }
 }
