@@ -20,7 +20,9 @@ package org.darkware.wpman.data;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -67,6 +69,13 @@ public class WPPlugins extends WPDataComponent implements Iterable<WPPlugin>
     {
         List<WPPlugin> rawList = this.getManager().getDataManager().getPlugins();
 
+        // Get a set of all new plugin ids
+        Set<String> newIds = rawList.stream().map(WPUpdatableComponent::getId).collect(Collectors.toSet());
+
+        // Remove all current plugins not in the new set
+        this.plugins.keySet().stream().filter(id -> !newIds.contains(id)).forEach(this.plugins::remove);
+
+        // Update all new plugin data
         for (WPPlugin plug : rawList)
         {
             WPData.log.debug("Loaded plugin info: {}", plug.getId());

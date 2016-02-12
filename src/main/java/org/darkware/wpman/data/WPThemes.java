@@ -20,7 +20,9 @@ package org.darkware.wpman.data;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -43,6 +45,13 @@ public class WPThemes extends WPDataComponent implements Iterable<WPTheme>
     {
         List<WPTheme> rawList = this.getManager().getDataManager().getThemes();
 
+        // Get a set of all new plugin ids
+        Set<String> newIds = rawList.stream().map(WPUpdatableComponent::getId).collect(Collectors.toSet());
+
+        // Remove all current themes not in the new set
+        this.themes.keySet().stream().filter(id -> !newIds.contains(id)).forEach(this.themes::remove);
+
+        // Update all new theme data
         for (WPTheme plug : rawList)
         {
             WPData.log.debug("Loaded themes info: {}", plug.getId());
