@@ -38,6 +38,8 @@ import org.darkware.wpman.data.WPSite;
 import org.darkware.wpman.wpcli.json.DateTimeSerializer;
 import org.darkware.wpman.wpcli.json.VersionSerializer;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -72,6 +74,9 @@ import java.util.Set;
  */
 public class WPCLI
 {
+    /** A shared log facility for reporting messages about the WP-CLI wrapper system */
+    protected static final Logger log = LoggerFactory.getLogger("WP-CLI");
+
     private static Path toolPath = Paths.get("/opt/wpcli/wp");
     public static void setPath(final Path toolPath)
     {
@@ -290,6 +295,32 @@ public class WPCLI
         catch (IllegalStateException e)
         {
             throw new WPCLIError(this, "Error parsing JSON response: " + data);
+        }
+    }
+
+    /**
+     * Executes the command, ignoring any messages or data and only checking for success
+     * or failure response codes.
+     *
+     * @return {@code true} if the command returned no error, {@code false} if any error
+     * is returned.
+     */
+    public boolean checkSuccess()
+    {
+        try
+        {
+            this.execute();
+            return true;
+        }
+        catch (WPCLIError e)
+        {
+            WPCLI.log.debug("Command returned error: {}", e.getLocalizedMessage());
+            return false;
+        }
+        catch (Throwable t)
+        {
+            WPCLI.log.warn("Saw unexpected exception while running a command for success/failure: {}: {}", t.getClass().getName(), t.getLocalizedMessage());
+            return false;
         }
     }
 
