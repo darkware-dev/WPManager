@@ -37,6 +37,30 @@ public class WPPlugins extends WPDataComponent implements Iterable<WPPlugin>
         this.plugins = new ConcurrentSkipListMap<>();
     }
 
+    /**
+     * Check to see if a plugin with the given ID is already installed.
+     *
+     * @param pluginId The plugin's unique ID string
+     * @return {@code true} if the plugin is installed, {@code false} if it's not found.
+     */
+    public boolean isInstalled(final String pluginId)
+    {
+        this.checkRefresh();
+        return this.plugins.containsKey(pluginId);
+    }
+
+    /**
+     * Fetch the plugin with the given id.
+     *
+     * @param pluginId The plugin id to search for.
+     * @return A {@link WPPlugin}, or {@code null} if the plugin isn't found.
+     */
+    public WPPlugin get(final String pluginId)
+    {
+        this.checkRefresh();
+        return this.plugins.get(pluginId);
+    }
+
     @Override
     protected void refreshBaseData()
     {
@@ -52,6 +76,7 @@ public class WPPlugins extends WPDataComponent implements Iterable<WPPlugin>
     @Override
     public Iterator<WPPlugin> iterator()
     {
+        this.checkRefresh();
         return this.plugins.values().iterator();
     }
 }
