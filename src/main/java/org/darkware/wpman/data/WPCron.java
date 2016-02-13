@@ -46,6 +46,8 @@ public class WPCron extends WPDataComponent implements Iterable<WPCronHook>
         List<WPCronHook> hookData = this.getManager().getDataManager().getCronEvents(site);
 
         this.hooks.clear();
+        if (hookData == null) return;
+
         for (WPCronHook hook : hookData)
         {
             WPData.log.debug("Loaded cron hook: {} @ {}", hook.getHook(), hook.getNextRun());
