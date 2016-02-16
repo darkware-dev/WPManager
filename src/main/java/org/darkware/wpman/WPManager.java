@@ -19,8 +19,8 @@ package org.darkware.wpman;
 
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPActionService;
-import org.darkware.wpman.actions.WPThemeUpdate;
 import org.darkware.wpman.agents.WPPluginSync;
+import org.darkware.wpman.agents.WPThemeSync;
 import org.darkware.wpman.cron.WPCronAgent;
 import org.darkware.wpman.cron.WPLowLatencyCronAgent;
 import org.darkware.wpman.data.Version;
@@ -186,6 +186,12 @@ public class WPManager extends Thread
     }
 
     @Override
+    protected Object clone() throws CloneNotSupportedException
+    {
+        return super.clone();
+    }
+
+    @Override
     public void run()
     {
         WPManager.log.info("Starting up.");
@@ -218,6 +224,8 @@ public class WPManager extends Thread
         // Starting up agents
         WPPluginSync pluginSync = new WPPluginSync();
         this.actionService.schedule(pluginSync);
+        WPThemeSync themeSync = new WPThemeSync();
+        this.actionService.schedule(themeSync);
 
         WPManager.log.info("Starting cron runner.");
         this.cron = new WPLowLatencyCronAgent();
@@ -228,16 +236,6 @@ public class WPManager extends Thread
             WPSiteTheme siteTheme = site.getTheme();
             WPTheme theme = siteTheme.activeTheme();
             WPManager.log.info("Site [{}] is using theme: {}", site.getUrl(), theme.getId());
-        }
-
-        for (WPTheme theme : report.getThemes())
-        {
-            if (theme.hasUpdate())
-            {
-                WPManager.log.info("Update available for theme: {} => {}", theme.getId(), theme.getLatestVersion());
-                WPThemeUpdate themeUpdate = new WPThemeUpdate(theme);
-                this.actionService.scheduleAction(themeUpdate);
-            }
         }
     }
 

@@ -35,28 +35,40 @@ import java.util.stream.Stream;
  * @author jeff
  * @since 2016-02-13
  */
-public abstract class WPInstallSync extends WPPeriodicAgent
+public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WPPeriodicAgent
 {
     protected String objectType;
 
-    public WPInstallSync(final String name, final String objectType, final Duration interval)
+    public WPUpdatableSync(final String name, final String objectType, final Duration interval)
     {
         super(name, interval);
         this.objectType = objectType;
     }
 
+    /**
+     * Creates a {@link WPAction} for installing the given item.
+     *
+     * @param itemId The item identifier.
+     * @return An {@code WPAction}.
+     */
     protected abstract WPAction getInstallAction(String itemId);
 
+    /**
+     * Creates a {@link WPAction} for removing the given item.
+     *
+     * @param itemId The item identifier.
+     * @return An {@code WPAction}.
+     */
     protected abstract WPAction getRemoveAction(String itemId);
 
-    private void installItem(final String pluginId)
+    private void installItem(final String itemId)
     {
-        this.getManager().scheduleAction(this.getInstallAction(pluginId));
+        this.getManager().scheduleAction(this.getInstallAction(itemId));
     }
 
-    private void removeItem(final String pluginId)
+    private void removeItem(final String itemId)
     {
-        this.getManager().scheduleAction(this.getRemoveAction(pluginId));
+        this.getManager().scheduleAction(this.getRemoveAction(itemId));
     }
 
     /**
@@ -91,35 +103,56 @@ public abstract class WPInstallSync extends WPPeriodicAgent
         return autoInstallListPath;
     }
 
-    protected Set<String> getInstalledItemIds()
+    protected final Path getIgnoreListPath()
     {
-        return this.getManager().getData().getPlugins().stream().map(WPUpdatableComponent::getId).collect(Collectors.toSet());
+        Config config = this.getManager().getConfig();
+
+        Path autoInstallListPath = config.readVariable(Config.buildKey(this.getObjectTypePlural(), "ignore"), Paths
+                .get(Config.buildKey(this.getObjectType(), "ignore")));
+        if (!autoInstallListPath.isAbsolute()) autoInstallListPath = config.getRootPath().resolve(autoInstallListPath);
+
+        return autoInstallListPath;
     }
 
-    protected abstract Stream<? extends WPUpdatableComponent> getUpdatableList();
+    protected abstract Set<String> getInstalledItemIds();
+
+    protected abstract Stream<T> getUpdatableList();
 
     @Override
     public void executeAction()
     {
         WPManager.log.info("Starting {} synchronization.", this.getObjectType());
 
+        ListFile ignoreFile = new ListFile(this.getIgnoreListPath());
+        ignoreFile.setCommentTokens("#", ";", "//");
+        Set<String> ignore = ignoreFile.stream().collect(Collectors.toSet());
+
         ListFile autoInstallFile = new ListFile(this.getAutoInstallListPath());
         autoInstallFile.setCommentTokens("#", ";", "//");
 
-        // Collect the set of installed plugin ids
+        // Collect the set of installed item ids
         Set<String> installedItems = new TreeSet<>(this.getInstalledItemIds());
 
-        // Collect the set of requested plugin ids
+        // Collect the set of requested item ids
         Set<String> requestedItems = new TreeSet<>();
         autoInstallFile.stream().forEach(requestedItems::add);
 
         // Install missing items
-        requestedItems.stream().filter(p -> !installedItems.contains(p)).forEach(this::installItem);
+        requestedItems.stream()
+                      .filter(i ->!ignore.contains(i))
+                      .filter(p -> !installedItems.contains(p))
+                      .forEach(this::installItem);
 
         // Remove extraneous items
-        installedItems.stream().filter(p -> !requestedItems.contains(p)).forEach(this::removeItem);
+        installedItems.stream()
+                      .filter(i -> !ignore.contains(i))
+                      .filter(p -> !requestedItems.contains(p))
+                      .forEach(this::removeItem);
 
-        // Find items to update, ignoring any plugins scheduled for removal
-        this.getUpdatableList().filter(WPUpdatableComponent::hasUpdate).map(WPUpdatableComponent::getId).forEach(this::installItem);
+        // Find items to update, ignoring any item scheduled for removal
+        this.getUpdatableList()
+            .filter(i -> !ignore.contains(i))
+            .filter(WPUpdatableComponent::hasUpdate)
+            .map(WPUpdatableComponent::getId).forEach(this::installItem);
     }
 }

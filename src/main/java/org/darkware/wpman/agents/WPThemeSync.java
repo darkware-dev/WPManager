@@ -18,9 +18,9 @@
 package org.darkware.wpman.agents;
 
 import org.darkware.wpman.actions.WPAction;
-import org.darkware.wpman.actions.WPPluginAutoInstall;
-import org.darkware.wpman.actions.WPPluginRemove;
-import org.darkware.wpman.data.WPPlugin;
+import org.darkware.wpman.actions.WPThemeAutoInstall;
+import org.darkware.wpman.actions.WPThemeRemove;
+import org.darkware.wpman.data.WPTheme;
 import org.darkware.wpman.data.WPUpdatableComponent;
 import org.joda.time.Duration;
 
@@ -34,43 +34,36 @@ import java.util.stream.Stream;
  * @author jeff
  * @since 2016-02-09
  */
-public class WPPluginSync extends WPUpdatableSync<WPPlugin>
+public class WPThemeSync extends WPUpdatableSync<WPTheme>
 {
     /**
      * Create a plugin synchronization agent.
      */
-    public WPPluginSync()
+    public WPThemeSync()
     {
-        super("Plugin Sync", "plugin", Duration.standardMinutes(2));
+        super("Theme Sync", "theme", Duration.standardMinutes(2));
     }
 
-    /**
-     * Creates a {@link WPAction} for installing the given item.
-     *
-     * @param itemId The item identifier.
-     * @return An {@code WPAction}.
-     */
+    protected Set<String> getInstalledItemIds()
+    {
+        return this.getManager().getData().getThemes().stream().map(WPUpdatableComponent::getId).collect(Collectors.toSet());
+    }
+
     @Override
     protected WPAction getInstallAction(final String itemId)
     {
-        return new WPPluginAutoInstall(itemId);
+        return new WPThemeAutoInstall(itemId);
     }
 
     @Override
     protected WPAction getRemoveAction(final String itemId)
     {
-        return new WPPluginRemove(itemId);
+        return new WPThemeRemove(itemId);
     }
 
     @Override
-    protected Set<String> getInstalledItemIds()
+    protected Stream<WPTheme> getUpdatableList()
     {
-        return this.getManager().getData().getPlugins().stream().map(WPUpdatableComponent::getId).collect(Collectors.toSet());
-    }
-
-    @Override
-    protected Stream<WPPlugin> getUpdatableList()
-    {
-        return this.getManager().getData().getPlugins().stream();
+        return this.getManager().getData().getThemes().stream();
     }
 }
