@@ -172,7 +172,13 @@ public class Config
      */
     protected void refreshComposedInfo()
     {
-
+        // Common, important directories.
+        Path wpRoot = this.readPath("wp.root");
+        Path wpContent = this.storePath("wp.content", wpRoot.resolve("wp-content"), true);
+        Path wpPlugins = this.storePath("wp.plugin", wpContent.resolve("plugins"), true);
+        Path wpThemes = this.storePath("wp.theme", wpContent.resolve("plugins"), true);
+        Path wpGutterPlugins = this.storePath("wp.gutter.plugin", wpContent.resolve("plugins.gutter"), true);
+        Path wpGutterThemes = this.storePath("wp.gutter.theme", wpContent.resolve("themes.gutter"), true);
     }
 
     /**
@@ -181,10 +187,48 @@ public class Config
      * @param parts The parts of the configuration key to fetch.
      * @return The value as a {@code String} or {@code null} if the key does not exist.
      */
+    //TODO: Deprecate this
     public String getConfigValue(String ... parts)
     {
         if (parts.length < 1) throw new IllegalArgumentException("Configuration key cannot be empty");
         return this.raw.getProperty(Config.buildKey(parts));
+    }
+
+    /**
+     * Store a default value for a key if no other value exists.
+     *
+     * @param key The key to store the value for.
+     * @param value An {@code Object} value to store. The value will automatically be converted
+     * to a String for storage.
+     */
+    protected void storeDefault(String key, Object value)
+    {
+        if (!this.exists(key)) this.raw.setProperty(key, value.toString());
+    }
+
+    protected Path storePath(String key, Path path, boolean weak)
+    {
+        if (this.exists(key) && weak) return this.readPath(key);
+
+        this.raw.setProperty(key, path.toString());
+        return path;
+    }
+
+    protected Path storePath(String key, Path path, Path defaultRoot, boolean weak)
+    {
+        if (path.isAbsolute()) return this.storePath(key, path, weak);
+        else return this.storePath(key, defaultRoot.resolve(path), weak);
+    }
+
+    /**
+     * Checks to see if a given configuration key has been set.
+     *
+     * @param key The key to check.
+     * @return {@code true} if the key has a value, {@code false} if it does not.
+     */
+    public boolean exists(String key)
+    {
+        return this.raw.containsKey(key);
     }
 
     /**
@@ -231,6 +275,17 @@ public class Config
         String value = this.readVariable(key, (String)null);
         if (value == null) return defaultValue;
         else return Config.translateBoolean(value);
+    }
+
+    /**
+     * Fetch a configuration value for the given key as a {@code Path}.
+     *
+     * @param key The configuration key to fetch.
+     * @return The value or default as a {@code boolean}
+     */
+    public Path readPath(final String key)
+    {
+        return Paths.get(this.readVariable(key));
     }
 
     /**
