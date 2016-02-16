@@ -19,16 +19,12 @@ package org.darkware.wpman;
 
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPActionService;
-import org.darkware.wpman.actions.WPCronHookExec;
-import org.darkware.wpman.actions.WPPluginUpdate;
 import org.darkware.wpman.actions.WPThemeUpdate;
 import org.darkware.wpman.agents.WPPluginSync;
 import org.darkware.wpman.cron.WPCronAgent;
 import org.darkware.wpman.cron.WPLowLatencyCronAgent;
 import org.darkware.wpman.data.Version;
-import org.darkware.wpman.data.WPCronHook;
 import org.darkware.wpman.data.WPData;
-import org.darkware.wpman.data.WPPlugin;
 import org.darkware.wpman.data.WPSite;
 import org.darkware.wpman.data.WPSiteTheme;
 import org.darkware.wpman.data.WPTheme;
@@ -234,16 +230,6 @@ public class WPManager extends Thread
             WPManager.log.info("Site [{}] is using theme: {}", site.getUrl(), theme.getId());
         }
 
-        for (WPPlugin plugin : report.getPlugins())
-        {
-            if (plugin.hasUpdate())
-            {
-                WPManager.log.info("Update available for plugin: {} => {}", plugin.getId(), plugin.getLatestVersion());
-                WPPluginUpdate plugUpdate = new WPPluginUpdate(plugin);
-                this.actionService.scheduleAction(plugUpdate);
-            }
-        }
-
         for (WPTheme theme : report.getThemes())
         {
             if (theme.hasUpdate())
@@ -251,16 +237,6 @@ public class WPManager extends Thread
                 WPManager.log.info("Update available for theme: {} => {}", theme.getId(), theme.getLatestVersion());
                 WPThemeUpdate themeUpdate = new WPThemeUpdate(theme);
                 this.actionService.scheduleAction(themeUpdate);
-            }
-        }
-
-        for (WPSite site : report.getSites())
-        {
-            for (WPCronHook hook : site.getCron().getWaitingHooks())
-            {
-                WPCronHookExec action = new WPCronHookExec(site, hook);
-                WPManager.log.info("Scheduling cron run for hook: {}::{}", site.getDomain(), hook.getHook());
-                this.actionService.scheduleAction(action);
             }
         }
     }
@@ -295,6 +271,37 @@ public class WPManager extends Thread
     public void scheduleAction(final WPAction action)
     {
         this.actionService.scheduleAction(action);
+    }
+
+    /**
+     * Fetches the root path of the associate WordPress install.
+     *
+     * @return A {@code Path} containing the absolute path to the WordPress installation.
+     */
+    public Path getWPRoot()
+    {
+        //TODO: We could cache this
+        return Paths.get(this.config.readVariable("wp.root")).toAbsolutePath();
+    }
+
+    /**
+     * Fetch the directory where plugins are stored.
+     *
+     * @return An absolute {@code Path} to the plugin storage directory.
+     */
+    public Path getPluginDir()
+    {
+        return this.getWPRoot().resolve("wp-content/plugins");
+    }
+
+    /**
+     * Fetch the directory where themes are stored.
+     *
+     * @return An absolute {@code Path} to the plugin storage directory.
+     */
+    public Path getThemeDir()
+    {
+        return this.getWPRoot().resolve("wp-content/themes");
     }
 
 }
