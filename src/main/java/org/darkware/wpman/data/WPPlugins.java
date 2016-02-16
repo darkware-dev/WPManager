@@ -17,87 +17,22 @@
 
 package org.darkware.wpman.data;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author jeff
  * @since 2016-01-23
  */
-public class WPPlugins extends WPDataComponent implements Iterable<WPPlugin>
+public class WPPlugins extends WPUpdatableCollection<WPPlugin> implements Iterable<WPPlugin>
 {
-    private final Map<String, WPPlugin> plugins;
-
     public WPPlugins()
     {
         super();
-
-        this.plugins = new ConcurrentSkipListMap<>();
-    }
-
-    /**
-     * Check to see if a plugin with the given ID is already installed.
-     *
-     * @param pluginId The plugin's unique ID string
-     * @return {@code true} if the plugin is installed, {@code false} if it's not found.
-     */
-    public boolean isInstalled(final String pluginId)
-    {
-        this.checkRefresh();
-        return this.plugins.containsKey(pluginId);
-    }
-
-    /**
-     * Fetch the plugin with the given id.
-     *
-     * @param pluginId The plugin id to search for.
-     * @return A {@link WPPlugin}, or {@code null} if the plugin isn't found.
-     */
-    public WPPlugin get(final String pluginId)
-    {
-        this.checkRefresh();
-        return this.plugins.get(pluginId);
     }
 
     @Override
-    protected void refreshBaseData()
+    protected List<WPPlugin> fetchNewItems()
     {
-        List<WPPlugin> rawList = this.getManager().getDataManager().getPlugins();
-
-        // Get a set of all new plugin ids
-        Set<String> newIds = rawList.stream().map(WPUpdatableComponent::getId).collect(Collectors.toSet());
-
-        // Remove all current plugins not in the new set
-        this.plugins.keySet().stream().filter(id -> !newIds.contains(id)).forEach(this.plugins::remove);
-
-        // Update all new plugin data
-        for (WPPlugin plug : rawList)
-        {
-            WPData.log.debug("Loaded plugin info: {}", plug.getId());
-            this.plugins.put(plug.getId(), plug);
-        }
-    }
-
-    @Override
-    public Iterator<WPPlugin> iterator()
-    {
-        this.checkRefresh();
-        return this.plugins.values().iterator();
-    }
-
-    /**
-     * Get a stream of the currently installed plugins.
-     *
-     * @return A {@link Stream} of {@link WPPlugin}s.
-     */
-    public Stream<WPPlugin> stream()
-    {
-        this.checkRefresh();
-        return this.plugins.values().stream();
+        return this.getManager().getDataManager().getPlugins();
     }
 }
