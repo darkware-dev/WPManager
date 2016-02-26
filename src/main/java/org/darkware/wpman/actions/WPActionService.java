@@ -23,10 +23,13 @@ import org.joda.time.Seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author jeff
@@ -51,9 +54,18 @@ public class WPActionService extends WPComponent
         this.execService.scheduleAtFixedRate(agent, 0, agent.getPeriod(), TimeUnit.SECONDS);
     }
 
-    public void scheduleAction(final WPAction action)
+    public <T> void scheduleAction(final WPAction<T> action)
     {
         this.execService.submit(action);
+        if (action.hasTimeout())
+        {
+            Future<T> future = this.execService.submit(action);
+            if (action.hasTimeout())
+            {
+                TimeoutCop<T> enforcer = new TimeoutCop<>(action, future);
+                enforcer.start();
+            }
+        }
     }
 
     public ScheduledFuture scheduleAction(final WPAction action, Seconds delay)
@@ -77,5 +89,48 @@ public class WPActionService extends WPComponent
 
         this.execService.shutdownNow();
         WPActionService.log.info("Action service has shut down.");
+    }
+
+    private final class TimeoutCop<T> extends Thread
+    {
+        private final WPAction<T> action;
+        private final Future<T> actionFuture;
+
+        public TimeoutCop(final WPAction<T> action, final Future<T> actionFuture)
+        {
+            super();
+
+            this.action = action;
+            this.actionFuture = actionFuture;
+        }
+
+        public void run()
+        {
+            try
+            {
+                if (action.hasTimeout())
+                {
+                    this.actionFuture.get(action.getTimeout(), TimeUnit.SECONDS);
+                }
+            }
+            catch (TimeoutException e)
+            {
+                WPActionService.log.warn("Canceled action due to immediate timeout request: " + this.action.getDescription());
+                this.actionFuture.cancel(true);
+            }
+            catch (InterruptedException e)
+            {
+                WPActionService.log.warn("Canceled action due to immediate timeout request: " + this.action.getDescription());
+                this.actionFuture.cancel(true);
+            }
+            catch (ExecutionException e)
+            {
+                WPActionService.log.warn("Timeout canceled due to action termination: " + this.action.getDescription());
+            }
+            catch (Throwable t)
+            {
+                WPActionService.log.warn("Timeout canceled due to abnormal error: " + this.action.getDescription() + " (" + t.getLocalizedMessage() + ")");
+            }
+        }
     }
 }

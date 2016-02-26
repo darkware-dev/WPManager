@@ -17,12 +17,30 @@
 
 package org.darkware.wpman.actions;
 
+import java.util.concurrent.Callable;
+
 /**
  * @author jeff
  * @since 2016-02-10
  */
-public interface WPAction extends Runnable
+public interface WPAction<T> extends Callable<T>
 {
+    /**
+     * Checks to see if this action has requested a timeout value be applied to its
+     * execution.
+     *
+     * @return {@code true} if the action has a timeout, {@code false} if not.
+     */
+    boolean hasTimeout();
+
+    /**
+     * Fetches the number of seconds this action is allowed to execute for, or zero if no
+     * timeout is enabled.
+     *
+     * @return The timeout, in seconds, or zero if no timeout is requested.
+     */
+    int getTimeout();
+
     /**
      * Fetch a description of the goal of this action.
      *

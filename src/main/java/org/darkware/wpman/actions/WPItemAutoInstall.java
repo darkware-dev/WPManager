@@ -32,7 +32,7 @@ import java.nio.file.Path;
  * @author jeff
  * @since 2016-02-14
  */
-public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends WPBasicAction
+public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends WPBasicAction<Boolean>
 {
     protected final String installToken;
     protected final String itemType;
@@ -56,7 +56,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
     }
 
     @Override
-    public void run()
+    public Boolean exec()
     {
         try
         {
@@ -75,7 +75,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
                 {
                     WPManager.log.info("The {} '{}' is already installed and up to date. ({}))", this.getItemType(), this.installToken,
                                        preInstall.getVersion());
-                    return;
+                    return true;
                 }
             }
             else
@@ -107,11 +107,10 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
         {
             t.printStackTrace();
             WPManager.log.warn("Error while auto-installing {} '{}' : {} : {}", this.getItemType(), this.installToken, t.getClass().getName(), t.getLocalizedMessage());
+            return false;
         }
-        finally
-        {
 
-        }
+        return true;
     }
 
     protected void doUpdate()

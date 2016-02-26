@@ -26,7 +26,7 @@ import org.darkware.wpman.wpcli.WPCLIError;
  * @author jeff
  * @since 2016-01-28
  */
-public abstract class WPCLIAction extends WPBasicAction
+public abstract class WPCLIAction extends WPBasicAction<Boolean>
 {
     private final WPCLI command;
 
@@ -50,7 +50,7 @@ public abstract class WPCLIAction extends WPBasicAction
     }
 
     @Override
-    public void run()
+    public Boolean exec()
     {
         WPActionService.log.info("Starting action: {}", this.getDescription());
 
@@ -58,10 +58,12 @@ public abstract class WPCLIAction extends WPBasicAction
         {
             this.command.execute();
             WPActionService.log.info("Completed action: {}", this.getDescription());
+            return true;
         }
         catch (WPCLIError error)
         {
             WPActionService.log.error("Error running action: {}", error.getLocalizedMessage());
+            return false;
         }
     }
 }
