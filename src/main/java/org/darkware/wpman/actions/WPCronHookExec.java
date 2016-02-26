@@ -40,6 +40,8 @@ public class WPCronHookExec extends WPCLIAction
         this.getCommand().setSite(site);
         this.getCommand().loadThemes(false);
         this.getCommand().setFormat(WPCLIFormat.DEFAULT);
+
+        this.requestTimeout(20);
     }
 
     @Override
