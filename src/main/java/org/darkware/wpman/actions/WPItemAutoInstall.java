@@ -136,9 +136,9 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
         // Move the existing directory, if it does exist
         if (Files.exists(this.getItemDirectory()))
         {
-            Path gutterDir = this.getGutterDirectory().resolve(this.installToken);
             try
             {
+                Path gutterDir = this.getGutterDirectory().resolve(this.installToken);
                 if (Files.exists(gutterDir)) FileSystemTools.deleteTree(gutterDir);
                 Files.move(this.getItemDirectory(), gutterDir);
             }
@@ -183,9 +183,11 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
      *
      * @return An absolute path to the gutter directory for the current item type.
      */
-    protected Path getGutterDirectory()
+    protected Path getGutterDirectory() throws IOException
     {
-        return this.getManager().getConfig().readPath(Config.buildKey("wp.gutter", this.getItemType()));
+        Path gutter = this.getManager().getConfig().readPath(Config.buildKey("wp.gutter", this.getItemType()));
+        if (!Files.exists(gutter)) Files.createDirectories(gutter);
+        return gutter;
     }
 
     /**
