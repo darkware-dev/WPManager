@@ -17,7 +17,6 @@
 
 package org.darkware.wpman.actions;
 
-import com.sun.istack.internal.Nullable;
 import org.darkware.cltools.utils.FileSystemTools;
 import org.darkware.wpman.Config;
 import org.darkware.wpman.WPManager;
@@ -203,7 +202,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
      * @return A record of the currently installed item or {@code null} if the item is not
      * currently installed.
      */
-    protected abstract @Nullable T getItem();
+    protected abstract T getItem();
 
     /**
      * Expire the {@code WPData} container which holds records for this item. This should be
