@@ -30,7 +30,7 @@ import java.nio.file.Path;
  * @author jeff
  * @since 2016-02-10
  */
-public class WPPluginRemove extends WPBasicAction
+public class WPPluginRemove extends WPBasicAction<Boolean>
 {
     private final String pluginToken;
 
@@ -48,7 +48,7 @@ public class WPPluginRemove extends WPBasicAction
     }
 
     @Override
-    public void run()
+    public Boolean exec()
     {
         try
         {
@@ -109,5 +109,7 @@ public class WPPluginRemove extends WPBasicAction
         {
             this.getManager().getData().getPlugins().expire();
         }
+
+        return true;
     }
 }

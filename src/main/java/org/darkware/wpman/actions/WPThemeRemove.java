@@ -30,7 +30,7 @@ import java.nio.file.Path;
  * @author jeff
  * @since 2016-02-10
  */
-public class WPThemeRemove extends WPBasicAction
+public class WPThemeRemove extends WPBasicAction<Boolean>
 {
     private final String themeToken;
 
@@ -48,7 +48,7 @@ public class WPThemeRemove extends WPBasicAction
     }
 
     @Override
-    public void run()
+    public Boolean exec()
     {
         try
         {
@@ -109,5 +109,7 @@ public class WPThemeRemove extends WPBasicAction
         {
             this.getManager().getData().getThemes().expire();
         }
+
+        return true;
     }
 }
