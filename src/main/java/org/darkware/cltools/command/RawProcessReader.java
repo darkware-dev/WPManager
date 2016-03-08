@@ -17,8 +17,7 @@
 
 package org.darkware.cltools.command;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
-
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -30,18 +29,18 @@ import java.nio.charset.Charset;
  */
 public class RawProcessReader extends ProcessReader
 {
-    private final ByteOutputStream output;
+    private final ByteArrayOutputStream output;
 
     public RawProcessReader()
     {
         super();
 
-        this.output = new ByteOutputStream();
+        this.output = new ByteArrayOutputStream();
     }
 
     public byte[] getData()
     {
-        return this.output.getBytes();
+        return this.output.toByteArray();
     }
 
     @Override
