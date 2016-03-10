@@ -176,7 +176,8 @@ public class Config
         Path wpRoot = this.readPath("wp.root");
         Path wpContent = this.storePath("wp.content", wpRoot.resolve("wp-content"), true);
         Path wpPlugins = this.storePath("wp.plugin", wpContent.resolve("plugins"), true);
-        Path wpThemes = this.storePath("wp.theme", wpContent.resolve("plugins"), true);
+        Path wpThemes = this.storePath("wp.theme", wpContent.resolve("themes"), true);
+        Path wpUploads = this.storePath("wp.upload", wpContent.resolve("uploads"), true);
         Path wpGutterPlugins = this.storePath("wp.gutter.plugin", wpContent.resolve("plugins.gutter"), true);
         Path wpGutterThemes = this.storePath("wp.gutter.theme", wpContent.resolve("themes.gutter"), true);
     }
