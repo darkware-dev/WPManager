@@ -19,6 +19,7 @@ package org.darkware.wpman;
 
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPActionService;
+import org.darkware.wpman.agents.WPIntegrityCheckAgent;
 import org.darkware.wpman.agents.WPPluginSync;
 import org.darkware.wpman.agents.WPThemeSync;
 import org.darkware.wpman.cron.WPCronAgent;
@@ -226,6 +227,8 @@ public class WPManager extends Thread
         this.actionService.schedule(pluginSync);
         WPThemeSync themeSync = new WPThemeSync();
         this.actionService.schedule(themeSync);
+        WPIntegrityCheckAgent integrity = new WPIntegrityCheckAgent();
+        this.actionService.schedule(integrity);
 
         WPManager.log.info("Starting cron runner.");
         this.cron = new WPLowLatencyCronAgent();
