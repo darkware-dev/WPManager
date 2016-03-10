@@ -79,6 +79,16 @@ public class ContextManager
         }
     }
 
+    public <T> boolean has(final Class<T> instanceClass)
+    {
+        return this.has(TypeToken.of(instanceClass));
+    }
+
+    public <T> boolean has(final TypeToken<T> typeToken)
+    {
+        return this.instances.containsKey(typeToken.getType());
+    }
+
     public <T> void registerInstance(T instance)
     {
         final Type instanceType = TypeToken.of(instance.getClass()).getType();
