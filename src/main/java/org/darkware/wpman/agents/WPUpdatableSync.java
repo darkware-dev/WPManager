@@ -151,7 +151,7 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
 
         // Find items to update, ignoring any item scheduled for removal
         this.getUpdatableList()
-            .filter(i -> !ignore.contains(i))
+            .filter(i -> !ignore.contains(i.getId()))
             .filter(WPUpdatableComponent::hasUpdate)
             .map(WPUpdatableComponent::getId).forEach(this::installItem);
     }
