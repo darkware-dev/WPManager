@@ -70,14 +70,28 @@ public class Command
         else this.argv.set(0, executable);
     }
 
+    public Command addArgument(Object arg)
+    {
+        if (arg instanceof String) this.argv.add((String)arg);
+        else if (arg instanceof Path) this.argv.add(((Path)arg).toAbsolutePath().toString());
+        else this.argv.add(arg.toString());
+
+        return this;
+    }
+
     public Command addArguments(Object ... args)
     {
         for (Object arg : args)
         {
-            if (arg instanceof String) this.argv.add((String)arg);
-            else if (arg instanceof Path) this.argv.add(((Path)arg).toAbsolutePath().toString());
-            else this.argv.add(arg.toString());
+            this.addArgument(arg);
         }
+
+        return this;
+    }
+
+    public Command addArgumentList(List<? extends Object> argList)
+    {
+        argList.stream().forEach(this::addArgument);
 
         return this;
     }
