@@ -17,6 +17,7 @@
 
 package org.darkware.wpman.data;
 
+import com.google.common.base.Objects;
 import com.google.gson.annotations.SerializedName;
 import org.joda.time.DateTime;
 
@@ -131,5 +132,20 @@ public class WPSite
     public WPCron getCron()
     {
         return this.cron;
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+        if (this == o) return true;
+        if (!(o instanceof WPSite)) return false;
+        final WPSite wpSite = (WPSite) o;
+        return blogId == wpSite.blogId;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hashCode(blogId);
     }
 }
