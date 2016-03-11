@@ -36,6 +36,7 @@ public class WPSite
     @SerializedName("public") private boolean searchable;
     @SerializedName("deleted") private boolean deleted;
 
+    private String subDomain;
     private final WPSitePlugins plugins;
     private final WPCron cron;
     private WPSiteTheme theme;
@@ -67,6 +68,16 @@ public class WPSite
     public void setDomain(final String domain)
     {
         this.domain = domain;
+    }
+
+    public String getSubDomain()
+    {
+        if (this.subDomain == null)
+        {
+            if (this.domain == null) return "<unknown>";
+            this.subDomain = domain.split("\\.", 2)[0];
+        }
+        return this.subDomain;
     }
 
     public String getUrl()
