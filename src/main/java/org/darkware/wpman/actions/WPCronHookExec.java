@@ -17,9 +17,13 @@
 
 package org.darkware.wpman.actions;
 
+import com.google.common.base.Joiner;
 import org.darkware.wpman.data.WPCronHook;
 import org.darkware.wpman.data.WPSite;
 import org.darkware.wpman.wpcli.WPCLIFormat;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author jeff
@@ -28,14 +32,15 @@ import org.darkware.wpman.wpcli.WPCLIFormat;
 public class WPCronHookExec extends WPCLIAction
 {
     private final WPSite site;
-    private final WPCronHook cron;
+    private final Set<WPCronHook> hooks;
 
     public WPCronHookExec(final WPSite site, final WPCronHook cron)
     {
         super("cron", "event", "run", cron.getHook());
 
         this.site = site;
-        this.cron = cron;
+        this.hooks = new HashSet<>();
+        this.addHook(cron);
 
         this.getCommand().setSite(site);
         this.getCommand().loadThemes(false);
@@ -44,9 +49,20 @@ public class WPCronHookExec extends WPCLIAction
         this.requestTimeout(20);
     }
 
+    public void addHook(final WPCronHook hook)
+    {
+        this.hooks.add(hook);
+    }
+
+    @Override
+    protected void beforeExec()
+    {
+        this.hooks.stream().map(h -> h.getHook()).forEach(this.getCommand()::addArgument);
+    }
+
     @Override
     public String getDescription()
     {
-        return "Execute cron hook [" + this.cron.getHook() + "] @ " + this.site.getDomain();
+        return "Cron::" + this.site.getDomain() + " [" + Joiner.on(",").join(this.hooks) + "]";
     }
 }
