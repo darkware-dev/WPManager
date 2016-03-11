@@ -165,7 +165,7 @@ public class WPCLI
 
     private final String group;
     private final String command;
-    private final String[] commandArgs;
+    private final List<String> commandArgs;
     private final List<String> args;
     private final Map<String,WPCLIBasicOption> options;
 
@@ -177,9 +177,21 @@ public class WPCLI
 
         this.group = group;
         this.command = command;
-        this.commandArgs = commandArgs;
+        this.commandArgs = new ArrayList<>();
+        for (String arg : commandArgs) this.addArgument(arg);
         this.args = new ArrayList<>();
         this.options = new HashMap<>();
+    }
+
+    /**
+     * Add another argument to the command. This is explicitly placed after the group and
+     * command strings, and ordered in the same order that it was added.
+     *
+     * @param argument The argument to add.
+     */
+    public void addArgument(final String argument)
+    {
+        this.commandArgs.add(argument);
     }
 
     public void setOption(WPCLIBasicOption option)
@@ -222,14 +234,14 @@ public class WPCLI
 
     protected void render()
     {
-        this.cmd.addArguments(group);
-        this.cmd.addArguments(command);
-        this.cmd.addArguments(commandArgs);
+        this.cmd.addArgument(group);
+        this.cmd.addArgument(command);
+        this.cmd.addArgumentList(commandArgs);
         if (this.args.size() > 0) this.cmd.addArguments(this.args);
-        for (WPCLIBasicOption opt : this.options.values())
-        {
-            if (opt.isEnabled()) this.cmd.addArguments(opt.render());
-        }
+        this.options.values()
+                    .stream()
+                    .filter(opt -> opt.isEnabled())
+                    .forEach(opt -> this.cmd.addArguments(opt.render()));
     }
 
     public List<String> readLines() throws WPCLIError
@@ -354,6 +366,7 @@ public class WPCLI
             /* Check if we tossed an error code, but still succeeded */
             if (errorMessage.contains("\nSucess: ")) return;
 
+            WPManager.log.error("Error running command: " + this.cmd.quotedString());
             throw new WPCLIError(this, "Result=" + result + ": " + errorMessage);
         }
     }
