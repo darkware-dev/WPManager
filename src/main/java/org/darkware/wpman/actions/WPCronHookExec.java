@@ -17,13 +17,13 @@
 
 package org.darkware.wpman.actions;
 
-import com.google.common.base.Joiner;
 import org.darkware.wpman.data.WPCronHook;
 import org.darkware.wpman.data.WPSite;
 import org.darkware.wpman.wpcli.WPCLIFormat;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author jeff
@@ -63,6 +63,6 @@ public class WPCronHookExec extends WPCLIAction
     @Override
     public String getDescription()
     {
-        return "Cron::" + this.site.getDomain() + " [" + Joiner.on(",").join(this.hooks) + "]";
+        return "Cron::" + this.site.getDomain() + " [" + this.hooks.stream().map(h -> h.getHook()).collect(Collectors.joining(", ")) + "]";
     }
 }

@@ -19,11 +19,11 @@ package org.darkware.wpman;
 
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPActionService;
+import org.darkware.wpman.agents.WPCronAgent;
 import org.darkware.wpman.agents.WPIntegrityCheckAgent;
+import org.darkware.wpman.agents.WPLowLatencyCronAgent;
 import org.darkware.wpman.agents.WPPluginSync;
 import org.darkware.wpman.agents.WPThemeSync;
-import org.darkware.wpman.cron.WPCronAgent;
-import org.darkware.wpman.cron.WPLowLatencyCronAgent;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.data.WPData;
 import org.darkware.wpman.data.WPSite;
@@ -232,7 +232,7 @@ public class WPManager extends Thread
 
         WPManager.log.info("Starting cron runner.");
         this.cron = new WPLowLatencyCronAgent();
-        this.cron.start();
+        new Thread(this.cron).start();
 
         for (WPSite site : report.getSites())
         {

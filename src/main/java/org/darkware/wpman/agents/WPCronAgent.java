@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.darkware.wpman.cron;
+package org.darkware.wpman.agents;
 
 import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
@@ -35,12 +35,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author jeff
  * @since 2016-02-01
  */
-public abstract class WPCronAgent extends Thread
+public abstract class WPCronAgent extends WPAgent
 {
     /** The public logging facility for all agents. */
     protected final static Logger log = LoggerFactory.getLogger("Cron");
 
-    private final WPManager manager;
     private final WPSites sites;
     private final AtomicBoolean enabled;
 
@@ -50,21 +49,10 @@ public abstract class WPCronAgent extends Thread
      */
     public WPCronAgent()
     {
-        super();
+        super("cron");
 
         this.enabled = new AtomicBoolean(true);
-        this.manager = ContextManager.local().getContextualInstance(WPManager.class);
-        this.sites = this.manager.getData().getSites();
-    }
-
-    /**
-     * Fetch the {@link WPManager} associated with this agent.
-     *
-     * @return The attached {@code WPManager}.
-     */
-    public WPManager getManager()
-    {
-        return manager;
+        this.sites = this.getManager().getData().getSites();
     }
 
     /**
@@ -90,7 +78,7 @@ public abstract class WPCronAgent extends Thread
     }
 
     @Override
-    public void run()
+    public void executeAction()
     {
         try
         {
@@ -105,7 +93,7 @@ public abstract class WPCronAgent extends Thread
                         return;
                     }
 
-                    WPCronAgentRoundRobin.log.debug("Processing cron events for {}", site.getDomain());
+                    WPCronAgent.log.debug("Processing cron events for {}", site.getDomain());
                     this.handleCronEvents(site);
                 }
                 this.postSiteScan();
