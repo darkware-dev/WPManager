@@ -49,6 +49,15 @@ public abstract class WPCLIAction extends WPBasicAction<Boolean>
         return command;
     }
 
+    /**
+     * Perform any last-millisecond changes or additions to the action or command before
+     * it is executed.
+     */
+    protected void beforeExec()
+    {
+        // Nothing to do by default
+    }
+
     @Override
     public Boolean exec()
     {
