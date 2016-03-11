@@ -50,7 +50,7 @@ public abstract class WPAgent implements Runnable
      *
      * @return The name as a {@code String}.
      */
-    public String getName()
+    public final String getName()
     {
         return name;
     }
@@ -60,13 +60,13 @@ public abstract class WPAgent implements Runnable
      *
      * @return A {@code WPManager} instance.
      */
-    public WPManager getManager()
+    public final WPManager getManager()
     {
         return manager;
     }
 
     @Override
-    public void run()
+    public final void run()
     {
         try
         {
