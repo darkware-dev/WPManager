@@ -65,6 +65,19 @@ public abstract class WPAgent implements Runnable
         return manager;
     }
 
+    /**
+     * Starts up a new {@code Thread} which executes this agent.
+     *
+     * @return The {@code Thread} where the agent was executed. The thread may or may not be running
+     * by the time the value can be inspected.
+     */
+    public final Thread startThread()
+    {
+        Thread thread = new Thread(this);
+        thread.start();
+        return thread;
+    }
+
     @Override
     public final void run()
     {
