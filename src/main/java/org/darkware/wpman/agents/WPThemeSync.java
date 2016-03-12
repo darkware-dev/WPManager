@@ -41,7 +41,7 @@ public class WPThemeSync extends WPUpdatableSync<WPTheme>
      */
     public WPThemeSync()
     {
-        super("Theme Sync", "theme", Duration.standardMinutes(2));
+        super("Theme Sync", "theme", Duration.standardMinutes(480));
     }
 
     protected Set<String> getInstalledItemIds()

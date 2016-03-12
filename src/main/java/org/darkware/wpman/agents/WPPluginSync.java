@@ -41,7 +41,7 @@ public class WPPluginSync extends WPUpdatableSync<WPPlugin>
      */
     public WPPluginSync()
     {
-        super("Plugin Sync", "plugin", Duration.standardMinutes(2));
+        super("Plugin Sync", "plugin", Duration.standardMinutes(360));
     }
 
     /**
