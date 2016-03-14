@@ -26,11 +26,10 @@ import org.darkware.wpman.agents.WPPluginSync;
 import org.darkware.wpman.agents.WPThemeSync;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.data.WPData;
-import org.darkware.wpman.data.WPSite;
-import org.darkware.wpman.data.WPSiteTheme;
-import org.darkware.wpman.data.WPTheme;
 import org.darkware.wpman.events.WPEvent;
 import org.darkware.wpman.events.WPEventManager;
+import org.darkware.wpman.events.WPStartupEvent;
+import org.darkware.wpman.services.PostNotificationService;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFactory;
 import org.slf4j.Logger;
@@ -210,7 +209,6 @@ public class WPManager extends Thread
         WPManager.log.info("WP Root at: {}", this.config.readVariable("wp.root"));
 
         WPData report = new WPData();
-        report.refresh();
 
         WPManager.log.info("Starting action execution service.");
 
@@ -222,6 +220,10 @@ public class WPManager extends Thread
         WPManager.log.info("Starting config monitoring service.");
         this.configWatcher.start();
 
+        // Initialize services
+        PostNotificationService postNotify = new PostNotificationService();
+        postNotify.activate();
+
         // Starting up agents
         WPPluginSync pluginSync = new WPPluginSync();
         this.actionService.schedule(pluginSync);
@@ -232,14 +234,9 @@ public class WPManager extends Thread
 
         WPManager.log.info("Starting cron runner.");
         this.cron = new WPLowLatencyCronAgent();
-        new Thread(this.cron).start();
+        this.cron.startThread();
 
-        for (WPSite site : report.getSites())
-        {
-            WPSiteTheme siteTheme = site.getTheme();
-            WPTheme theme = siteTheme.activeTheme();
-            WPManager.log.info("Site [{}] is using theme: {}", site.getUrl(), theme.getId());
-        }
+        this.dispatchEvent(new WPStartupEvent());
     }
 
     /**
