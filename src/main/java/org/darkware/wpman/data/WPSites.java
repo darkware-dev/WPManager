@@ -37,6 +37,16 @@ public class WPSites extends WPDataComponent implements Iterable<WPSite>
         this.sites = new ConcurrentSkipListMap<>();
     }
 
+    public WPSite get(final String identifier)
+    {
+        for (WPSite site : this)
+        {
+            if (site.getDomain().equals(identifier)) return site;
+            if (site.getSubDomain().equals(identifier)) return site;
+        }
+        return null;
+    }
+
     @Override
     protected void refreshBaseData()
     {
@@ -52,6 +62,7 @@ public class WPSites extends WPDataComponent implements Iterable<WPSite>
     @Override
     public Iterator<WPSite> iterator()
     {
+        this.checkRefresh();
         return this.sites.values().iterator();
     }
 }
