@@ -24,6 +24,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import org.darkware.wpman.WPManager;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -50,6 +51,15 @@ public class DateTimeSerializer implements JsonSerializer<DateTime>, JsonDeseria
         String dateString = json.getAsString();
 
         if (dateString.startsWith("0000")) return null;
-        return DateTime.parse(dateString, DateTimeSerializer.format);
+
+        try
+        {
+            return DateTime.parse(dateString, DateTimeSerializer.format);
+        }
+        catch (Throwable t)
+        {
+            WPManager.log.error("Error parsing date '" + dateString + "' in cron entry: " + t.getLocalizedMessage());
+            return DateTime.now();
+        }
     }
 }
