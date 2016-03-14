@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,6 +112,11 @@ public class Command
         this.outputReader.start();
 
         return this.process;
+    }
+
+    public OutputStream getOutputStream()
+    {
+        return this.process.getOutputStream();
     }
 
     public int waitForCompletion()
