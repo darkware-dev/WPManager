@@ -51,13 +51,19 @@ public abstract class WPDataComponent extends WPComponent
 
     protected final void refresh()
     {
-        this.refreshBaseData();
-        this.nextRefresh = DateTime.now().plus(this.refreshDuration);
+        synchronized (this)
+        {
+            this.refreshBaseData();
+            this.nextRefresh = DateTime.now().plus(this.refreshDuration);
+        }
     }
 
     protected final void checkRefresh()
     {
-        if (this.nextRefresh.isBeforeNow()) this.refresh();
+        synchronized (this)
+        {
+            if (this.nextRefresh.isBeforeNow()) this.refresh();
+        }
     }
 
     protected abstract void refreshBaseData();
