@@ -41,7 +41,9 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.Channels;
@@ -168,6 +170,8 @@ public class WPCLI
     private final List<String> commandArgs;
     private final List<String> args;
     private final Map<String,WPCLIBasicOption> options;
+    private final ByteArrayOutputStream inputData;
+    private final PrintWriter input;
 
     public WPCLI(final String group, final String command, final String ... commandArgs)
     {
@@ -181,6 +185,9 @@ public class WPCLI
         for (String arg : commandArgs) this.addArgument(arg);
         this.args = new ArrayList<>();
         this.options = new HashMap<>();
+
+        this.inputData = new ByteArrayOutputStream();
+        this.input = new PrintWriter(this.inputData);
     }
 
     /**
@@ -232,6 +239,11 @@ public class WPCLI
         else this.setOption(new WPCLIFlag("skip-plugins"));
     }
 
+    public PrintWriter getStdin()
+    {
+        return this.input;
+    }
+
     protected void render()
     {
         this.cmd.addArgument(group);
@@ -250,7 +262,7 @@ public class WPCLI
 
         try
         {
-            this.runCommand(lineReader);
+            this.runCommand(lineReader, this.inputData.toByteArray());
 
             return lineReader.getLines();
         }
@@ -266,7 +278,7 @@ public class WPCLI
 
         try
         {
-            this.runCommand(stringReader);
+            this.runCommand(stringReader, this.inputData.toByteArray());
 
             return stringReader.getData().trim();
         }
@@ -342,7 +354,8 @@ public class WPCLI
 
         try
         {
-            this.runCommand(stringReader);
+            this.input.flush();
+            this.runCommand(stringReader, this.inputData.toByteArray());
 
             return stringReader.getData();
         }
@@ -352,11 +365,20 @@ public class WPCLI
         }
     }
 
-    protected void runCommand(ProcessReader reader) throws IOException, WPCLIError
+    protected void runCommand(ProcessReader reader, final byte[] input) throws IOException, WPCLIError
     {
         this.render();
         this.cmd.attachOutputReader(reader);
         this.cmd.start();
+
+        // Write the input, if it exists
+        if (input != null && input.length > 0)
+        {
+            this.cmd.getOutputStream().write(input);
+            this.cmd.getOutputStream().flush();
+            this.cmd.getOutputStream().close();
+        }
+
         int result = this.cmd.waitForCompletion();
 
         if (result != 0)
