@@ -54,7 +54,7 @@ public class WPSites extends WPDataComponent implements Iterable<WPSite>
 
         for (WPSite site : rawSites)
         {
-            WPData.log.info("Loaded site: #{}: {}", site.getBlogId(), site.getUrl());
+            WPData.log.debug("Loaded site: #{}: {}", site.getBlogId(), site.getUrl());
             this.sites.put(site.getBlogId(), site);
         }
     }
