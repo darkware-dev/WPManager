@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.darkware.wpman.cron;
+package org.darkware.wpman.agents;
 
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.actions.WPCronHookExec;
