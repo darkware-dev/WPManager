@@ -4,7 +4,7 @@ BINDIR="$(dirname "$(readlink -f "$0")")"
 BASEDIR="$(dirname "$BINDIR")"
 
 #java -classpath $BASEDIR/target/classes:$BASEDIR/out/artifacts/wpman_jar/wpman.jar org.darkware.wpman.App
-java -classpath $BASEDIR/target/classes:$BASEDIR/out/artifacts/dependencies/dependencies.jar \
+java -classpath $BASEDIR/target/classes:$BASEDIR/target/wpmanager.jar \
      -Dwpman.dir=$BASEDIR \
      org.darkware.wpman.App \
      "$@"
