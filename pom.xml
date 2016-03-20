@@ -56,6 +56,7 @@
         <artifactId>maven-shade-plugin</artifactId>
         <version>2.4.3</version>
         <configuration>
+          <outputFile>target/${project.artifactId}.jar</outputFile>
           <createSourcesJar>true</createSourcesJar>
           <createDependencyReducedPom>false</createDependencyReducedPom>
         </configuration>
@@ -130,6 +131,12 @@
       <groupId>com.sparkjava</groupId>
       <artifactId>spark-core</artifactId>
       <version>2.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.java.dev.jna</groupId>
+      <artifactId>jna-platform</artifactId>
+      <version>4.2.2</version>
     </dependency>
 
   </dependencies>
