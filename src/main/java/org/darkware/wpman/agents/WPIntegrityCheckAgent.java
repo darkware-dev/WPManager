@@ -20,6 +20,7 @@ package org.darkware.wpman.agents;
 import org.darkware.wpman.Config;
 import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
+import org.darkware.wpman.events.InstallationFileChange;
 import org.darkware.wpman.security.ChecksumDatabase;
 import org.darkware.wpman.security.DirectoryScanner;
 import org.darkware.wpman.security.ScanResults;
@@ -29,6 +30,12 @@ import java.nio.file.Path;
 import java.util.Set;
 
 /**
+ * The {@code WPIntegrityCheckAgent} is an {@link WPAgent} which performs periodic checks of the files
+ * in the WordPress instance.
+ * <p>
+ * The agent is primarily a driver for the {@link DirectoryScanner} and {@link ChecksumDatabase} classes. In
+ * the case where changed files are found, it dispatches an {@link InstallationFileChange} event.
+ *
  * @author jeff
  * @since 2016-03-08
  */
@@ -37,6 +44,9 @@ public class WPIntegrityCheckAgent extends WPPeriodicAgent
     private final Config config;
     private final ChecksumDatabase checksums;
 
+    /**
+     * Create a new {@code WPIntegrityCheckAgent}.
+     */
     public WPIntegrityCheckAgent()
     {
         super("integrity", Duration.standardMinutes(30));
@@ -57,6 +67,7 @@ public class WPIntegrityCheckAgent extends WPPeriodicAgent
     public void executeAction()
     {
         DirectoryScanner scanner = new DirectoryScanner(this.config.readPath("wp.root"), this.checksums);
+        scanner.updateChecksums(true);
         ScanResults results = scanner.scan();
 
         Set<Path> newFiles = results.getNewFiles();
@@ -69,5 +80,11 @@ public class WPIntegrityCheckAgent extends WPPeriodicAgent
 
         changedFiles.stream().forEach(p -> WPManager.log.warn("File changed: {}", p));
         newFiles.stream().forEach(p -> WPManager.log.warn("New file found: {}", p));
+
+        // Dispatch an event
+        this.getManager().dispatchEvent(new InstallationFileChange(results));
+
+        // Write the new state of the database
+        this.checksums.writeDatabase();
     }
 }

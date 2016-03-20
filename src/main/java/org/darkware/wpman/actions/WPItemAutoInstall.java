@@ -19,8 +19,11 @@ package org.darkware.wpman.actions;
 
 import org.darkware.cltools.utils.FileSystemTools;
 import org.darkware.wpman.Config;
+import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.WPUpdatableComponent;
+import org.darkware.wpman.security.ChecksumDatabase;
+import org.darkware.wpman.security.DirectoryScanner;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFlag;
 
@@ -29,22 +32,61 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
+ * The {@code WPItemAutoInstall} is an abstract implementation of an {@link WPAction} that can perform
+ * installations and upgrades of updatable components (Themes and Plugins) with a respectable level of
+ * perseverance in the face of predictable errors. The actions are integrated with a
+ * {@link ChecksumDatabase} from the local context in order to suppress file change warnings during
+ * the auto-install and to recalculate checksums after the installation is complete.
+ * <p>
+ * In the majority of cases, installations and upgrades are simple, one-step processes. However, rare
+ * problems can result in failures that may result in disabled items, possibly with file system entries
+ * that prevent future attempts at fixing them. This action attempts to auto-detect problems and take
+ * appropriate actions to remedy them as soon as they are detected.
+ * <p>
+ * The classic situation is a failed upgrade. If an upgrade fails for whatever reason, one of the best
+ * remedies is to immediately attempt to perform a reinstall of the item.
+ * <p>
+ * This action takes the above logic and merges into a single decision tree that handles both installation
+ * and update requests, regardless of the initial state of the item being targeted. If the item is
+ * recognized by WordPress, its updated. If not, it is installed. Following that action, the item's
+ * existence is checked again. If it still doesn't exist, an install action is forced, hopefully replacing
+ * the failed files. Further checks are done, and a final judgement on the success of the action is
+ * returned.
+ *
  * @author jeff
  * @since 2016-02-14
  */
 public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends WPBasicAction<Boolean>
 {
+    /** The item ID which declares which item is being installed. */
     protected final String installToken;
+    /** The type of WordPress item being installed. Usually {@code theme} or {@code plugin}. */
     protected final String itemType;
+    /** The {@code ChecksumDatabase} tracking the file changes for this item. */
+    protected final ChecksumDatabase checksums;
 
+    /**
+     * Create a new {@code WPItemAutoInstall} instance.
+     *
+     * @param itemType The type of item to install.
+     * @param installToken The ID of the item to install.
+     */
     public WPItemAutoInstall(final String itemType, final String installToken)
     {
         super();
+
         this.installToken = installToken;
         this.itemType = itemType;
+        this.checksums = ContextManager.local().getContextualInstance(ChecksumDatabase.class);
     }
 
-    public String getItemType()
+    /**
+     * Fetch the type of item which is being installed. For now, this should be limited to just
+     * {@code theme} or {@code plugin}.
+     *
+     * @return The item type, as a {@code String}.
+     */
+    public final String getItemType()
     {
         return itemType;
     }
@@ -113,55 +155,97 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
         return true;
     }
 
+    /**
+     * Perform a standard item update. This attempts to do a simple update of the item with no checking or
+     * recovery. Those actions should be taken by calling code since the types of checking and recovery might
+     * differ depending on the situation. This method does properly suppress file change reports while files are
+     * changing.
+     */
     protected void doUpdate()
     {
-        WPCLI update = this.getWPCWpcliFactory().build(this.getItemType(), "update", this.installToken);
-
-        if (update.checkSuccess())
+        try
         {
-            WPManager.log.info("Installed {}: {}", this.getItemType(), this.installToken);
-        }
-        else
-        {
-            WPManager.log.warn("Failed to update {}: {}", this.getItemType(), this.installToken);
-        }
+            // Suppress change notices on the item directory
+            this.checksums.suppress(this.getItemDirectory());
 
-        this.expireItemContainer();
+            WPCLI update = this.getWPCWpcliFactory().build(this.getItemType(), "update", this.installToken);
+
+            if (update.checkSuccess())
+            {
+                WPManager.log.info("Installed {}: {}", this.getItemType(), this.installToken);
+            }
+            else
+            {
+                WPManager.log.warn("Failed to update {}: {}", this.getItemType(), this.installToken);
+            }
+
+        }
+        finally
+        {
+            this.expireItemContainer();
+            this.checksums.unsuppress(this.getItemDirectory());
+        }
     }
 
+    /**
+     * Perform a standard item install. This attempts to do a forced install of the item with no checking or
+     * recovery. Those actions should be taken by calling code since the types of checking and recovery might
+     * differ depending on the situation. This method does properly suppress file change reports while files are
+     * changing.
+     */
     protected void doInstall()
     {
-        // Move the existing directory, if it does exist
-        if (Files.exists(this.getItemDirectory()))
+        try
         {
-            try
+            // Suppress change notices on the item directory
+            this.checksums.suppress(this.getItemDirectory());
+
+            // Move the existing directory, if it does exist
+            if (Files.exists(this.getItemDirectory()))
             {
-                Path gutterDir = this.getGutterDirectory().resolve(this.installToken);
-                if (Files.exists(gutterDir)) FileSystemTools.deleteTree(gutterDir);
-                Files.move(this.getItemDirectory(), gutterDir);
+                try
+                {
+                    Path gutterDir = this.getGutterDirectory().resolve(this.installToken);
+                    if (Files.exists(gutterDir)) FileSystemTools.deleteTree(gutterDir);
+                    Files.move(this.getItemDirectory(), gutterDir);
+                }
+                catch (IOException e)
+                {
+                    WPManager.log.warn("Error while trying to move colliding directory to the gutter: {} : {}",
+                                       this.getItemDirectory(), e.getLocalizedMessage());
+                }
             }
-            catch (IOException e)
+
+            // Run an install
+            WPCLI update = this.getWPCWpcliFactory().build(this.getItemType(), "install", this.installToken);
+            update.loadThemes(false);
+            update.loadPlugins(false);
+            update.setOption(new WPCLIFlag("force"));
+
+            if (update.checkSuccess())
             {
-                WPManager.log.warn("Error while trying to move colliding directory to the gutter: {} : {}", this.getItemDirectory(), e.getLocalizedMessage());
+                WPManager.log.info("Installed {}: {}", this.getItemType(), this.installToken);
+            }
+            else
+            {
+                WPManager.log.warn("Failed to update {}: {}", this.getItemType(), this.installToken);
             }
         }
-
-        // Run an install
-        WPCLI update = this.getWPCWpcliFactory().build(this.getItemType(), "install", this.installToken);
-        update.loadThemes(false);
-        update.loadPlugins(false);
-        update.setOption(new WPCLIFlag("force"));
-
-        if (update.checkSuccess())
+        finally
         {
-            WPManager.log.info("Installed {}: {}", this.getItemType(), this.installToken);
+            this.expireItemContainer();
+            this.checksums.unsuppress(this.getItemDirectory());
         }
-        else
-        {
-            WPManager.log.warn("Failed to update {}: {}", this.getItemType(), this.installToken);
-        }
+    }
 
-        this.expireItemContainer();
+    /**
+     * Update the checksums for files associated with the named item.
+     */
+    protected void updateChecksums()
+    {
+        DirectoryScanner scanner = new DirectoryScanner(this.getItemDirectory(), this.checksums);
+        scanner.updateChecksums(true);
+        scanner.scan();
     }
 
     /**
@@ -180,6 +264,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
      * with intended target directories.
      *
      * @return An absolute path to the gutter directory for the current item type.
+     * @throws IOException if there is a problem moving files to the gutter directory.
      */
     protected Path getGutterDirectory() throws IOException
     {

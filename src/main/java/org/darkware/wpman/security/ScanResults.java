@@ -20,6 +20,7 @@ package org.darkware.wpman.security;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -99,5 +100,36 @@ public class ScanResults
     public Set<Path> getNewFiles()
     {
         return Collections.unmodifiableSet(newFiles);
+    }
+
+    /**
+     * Filter the current result set based on the suppressed entries from the given {@link ChecksumDatabase}.
+     * This operation should be done at the end of most scans, but it is not required as some situations may
+     * want the full raw comparison without suppression.
+     *
+     * @param database The database to filter against.
+     * @see ChecksumDatabase#isSuppressed(Path)
+     */
+    public void filterSuppressedEntries(final ChecksumDatabase database)
+    {
+        this.filterDescendants(this.missingFiles, database);
+        this.filterDescendants(this.changedFiles, database);
+        this.filterDescendants(this.newFiles, database);
+    }
+
+    /**
+     * Filter the entries in a given set against the suppressed entries of the given {@code ChecksumDatabase}.
+     *
+     * @param internalSet The {@code Set} to filter.
+     * @param database The {@code ChecksumDatabase} to consult for suppression.
+     */
+    protected void filterDescendants(final Set<Path> internalSet, final ChecksumDatabase database)
+    {
+        Iterator<Path> internalIterator = internalSet.iterator();
+        while(internalIterator.hasNext())
+        {
+            Path current = internalIterator.next();
+            if (database.isSuppressed(current)) internalIterator.remove();
+        }
     }
 }
