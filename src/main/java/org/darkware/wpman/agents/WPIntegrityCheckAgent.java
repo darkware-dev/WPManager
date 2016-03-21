@@ -74,17 +74,20 @@ public class WPIntegrityCheckAgent extends WPPeriodicAgent
         Set<Path> changedFiles = results.getChangedFiles();
         Set<Path> missingFiles = results.getMissingFiles();
 
-        WPManager.log.info("Integrity Scan: New files found: {}", newFiles.size());
-        WPManager.log.info("Integrity Scan: Changed files found: {}", changedFiles.size());
-        WPManager.log.info("Integrity Scan: Missing files found: {}", missingFiles.size());
+        if (results.foundChanges())
+        {
+            WPManager.log.info("Integrity Scan: New files found: {}", newFiles.size());
+            WPManager.log.info("Integrity Scan: Changed files found: {}", changedFiles.size());
+            WPManager.log.info("Integrity Scan: Missing files found: {}", missingFiles.size());
 
-        changedFiles.stream().forEach(p -> WPManager.log.warn("File changed: {}", p));
-        newFiles.stream().forEach(p -> WPManager.log.warn("New file found: {}", p));
+            changedFiles.stream().forEach(p -> WPManager.log.warn("File changed: {}", p));
+            newFiles.stream().forEach(p -> WPManager.log.warn("New file found: {}", p));
 
-        // Dispatch an event
-        this.getManager().dispatchEvent(new InstallationFileChange(results));
+            // Dispatch an event
+            this.getManager().dispatchEvent(new InstallationFileChange(results));
 
-        // Write the new state of the database
-        this.checksums.writeDatabase();
+            // Write the new state of the database
+            this.checksums.writeDatabase();
+        }
     }
 }

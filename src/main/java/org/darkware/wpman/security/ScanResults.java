@@ -103,6 +103,21 @@ public class ScanResults
     }
 
     /**
+     * Check to see if there are any changes found so far. If this result set is being used by a
+     * scanner, the result of this method may change over time. For the most reliable results, wait
+     * until a scan is complete before checking.
+     *
+     * @return {@code true} if there are changes found, {@code false} if no changes are seen.
+     */
+    public boolean foundChanges()
+    {
+        if (this.changedFiles.size() == 0 &&
+            this.newFiles.size() == 0 &&
+            this.missingFiles.size() == 0) return true;
+        else return false;
+    }
+
+    /**
      * Filter the current result set based on the suppressed entries from the given {@link ChecksumDatabase}.
      * This operation should be done at the end of most scans, but it is not required as some situations may
      * want the full raw comparison without suppression.
