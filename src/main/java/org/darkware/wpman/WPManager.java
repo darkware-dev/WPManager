@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * The {@code WPManager} is the central agent of the WPManager package. It represents the central controller
@@ -60,31 +59,20 @@ public class WPManager extends Thread
 
     private final ContextManager context;
 
-    private final Config config;
+    private final WPManagerConfiguration config;
     private final WPData data;
     private final WPCLIFactory builder;
     private final WPActionService actionService;
     private WPCronAgent cron;
     private final WPDataManager dataManager;
-    private final ConfigWatcher configWatcher;
     private final WPEventManager eventManager;
 
     /**
-     * Creates a new {@code WPManager} reading configuration from the given path.
+     * Creates a new {@code WPManager} with the given configuration.
      *
-     * @param configPath The path to read configuration from.
+     * @param config The configuration for the manager.
      */
-    public WPManager(final String configPath)
-    {
-        this(Paths.get(configPath));
-    }
-
-    /**
-     * Creates a new {@code WPManager} reading configuration from the given path.
-     *
-     * @param configPath The path to read configuration from.
-     */
-    public WPManager(final Path configPath)
+    public WPManager(final WPManagerConfiguration config)
     {
         super();
 
@@ -95,11 +83,8 @@ public class WPManager extends Thread
         // Register this manager
         context.registerInstance(this);
 
-        this.config = new Config(configPath);
+        this.config = config;
         context.registerInstance(this.config);
-
-        this.configWatcher = new ConfigWatcher(configPath);
-        context.registerInstance(this.configWatcher);
 
         this.eventManager = new WPEventManager();
         context.registerInstance(this.eventManager);
@@ -122,7 +107,7 @@ public class WPManager extends Thread
      *
      * @return The current configuration.
      */
-    public Config getConfig()
+    public WPManagerConfiguration getConfig()
     {
         return this.config;
     }
@@ -148,20 +133,6 @@ public class WPManager extends Thread
     public WPDataManager getDataManager()
     {
         return this.dataManager;
-    }
-
-    /**
-     * Load configuration data from the given {@link Path}. This may update or replace the current
-     * configuration, which in turn, may trigger other components to reconfigure themselves.
-     * Efforts are taken to retain thread-safe behavior, but some configuration modifications do not
-     * have defined correct behaviors in the case of reconfiguration during active actions. Whenever
-     * possible, configuration loading should be done before major interactions.
-     *
-     * @param configPath The path to load configuration from.
-     */
-    public void loadConfig(final Path configPath)
-    {
-        this.config.load(configPath);
     }
 
     /**
@@ -206,7 +177,7 @@ public class WPManager extends Thread
             //TODO: Check config to see if wP-CLI updates are allowed
             WPCLI.update();
         }
-        WPManager.log.info("WP Root at: {}", this.config.readVariable("wp.root"));
+        WPManager.log.info("WP Root at: {}", this.config.getWordpress().getBasePath());
 
         WPData report = new WPData();
 
@@ -216,9 +187,6 @@ public class WPManager extends Thread
         {
             WPManager.log.info("Update available for core: {}", report.getCore().getUpdateVersion());
         }
-
-        WPManager.log.info("Starting config monitoring service.");
-        this.configWatcher.start();
 
         // Initialize services
         PostNotificationService postNotify = new PostNotificationService();
@@ -278,8 +246,7 @@ public class WPManager extends Thread
      */
     public Path getWPRoot()
     {
-        //TODO: We could cache this
-        return Paths.get(this.config.readVariable("wp.root")).toAbsolutePath();
+        return this.config.getWordpress().getBasePath();
     }
 
     /**

@@ -17,8 +17,8 @@
 
 package org.darkware.wpman.security;
 
-import org.darkware.wpman.Config;
 import org.darkware.wpman.ContextManager;
+import org.darkware.wpman.WPManagerConfiguration;
 
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
@@ -40,7 +40,7 @@ import java.util.Set;
 public class DirectoryScanner extends SimpleFileVisitor<Path>
 {
     /** The configuration for the scanner. */
-    protected final Config config;
+    protected final WPManagerConfiguration config;
     /** The {@code ChecksumDatabase} this scanner checks files against. */
     protected final ChecksumDatabase checksums;
     private final Path root;
@@ -60,16 +60,16 @@ public class DirectoryScanner extends SimpleFileVisitor<Path>
     {
         super();
 
-        this.config = ContextManager.local().getContextualInstance(Config.class);
+        this.config = ContextManager.local().getContextualInstance(WPManagerConfiguration.class);
         this.checksums = checksums;
         this.root = root;
         this.pruneDirectories = new HashSet<>();
         this.ignoreFiles = new HashSet<>();
         this.results = new ScanResults(this.checksums.entriesForPath(root));
 
-        this.prune(this.config.readPath("wp.upload"));
-        this.prune(this.config.readPath("wp.gutter.plugin"));
-        this.prune(this.config.readPath("wp.gutter.theme"));
+        this.prune(this.config.getWordpress().getUploadDir());
+        this.prune(this.config.getWordpress().getPluginListConfig().getGutterDir());
+        this.prune(this.config.getWordpress().getThemeListConfig().getGutterDir());
 
         this.ignore(this.root.resolve("wp-content/debug.log"));
     }

@@ -15,34 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.darkware.wpman;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import org.darkware.wpman.wpcli.WPCLI;
-import org.slf4j.LoggerFactory;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
+package org.darkware.wpman.config;
 
 /**
- *
- *
+ * @author jeff
+ * @since 2016-03-28
  */
-public class App 
+public class PluginListConfig extends UpdatableCollectionConfig<PluginConfig>
 {
-    public static void main( String[] args )
+    @Override
+    protected PluginConfig defaultDetails(final String itemId)
     {
-        Path basePath = Paths.get(System.getProperty("wpman.dir"));
-        WPCLI.setPath(basePath.resolve("bin").resolve("wpcli"));
-
-        Logger rootLogger = (Logger)LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        rootLogger.setLevel(Level.INFO);
-
-        WPManager.log.info("Base directory is: {}", System.getProperty("wpman.dir"));
-
-        WPManager manager = new WPManager(args[0]);
-
-        manager.start();
+        return new PluginConfig(itemId);
     }
 }

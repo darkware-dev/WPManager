@@ -18,14 +18,13 @@
 package org.darkware.wpman.agents;
 
 import org.darkware.cltools.utils.ListFile;
-import org.darkware.wpman.Config;
 import org.darkware.wpman.WPManager;
+import org.darkware.wpman.WPManagerConfiguration;
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.data.WPUpdatableComponent;
 import org.joda.time.Duration;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -94,24 +93,20 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
 
     protected final Path getAutoInstallListPath()
     {
-        Config config = this.getManager().getConfig();
+        WPManagerConfiguration config = this.getManager().getConfig();
 
-        Path autoInstallListPath = config.readVariable(Config.buildKey(this.getObjectTypePlural(), "autoinstall"), Paths
-                .get(Config.buildKey(this.getObjectType(), "list")));
-        if (!autoInstallListPath.isAbsolute()) autoInstallListPath = config.getRootPath().resolve(autoInstallListPath);
+        Path autoInstallListPath = config.getWordpress().getUpdateableCollection(this.getObjectType()).getAutoInstallList();
 
         return autoInstallListPath;
     }
 
     protected final Path getIgnoreListPath()
     {
-        Config config = this.getManager().getConfig();
+        WPManagerConfiguration config = this.getManager().getConfig();
 
-        Path autoInstallListPath = config.readVariable(Config.buildKey(this.getObjectTypePlural(), "ignore"), Paths
-                .get(Config.buildKey(this.getObjectType(), "ignore")));
-        if (!autoInstallListPath.isAbsolute()) autoInstallListPath = config.getRootPath().resolve(autoInstallListPath);
+        Path ignoreList = config.getWordpress().getUpdateableCollection(this.getObjectType()).getIgnoreList();
 
-        return autoInstallListPath;
+        return ignoreList;
     }
 
     protected abstract Set<String> getInstalledItemIds();

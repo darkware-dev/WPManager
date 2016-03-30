@@ -31,7 +31,6 @@ import org.darkware.cltools.command.LineProcessReader;
 import org.darkware.cltools.command.ProcessReader;
 import org.darkware.cltools.command.StringProcessReader;
 import org.darkware.cltools.utils.CSV;
-import org.darkware.cltools.utils.FileSystemTools;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.data.WPSite;
@@ -82,7 +81,7 @@ public class WPCLI
     private static Path toolPath = Paths.get("/opt/wpcli/wp");
     public static void setPath(final Path toolPath)
     {
-        FileSystemTools.require(toolPath, "efrx");
+        //FileSystemTools.require(toolPath, "efrx");
         WPCLI.toolPath = toolPath;
     }
 

@@ -55,8 +55,8 @@ public class WPComponent
     /**
      * Builds a new {@link WPCLI} command definition for the given command group and arguments. This
      * is built against the associated {@code WPManager} instance according to the active
-     * {@link Config}. The {@code WPCLI} object will be ready for further configuration or execution
-     * as needed.
+     * {@link WPManagerConfiguration}. The {@code WPCLI} object will be ready for further configuration
+     * or execution as needed.
      *
      * @param group The WP-CLI command group to invoke.
      * @param command The WP-CLI command or command cluster to invoke.

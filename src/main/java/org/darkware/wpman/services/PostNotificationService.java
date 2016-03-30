@@ -52,7 +52,7 @@ public class PostNotificationService extends WPService
     {
         super.beforeActivation();
 
-        String postSiteName = this.getConfig().readVariable("notify.post.site");
+        String postSiteName = this.getConfig().getWordpress().getNotification().getPostNotification().getSite();
         this.postSite = this.getManager().getData().getSites().get(postSiteName);
         if (this.postSite == null) throw new IllegalStateException("Notification post site does not exist.");
     }

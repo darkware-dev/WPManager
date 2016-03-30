@@ -18,7 +18,7 @@
 package org.darkware.wpman.data;
 
 import com.google.gson.annotations.SerializedName;
-import org.darkware.wpman.Config;
+import org.darkware.wpman.config.UpdatableConfig;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -52,10 +52,10 @@ public abstract class WPUpdatableComponent extends WPDataComponent
 
     protected void readConfig()
     {
-        Config config = this.getManager().getConfig();
+        UpdatableConfig config = this.getManager().getConfig().getWordpress().getUpdateableCollection(this.getConfigSection()).getDetails(this.getId());
 
-        this.allowUpdates = config.readVariable(Config.buildKey(this.getConfigSection(), this.getId(), "update"), true);
-        this.updateLimit = config.readVariableObject(Config.buildKey(this.getConfigSection(), this.getId(), "updateLimit"), this.getVersion());
+        this.allowUpdates = config.getUpdatable();
+        this.updateLimit = config.getMaxVersion();
     }
 
     public final String getId()

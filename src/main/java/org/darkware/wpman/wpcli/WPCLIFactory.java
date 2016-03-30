@@ -17,9 +17,7 @@
 
 package org.darkware.wpman.wpcli;
 
-import org.darkware.wpman.Config;
-import org.darkware.wpman.ConfigListener;
-import org.darkware.wpman.WPManager;
+import org.darkware.wpman.WPManagerConfiguration;
 
 import java.nio.file.Path;
 
@@ -34,9 +32,9 @@ import java.nio.file.Path;
  * @author jeff
  * @since 2016-01-22
  */
-public class WPCLIFactory implements ConfigListener
+public class WPCLIFactory
 {
-    private final Config config;
+    private final WPManagerConfiguration config;
 
     private Path wordpressDir;
     private String defaultUrl;
@@ -48,13 +46,14 @@ public class WPCLIFactory implements ConfigListener
      *
      * @param config The configuration to attach the factory to.
      */
-    public WPCLIFactory(final Config config)
+    public WPCLIFactory(final WPManagerConfiguration config)
     {
         super();
 
         this.config = config;
-        this.config.addListener(this);
-        this.configChanged();
+
+        this.wordpressDir = this.config.getWordpress().getBasePath();
+        this.defaultUrl = this.config.getWordpress().getDefaultHost();
     }
 
     /**
@@ -76,14 +75,5 @@ public class WPCLIFactory implements ConfigListener
         if (this.defaultUrl != null) wpcli.setOption(new WPCLIOption<>("url", this.defaultUrl));
 
         return wpcli;
-    }
-
-    @Override
-    public void configChanged()
-    {
-        this.wordpressDir = this.config.readVariable("wp.root", (Path)null);
-        this.defaultUrl = this.config.readVariable("wp.baseurl");
-
-        WPManager.log.info("NEW BASE DIR: {}", this.wordpressDir);
     }
 }

@@ -15,13 +15,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.darkware.wpman;
+package org.darkware.wpman.config;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.darkware.wpman.data.Version;
 
 /**
  * @author jeff
- * @since 2016-01-31
+ * @since 2016-03-28
  */
-public interface ConfigListener
+public class UpdatableConfig
 {
-    void configChanged();
+    private Boolean updatable = true;
+
+    private Version maxVersion;
+
+    @JsonProperty("updatable")
+    public Boolean getUpdatable()
+    {
+        return updatable;
+    }
+
+    @JsonProperty("updatable")
+    public void setUpdatable(final Boolean updatable)
+    {
+        this.updatable = updatable;
+    }
+
+    @JsonProperty("maxVersion")
+    public Version getMaxVersion()
+    {
+        return maxVersion;
+    }
+
+    @JsonProperty("maxVersion")
+    public void setMaxVersion(final Version maxVersion)
+    {
+        this.maxVersion = maxVersion;
+    }
 }

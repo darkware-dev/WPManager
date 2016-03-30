@@ -17,9 +17,9 @@
 
 package org.darkware.wpman.agents;
 
-import org.darkware.wpman.Config;
 import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
+import org.darkware.wpman.WPManagerConfiguration;
 import org.darkware.wpman.events.InstallationFileChange;
 import org.darkware.wpman.security.ChecksumDatabase;
 import org.darkware.wpman.security.DirectoryScanner;
@@ -41,7 +41,7 @@ import java.util.Set;
  */
 public class WPIntegrityCheckAgent extends WPPeriodicAgent
 {
-    private final Config config;
+    private final WPManagerConfiguration config;
     private final ChecksumDatabase checksums;
 
     /**
@@ -51,14 +51,14 @@ public class WPIntegrityCheckAgent extends WPPeriodicAgent
     {
         super("integrity", Duration.standardMinutes(30));
 
-        this.config = ContextManager.local().getContextualInstance(Config.class);
+        this.config = ContextManager.local().getContextualInstance(WPManagerConfiguration.class);
         if (ContextManager.local().has(ChecksumDatabase.class))
         {
             this.checksums = ContextManager.local().getContextualInstance(ChecksumDatabase.class);
         }
         else
         {
-            this.checksums = new ChecksumDatabase(this.config.readPath("integrity.db"), this.config.readPath("wp.root"));
+            this.checksums = new ChecksumDatabase(this.config.getWordpress().getDataFile("integrityDb"), this.config.getWordpress().getBasePath());
             ContextManager.local().registerInstance(this.checksums);
         }
     }
@@ -66,7 +66,7 @@ public class WPIntegrityCheckAgent extends WPPeriodicAgent
     @Override
     public void executeAction()
     {
-        DirectoryScanner scanner = new DirectoryScanner(this.config.readPath("wp.root"), this.checksums);
+        DirectoryScanner scanner = new DirectoryScanner(this.config.getWordpress().getBasePath(), this.checksums);
         scanner.updateChecksums(true);
         ScanResults results = scanner.scan();
 

@@ -18,7 +18,6 @@
 package org.darkware.wpman.actions;
 
 import org.darkware.cltools.utils.FileSystemTools;
-import org.darkware.wpman.Config;
 import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.WPUpdatableComponent;
@@ -268,7 +267,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
      */
     protected Path getGutterDirectory() throws IOException
     {
-        Path gutter = this.getManager().getConfig().readPath(Config.buildKey("wp.gutter", this.getItemType()));
+        Path gutter = this.getManager().getConfig().getWordpress().getUpdateableCollection(this.getItemType()).getGutterDir();
         if (!Files.exists(gutter)) Files.createDirectories(gutter);
         return gutter;
     }
