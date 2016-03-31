@@ -17,7 +17,6 @@
 
 package org.darkware.wpman;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPActionService;
 import org.darkware.wpman.agents.WPCronAgent;
@@ -33,10 +32,12 @@ import org.darkware.wpman.events.WPStartupEvent;
 import org.darkware.wpman.services.PostNotificationService;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFactory;
+import org.joda.time.Seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.concurrent.ScheduledFuture;
 
 /**
  * The {@code WPManager} is the central agent of the WPManager package. It represents the central controller
@@ -64,10 +65,9 @@ public class WPManager extends Thread
     private final WPData data;
     private final WPCLIFactory builder;
     private final WPActionService actionService;
-    private WPCronAgent cron;
+    private final WPCronAgent cron;
     private final WPDataManager dataManager;
     private final WPEventManager eventManager;
-    private final ObjectMapper objectMapper;
 
     /**
      * Creates a new {@code WPManager} with the given configuration.
@@ -100,10 +100,8 @@ public class WPManager extends Thread
         this.data = new WPData();
         context.registerInstance(this.data);
 
+        this.cron = new WPLowLatencyCronAgent();
         this.actionService = new WPActionService();
-
-        // Try to grab a local ObjectMapper
-        this.objectMapper = context.getContextualInstance(ObjectMapper.class);
     }
 
     /**
@@ -115,6 +113,16 @@ public class WPManager extends Thread
     public WPManagerConfiguration getConfig()
     {
         return this.config;
+    }
+
+    /**
+     * Fetch the current agent responsible for handling cron executions.
+     *
+     * @return A {@link WPCronAgent} instance.
+     */
+    public WPCronAgent getCronAgent()
+    {
+        return this.cron;
     }
 
     /**
@@ -206,7 +214,6 @@ public class WPManager extends Thread
         this.actionService.schedule(integrity);
 
         WPManager.log.info("Starting cron runner.");
-        this.cron = new WPLowLatencyCronAgent();
         this.cron.startThread();
 
         this.dispatchEvent(new WPStartupEvent());
@@ -242,6 +249,17 @@ public class WPManager extends Thread
     public void scheduleAction(final WPAction action)
     {
         this.actionService.scheduleAction(action);
+    }
+
+    /**
+     * Schedule a new action against the associated WordPress instance. The action will be executed at
+     * the next available instant.
+     *
+     * @param action The {@code WPAction} to schedule.
+     */
+    public ScheduledFuture scheduleAction(final WPAction action, final int seconds)
+    {
+        return this.actionService.scheduleAction(action, Seconds.seconds(seconds));
     }
 
     /**

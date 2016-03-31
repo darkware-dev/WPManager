@@ -17,21 +17,15 @@
 
 package org.darkware.wpman.agents;
 
-import com.google.common.base.Objects;
 import org.darkware.wpman.actions.WPCronHookExec;
 import org.darkware.wpman.data.WPCronHook;
 import org.darkware.wpman.data.WPSite;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This {@link WPCronAgent} is designed to execute cron hooks in a manner that
@@ -56,7 +50,6 @@ import java.util.concurrent.TimeUnit;
 public class WPLowLatencyCronAgent extends WPCronAgent
 {
     private final ScheduledExecutorService cronExecutor;
-    private final Map<CronEvent, ScheduledFuture> scheduledEvents;
     private DateTime nextScan;
 
     /**
@@ -67,7 +60,6 @@ public class WPLowLatencyCronAgent extends WPCronAgent
     {
         super();
 
-        this.scheduledEvents = new HashMap<>();
         this.cronExecutor = Executors.newScheduledThreadPool(8);
     }
 
@@ -78,13 +70,13 @@ public class WPLowLatencyCronAgent extends WPCronAgent
         for (WPCronHook hook : site.getCron())
         {
             CronEvent event = new CronEvent(site, hook);
-            if (this.scheduledEvents.containsKey(event)) continue;
+            if (this.isEventScheduled(event)) continue;
 
             ScheduledFuture future = null;
 
             // Look for an existing event to group with
             CronEvent matching = null;
-            for (CronEvent e : scheduledEvents.keySet())
+            for (CronEvent e : this.getScheduledEvents())
             {
                 if (e.reasonablyCloseTo(event))
                 {
@@ -98,20 +90,20 @@ public class WPLowLatencyCronAgent extends WPCronAgent
                 WPCronHookExec action = new WPCronHookExec(site, hook);
                 event.attachAction(action);
                 int secondsUntilExec = Seconds.secondsBetween(now, hook.getNextRun()).getSeconds();
-                future = this.cronExecutor.schedule(action, secondsUntilExec, TimeUnit.SECONDS);
+                future = this.getManager().scheduleAction(action, secondsUntilExec);
             }
             else
             {
                 WPCronAgent.log.info("Found existing similar hook: {}", matching);
                 WPCronHookExec action = matching.getAction();
                 event.attachAction(action);
-                future = this.scheduledEvents.get(matching);
+                future = this.getScheduledFuture(matching);
             }
 
             WPCronAgent.log.info("Scheduling cron hook: {}::{} @ {}", site.getSubDomain(), hook.getHook(), hook.getNextRun());
 
             // Don't schedule the event again
-            this.scheduledEvents.put(event, future);
+            this.addToSchedule(event, future);
         }
     }
 
@@ -134,132 +126,6 @@ public class WPLowLatencyCronAgent extends WPCronAgent
         Thread.sleep(millisToNextScan);
     }
 
-    /**
-     * Cleans the cache of any hooks which have completed or are overly stale. Stale events
-     * are forcefully canceled.
-     */
-    protected void cleanHookCache()
-    {
-        Set<CronEvent> expired = new HashSet<>();
-        for (CronEvent event : this.scheduledEvents.keySet())
-        {
-            ScheduledFuture future = this.scheduledEvents.get(event);
 
-            // Check for overly stale events
-            if (future.getDelay(TimeUnit.SECONDS) < -120)
-            {
-                future.cancel(true);
-            }
 
-            if (future.isCancelled()) expired.add(event);
-            else if (future.isDone()) expired.add(event);
-        }
-
-        expired.stream().forEach(this.scheduledEvents::remove);
-    }
-
-    /**
-     * A helper class for storing {@link WPCronHook}s and associated objects.
-     */
-    private static class CronEvent
-    {
-        private final WPSite site;
-        private final String hook;
-        private final DateTime execTime;
-        private WPCronHookExec action;
-
-        /**
-         * Creates a new event associating the site, hook, and execution time.
-         *
-         * @param site The {@link WPSite} the hook executes against.
-         * @param hook The name of the hook to execute.
-         * @param execTime The requested execution time of the hook.
-         */
-        public CronEvent(final WPSite site, final String hook, final DateTime execTime)
-        {
-            super();
-
-            this.site = site;
-            this.hook = hook;
-            this.execTime = execTime.withMillisOfSecond(0);
-        }
-
-        /**
-         * Creates a new event associating the site and a {@link WPCronHook} instance.
-         *
-         * @param site The {@link WPSite} the hook executes against.
-         * @param cronHook The {@link WPCronHook} encapsulating the hook execution event.
-         */
-        public CronEvent(final WPSite site, final WPCronHook cronHook)
-        {
-            this(site, cronHook.getHook(), cronHook.getNextRun());
-        }
-
-        /**
-         * Attach a {@code WPCronHookExec} action to this event.
-         *
-         * @param action The action that executes this event.
-         */
-        public void attachAction(final WPCronHookExec action)
-        {
-            synchronized (this)
-            {
-                if (this.action != null) throw new IllegalStateException("Attempted to attach an action to an already attached event.");
-
-                this.action = action;
-            }
-        }
-
-        /**
-         * Fetch the {@code WPCronHookExec} action that is registered to execute this event.
-         *
-         * @return The {@code WPAction} that executes this event.
-         */
-        public WPCronHookExec getAction()
-        {
-            return this.action;
-        }
-
-        /**
-         * Checks to see if a given {@code CronEvent} is reasonably close to this event. Presumably
-         * this would be used to decide if the other event could piggyback onto the same execution action.
-         *
-         * @param check The {@code CronEvent} to check against.
-         * @return {@code true} if the event is from the same site and is reasonably close to the same
-         * execution time, otherwise {@code false}.
-         */
-        public boolean reasonablyCloseTo(final CronEvent check)
-        {
-            // Check the site
-            if (!this.site.equals(check.site)) return false;
-
-            // Check the time
-            if (Math.abs(Seconds.secondsBetween(this.execTime, check.execTime).getSeconds()) > 15) return false;
-
-            return true;
-        }
-
-        @Override
-        public boolean equals(final Object o)
-        {
-            if (this == o) return true;
-            if (!(o instanceof CronEvent)) return false;
-            final CronEvent cronEvent = (CronEvent) o;
-            return Objects.equal(site, cronEvent.site) &&
-                   Objects.equal(hook, cronEvent.hook) &&
-                   Objects.equal(execTime, cronEvent.execTime);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hashCode(site, hook, execTime);
-        }
-
-        @Override
-        public String toString()
-        {
-            return this.hook + "@" + this.execTime;
-        }
-    }
 }

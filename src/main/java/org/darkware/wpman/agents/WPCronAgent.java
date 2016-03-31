@@ -24,6 +24,12 @@ import org.darkware.wpman.data.WPSites;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -40,8 +46,9 @@ public abstract class WPCronAgent extends WPAgent
     /** The public logging facility for all agents. */
     protected final static Logger log = LoggerFactory.getLogger("Cron");
 
-    private final WPSites sites;
+    private WPSites sites;
     private final AtomicBoolean enabled;
+    private final Map<CronEvent, ScheduledFuture> scheduledEvents;
 
     /**
      * Creates a new agent, attached to the {@link WPManager} from the current thread's
@@ -52,7 +59,27 @@ public abstract class WPCronAgent extends WPAgent
         super("cron");
 
         this.enabled = new AtomicBoolean(true);
-        this.sites = this.getManager().getData().getSites();
+        this.scheduledEvents = new ConcurrentHashMap<>();
+    }
+
+    public Set<CronEvent> getScheduledEvents()
+    {
+        return this.scheduledEvents.keySet();
+    }
+
+    public boolean isEventScheduled(final CronEvent event)
+    {
+        return this.scheduledEvents.containsKey(event);
+    }
+
+    public ScheduledFuture getScheduledFuture(final CronEvent event)
+    {
+        return this.scheduledEvents.get(event);
+    }
+
+    protected void addToSchedule(final CronEvent event, final ScheduledFuture future)
+    {
+        this.scheduledEvents.put(event, future);
     }
 
     /**
@@ -62,6 +89,8 @@ public abstract class WPCronAgent extends WPAgent
      */
     public WPSites getSites()
     {
+        if (this.sites == null) this.sites = this.getManager().getData().getSites();
+
         return sites;
     }
 
@@ -77,6 +106,30 @@ public abstract class WPCronAgent extends WPAgent
         return this.enabled.get();
     }
 
+    /**
+     * Cleans the cache of any hooks which have completed or are overly stale. Stale events
+     * are forcefully canceled.
+     */
+    protected void cleanHookCache()
+    {
+        Set<CronEvent> expired = new HashSet<>();
+        for (CronEvent event : this.getScheduledEvents())
+        {
+            ScheduledFuture future = this.getScheduledFuture(event);
+
+            // Check for overly stale events
+            if (future.getDelay(TimeUnit.SECONDS) < -120)
+            {
+                future.cancel(true);
+            }
+
+            if (future.isCancelled()) expired.add(event);
+            else if (future.isDone()) expired.add(event);
+        }
+
+        expired.stream().forEach(this.scheduledEvents::remove);
+    }
+
     @Override
     public void executeAction()
     {
@@ -85,7 +138,7 @@ public abstract class WPCronAgent extends WPAgent
             while (this.enabled.get())
             {
                 this.preSiteScan();
-                for (WPSite site : this.sites)
+                for (WPSite site : this.getSites())
                 {
                     if (!this.enabled.get())
                     {
