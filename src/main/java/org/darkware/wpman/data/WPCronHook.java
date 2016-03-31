@@ -17,6 +17,7 @@
 
 package org.darkware.wpman.data;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.gson.annotations.SerializedName;
 import org.joda.time.DateTime;
@@ -28,7 +29,7 @@ import org.joda.time.DateTime;
 public class WPCronHook implements Comparable<WPCronHook>
 {
     private String hook;
-    @SerializedName("next_run") private DateTime nextRun;
+    @SerializedName("next_run") @JsonProperty("next_run") private DateTime nextRun;
 
     public WPCronHook()
     {

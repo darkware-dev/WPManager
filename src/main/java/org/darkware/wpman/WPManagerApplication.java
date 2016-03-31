@@ -17,14 +17,26 @@
 
 package org.darkware.wpman;
 
+import com.google.gson.GsonBuilder;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.darkware.wpman.data.Version;
+import org.darkware.wpman.rest.PluginResource;
+import org.darkware.wpman.rest.SiteResource;
+import org.darkware.wpman.rest.ThemeResource;
 import org.darkware.wpman.rest.UtilityResource;
 import org.darkware.wpman.rest.health.NoopHealthCheck;
+import org.darkware.wpman.util.JSONHelper;
 import org.darkware.wpman.util.serialization.PathModule;
+import org.darkware.wpman.util.serialization.PermissiveBooleanModule;
+import org.darkware.wpman.util.serialization.PluginStatusModule;
 import org.darkware.wpman.util.serialization.VersionModule;
+import org.darkware.wpman.util.serialization.WPDateModule;
 import org.darkware.wpman.wpcli.WPCLI;
+import org.darkware.wpman.wpcli.json.DateTimeSerializer;
+import org.darkware.wpman.wpcli.json.VersionSerializer;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,15 +66,31 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         // Register serialization helpers
         bootstrap.getObjectMapper().registerModule(new PathModule());
         bootstrap.getObjectMapper().registerModule(new VersionModule());
+        bootstrap.getObjectMapper().registerModule(new PluginStatusModule());
+        bootstrap.getObjectMapper().registerModule(new WPDateModule());
+        bootstrap.getObjectMapper().registerModule(new PermissiveBooleanModule());
+
+        ContextManager.local().registerInstance(bootstrap.getObjectMapper());
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+
+        gsonBuilder.registerTypeAdapter(DateTime.class, new DateTimeSerializer());
+        gsonBuilder.registerTypeAdapter(Version.class, new VersionSerializer());
+
+        //JSONHelper.use(gsonBuilder.create());
+        JSONHelper.use(bootstrap.getObjectMapper());
     }
 
     @Override
     public void run(WPManagerConfiguration configuration, Environment environment)
     {
         WPManagerApplication.log.info("WP-CLI is at: " + configuration.getWpcli().getBinaryPath());
+        WPManager manager = new WPManager(configuration);
 
-        final UtilityResource utils = new UtilityResource();
-        environment.jersey().register(utils);
+        environment.jersey().register(new UtilityResource());
+        environment.jersey().register(new PluginResource(manager));
+        environment.jersey().register(new ThemeResource(manager));
+        environment.jersey().register(new SiteResource(manager));
 
         final NoopHealthCheck healthCheck =  new NoopHealthCheck();
         environment.healthChecks().register("noop", healthCheck);
@@ -70,7 +98,6 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         // Initialize a WPManager
         WPCLI.setPath(configuration.getWpcli().getBinaryPath());
         if (Files.notExists(configuration.getWpcli().getBinaryPath())) WPCLI.update();
-        WPManager manager = new WPManager(configuration);
         manager.start();
     }
 }

@@ -17,7 +17,8 @@
 
 package org.darkware.wpman;
 
-import com.google.gson.reflect.TypeToken;
+//import com.google.gson.reflect.TypeToken;
+import com.google.common.reflect.TypeToken;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.data.WPCronHook;
 import org.darkware.wpman.data.WPPlugin;

@@ -17,6 +17,7 @@
 
 package org.darkware.wpman;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPActionService;
 import org.darkware.wpman.agents.WPCronAgent;
@@ -66,6 +67,7 @@ public class WPManager extends Thread
     private WPCronAgent cron;
     private final WPDataManager dataManager;
     private final WPEventManager eventManager;
+    private final ObjectMapper objectMapper;
 
     /**
      * Creates a new {@code WPManager} with the given configuration.
@@ -99,6 +101,9 @@ public class WPManager extends Thread
         context.registerInstance(this.data);
 
         this.actionService = new WPActionService();
+
+        // Try to grab a local ObjectMapper
+        this.objectMapper = context.getContextualInstance(ObjectMapper.class);
     }
 
     /**

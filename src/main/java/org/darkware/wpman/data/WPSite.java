@@ -17,8 +17,11 @@
 
 package org.darkware.wpman.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.gson.annotations.SerializedName;
+import org.darkware.wpman.WPManager;
 import org.joda.time.DateTime;
 
 /**
@@ -27,14 +30,14 @@ import org.joda.time.DateTime;
  */
 public class WPSite
 {
-    @SerializedName("blog_id") private int blogId;
-    @SerializedName("domain") private String domain;
-    @SerializedName("url") private String url;
-    @SerializedName("last_updated") private DateTime lastModified;
-    @SerializedName("registered") private DateTime creationDate;
+    @SerializedName("blog_id") @JsonProperty("blog_id") private int blogId;
+    @SerializedName("domain") @JsonProperty("domain") private String domain;
+    @SerializedName("url") @JsonProperty("url") private String url;
+    @SerializedName("last_updated") @JsonProperty("last_updated") private DateTime lastModified;
+    @SerializedName("registered") @JsonProperty("registered") private DateTime creationDate;
 
-    @SerializedName("public") private boolean searchable;
-    @SerializedName("deleted") private boolean deleted;
+    @SerializedName("public") @JsonProperty("public") private boolean searchable;
+    @SerializedName("deleted") @JsonProperty("deleted") private boolean deleted;
 
     private String subDomain;
     private final WPSitePlugins plugins;
@@ -122,6 +125,7 @@ public class WPSite
 
     public boolean isDeleted()
     {
+        WPManager.log.info("Site:" + this.getBlogId() + " deleted=" + this.deleted);
         return this.deleted;
     }
 
@@ -130,16 +134,19 @@ public class WPSite
         this.deleted = deleted;
     }
 
+    @JsonIgnore
     public WPSitePlugins getPlugins()
     {
         return plugins;
     }
 
+    @JsonIgnore
     public WPSiteTheme getTheme()
     {
         return this.theme;
     }
 
+    @JsonIgnore
     public WPCron getCron()
     {
         return this.cron;

@@ -17,6 +17,7 @@
 
 package org.darkware.wpman.data;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -25,7 +26,7 @@ import com.google.gson.annotations.SerializedName;
  */
 public class WPTheme extends WPUpdatableComponent
 {
-    @SerializedName("title") private String name;
+    @SerializedName("title") @JsonProperty("title") private String name;
     private String description;
 
     private WPThemeStatus status;

@@ -15,59 +15,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.darkware.wpman.data;
+package org.darkware.wpman.util;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+
+import java.lang.reflect.Type;
 
 /**
  * @author jeff
- * @since 2016-01-23
+ * @since 2016-03-30
  */
-public class WPPlugin extends WPUpdatableComponent
+public class JsonHelperGson extends JSONHelper
 {
-    @SerializedName("title") @JsonProperty("title") private String name;
-    private String description;
-    private WPPluginStatus status;
+    private Gson gson;
 
-    public WPPlugin()
+    protected JsonHelperGson(final Gson gson)
     {
         super();
+
+        this.gson = gson;
     }
 
-    @Override
-    protected String getConfigSection()
+    protected <T> T _fromJSON(final String json, final Type type)
     {
-        return "plugin";
+        try
+        {
+            return this.gson.fromJson(json, type);
+        }
+        catch (JsonSyntaxException e)
+        {
+            throw new JsonFormatException(e);
+        }
     }
 
-    public String getName()
+    protected <T> String _toJSON(final T object)
     {
-        return name;
-    }
-
-    public void setName(final String name)
-    {
-        this.name = name;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(final String description)
-    {
-        this.description = description;
-    }
-
-    public WPPluginStatus getStatus()
-    {
-        return status;
-    }
-
-    public void setStatus(final WPPluginStatus status)
-    {
-        this.status = status;
+        return this.gson.toJson(object);
     }
 }

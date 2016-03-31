@@ -24,6 +24,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.Valid;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -41,14 +42,14 @@ public class WordpressConfig
     private String defaultHost;
 
     @Valid
-    private PluginListConfig pluginListConfig;
+    private PluginListConfig pluginListConfig = new PluginListConfig();
 
     @Valid
-    private ThemeListConfig themeListConfig;
+    private ThemeListConfig themeListConfig = new ThemeListConfig();
 
-    private NotificationConfig notification;
+    private NotificationConfig notification = new NotificationConfig();
 
-    private Map<String, Path> dataFiles;
+    private Map<String, Path> dataFiles = new HashMap<>();
 
     /**
      * Fetch the path to the top level of the WordPress install

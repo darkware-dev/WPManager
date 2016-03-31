@@ -54,7 +54,7 @@ public class PathModule extends SimpleModule
         }
     }
 
-    public class PathDeserializer extends StdScalarDeserializer<Path>
+    public static class PathDeserializer extends StdScalarDeserializer<Path>
     {
         public PathDeserializer()
         {

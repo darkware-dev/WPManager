@@ -17,7 +17,9 @@
 
 package org.darkware.wpman.data;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
+import org.darkware.wpman.config.UpdatableCollectionConfig;
 import org.darkware.wpman.config.UpdatableConfig;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,9 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class WPUpdatableComponent extends WPDataComponent
 {
-    @SerializedName("name") private String id;
+    @SerializedName("name") @JsonProperty("name") private String id;
     private Version version;
-    @SerializedName("update_version") private Version latestVersion;
+    @SerializedName("update_version") @JsonProperty("update_version") private Version latestVersion;
 
     private AtomicBoolean configured;
     private boolean allowUpdates;
@@ -52,7 +54,8 @@ public abstract class WPUpdatableComponent extends WPDataComponent
 
     protected void readConfig()
     {
-        UpdatableConfig config = this.getManager().getConfig().getWordpress().getUpdateableCollection(this.getConfigSection()).getDetails(this.getId());
+        UpdatableCollectionConfig collectionConfig = this.getManager().getConfig().getWordpress().getUpdateableCollection(this.getConfigSection());
+        UpdatableConfig config = collectionConfig.getDetails(this.getId());
 
         this.allowUpdates = config.getUpdatable();
         this.updateLimit = config.getMaxVersion();

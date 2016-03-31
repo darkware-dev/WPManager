@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -36,7 +37,7 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig>
     private Path ignoreList;
     private Path baseDir;
     private Path gutterDir;
-    private Map<String, T> items;
+    private Map<String, T> items = new HashMap<>();
 
     @JsonIgnore
     public String getCollectionType()

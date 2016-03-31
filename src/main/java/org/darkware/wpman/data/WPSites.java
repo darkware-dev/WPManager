@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Stream;
 
 /**
  * @author jeff
@@ -64,5 +65,11 @@ public class WPSites extends WPDataComponent implements Iterable<WPSite>
     {
         this.checkRefresh();
         return this.sites.values().iterator();
+    }
+
+    public Stream<WPSite> stream()
+    {
+        this.checkRefresh();
+        return this.sites.values().stream();
     }
 }

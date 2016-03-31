@@ -15,59 +15,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.darkware.wpman.data;
+package org.darkware.wpman.util;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+
+import java.lang.reflect.Type;
 
 /**
  * @author jeff
- * @since 2016-01-23
+ * @since 2016-03-30
  */
-public class WPPlugin extends WPUpdatableComponent
+public abstract class JSONHelper
 {
-    @SerializedName("title") @JsonProperty("title") private String name;
-    private String description;
-    private WPPluginStatus status;
+    private static JSONHelper helper;
 
-    public WPPlugin()
+    public static void use(final Gson gson)
+    {
+        JSONHelper.helper = new JsonHelperGson(gson);
+    }
+
+    public static void use(final ObjectMapper mapper)
+    {
+        JSONHelper.helper = new JsonHelperJackson(mapper);
+    }
+
+    public static <T> T fromJSON(final String json, final Type type)
+    {
+        if (json.length() < 1) return null;
+        return JSONHelper.helper._fromJSON(json, type);
+    }
+
+    public static <T> String toJSON(final T object)
+    {
+        return JSONHelper.helper._toJSON(object);
+    }
+
+    protected JSONHelper()
     {
         super();
     }
 
-    @Override
-    protected String getConfigSection()
-    {
-        return "plugin";
-    }
+    protected abstract <T> T _fromJSON(final String json, final Type type);
 
-    public String getName()
-    {
-        return name;
-    }
+    protected abstract  <T> String _toJSON(final T object);
 
-    public void setName(final String name)
-    {
-        this.name = name;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(final String description)
-    {
-        this.description = description;
-    }
-
-    public WPPluginStatus getStatus()
-    {
-        return status;
-    }
-
-    public void setStatus(final WPPluginStatus status)
-    {
-        this.status = status;
-    }
 }

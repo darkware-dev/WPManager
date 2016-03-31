@@ -25,46 +25,63 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.darkware.wpman.data.Version;
+import org.darkware.wpman.WPManager;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.io.IOException;
 
 /**
  * @author jeff
- * @since 2016-03-28
+ * @since 2016-03-30
  */
-public class VersionModule extends SimpleModule
+public class WPDateModule extends SimpleModule
 {
-    public VersionModule()
+    private final static DateTimeFormatter format = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss");
+
+    public WPDateModule()
     {
         super();
 
-        this.addSerializer(Version.class, new VersionSerializer());
-        this.addDeserializer(Version.class, new VersionDeserializer());
+        this.addSerializer(DateTime.class, new PluginStatusSerializer());
+        this.addDeserializer(DateTime.class, new PluginStatusDeserializer());
     }
 
-    public static class VersionSerializer extends JsonSerializer<Version>
+    public static class PluginStatusSerializer extends JsonSerializer<DateTime>
     {
         @Override
-        public void serialize(final Version version, final JsonGenerator jsonGenerator,
+        public void serialize(final DateTime version, final JsonGenerator jsonGenerator,
                               final SerializerProvider serializerProvider) throws IOException, JsonProcessingException
         {
             jsonGenerator.writeString(version.toString());
         }
     }
 
-    public static class VersionDeserializer extends StdScalarDeserializer<Version>
+    public static class PluginStatusDeserializer extends StdScalarDeserializer<DateTime>
     {
-        public VersionDeserializer()
+        public PluginStatusDeserializer()
         {
-            super(Version.class);
+            super(DateTime.class);
         }
 
         @Override
-        public Version deserialize(final JsonParser jsonParser,
-                                final DeserializationContext deserializationContext) throws IOException, JsonProcessingException
+        public DateTime deserialize(final JsonParser jsonParser,
+                                   final DeserializationContext deserializationContext) throws IOException, JsonProcessingException
         {
-            return new Version(jsonParser.getValueAsString());
+            String dateString = jsonParser.getValueAsString();
+
+            if (dateString.startsWith("0000")) return null;
+
+            try
+            {
+                return DateTime.parse(dateString, WPDateModule.format);
+            }
+            catch (Throwable t)
+            {
+                WPManager.log.error("Error parsing date '" + dateString + "' in cron entry: " + t.getLocalizedMessage());
+                return DateTime.now();
+            }
         }
     }
 }

@@ -17,10 +17,7 @@
 
 package org.darkware.wpman.wpcli;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
+import com.google.common.reflect.TypeToken;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
@@ -34,15 +31,15 @@ import org.darkware.cltools.utils.CSV;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.data.WPSite;
-import org.darkware.wpman.wpcli.json.DateTimeSerializer;
-import org.darkware.wpman.wpcli.json.VersionSerializer;
-import org.joda.time.DateTime;
+import org.darkware.wpman.util.JSONHelper;
+import org.darkware.wpman.util.JsonFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.Channels;
@@ -149,17 +146,6 @@ public class WPCLI
             e.printStackTrace();
             System.exit(1);
         }
-    }
-
-    private static final Gson jsonAdapter = WPCLI.createJsonAdapter();
-    private static Gson createJsonAdapter()
-    {
-        GsonBuilder jsonBuilder = new GsonBuilder();
-
-        jsonBuilder.registerTypeAdapter(DateTime.class, new DateTimeSerializer());
-        jsonBuilder.registerTypeAdapter(Version.class, new VersionSerializer());
-
-        return jsonBuilder.create();
     }
 
     private final Command cmd;
@@ -298,10 +284,15 @@ public class WPCLI
 
     public <T> T readJSON(Class<T> dstType) throws WPCLIError
     {
-        return this.readJSON(TypeToken.get(dstType));
+        return this.readJSON(TypeToken.of(dstType));
     }
 
     public <T> T readJSON(TypeToken<T> dstType) throws WPCLIError
+    {
+        return this.readJSON(dstType.getType());
+    }
+
+    public <T> T readJSON(Type type) throws WPCLIError
     {
         String data = "";
         try
@@ -309,10 +300,12 @@ public class WPCLI
             this.setFormat(WPCLIFormat.JSON);
             data = this.execute();
 
-            return WPCLI.jsonAdapter.fromJson(data, dstType.getType());
+            return JSONHelper.fromJSON(data, type);
         }
-        catch (JsonSyntaxException e)
+        catch (JsonFormatException e)
         {
+            WPCLI.log.error("Error in JSON parsing.", e);
+            System.exit(1);
             throw new WPCLIError(this, "Syntax error in JSON response: " + this + " - Response was:\n" + data);
         }
         catch (IllegalStateException e)

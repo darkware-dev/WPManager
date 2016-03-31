@@ -25,46 +25,51 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.darkware.wpman.data.Version;
+import org.darkware.wpman.data.WPPluginStatus;
 
 import java.io.IOException;
 
 /**
  * @author jeff
- * @since 2016-03-28
+ * @since 2016-03-30
  */
-public class VersionModule extends SimpleModule
+public class PluginStatusModule extends SimpleModule
 {
-    public VersionModule()
+    public PluginStatusModule()
     {
         super();
 
-        this.addSerializer(Version.class, new VersionSerializer());
-        this.addDeserializer(Version.class, new VersionDeserializer());
+        this.addSerializer(WPPluginStatus.class, new PluginStatusSerializer());
+        this.addDeserializer(WPPluginStatus.class, new PluginStatusDeserializer());
     }
 
-    public static class VersionSerializer extends JsonSerializer<Version>
+    public static class PluginStatusSerializer extends JsonSerializer<WPPluginStatus>
     {
         @Override
-        public void serialize(final Version version, final JsonGenerator jsonGenerator,
+        public void serialize(final WPPluginStatus version, final JsonGenerator jsonGenerator,
                               final SerializerProvider serializerProvider) throws IOException, JsonProcessingException
         {
             jsonGenerator.writeString(version.toString());
         }
     }
 
-    public static class VersionDeserializer extends StdScalarDeserializer<Version>
+    public static class PluginStatusDeserializer extends StdScalarDeserializer<WPPluginStatus>
     {
-        public VersionDeserializer()
+        public PluginStatusDeserializer()
         {
-            super(Version.class);
+            super(WPPluginStatus.class);
         }
 
         @Override
-        public Version deserialize(final JsonParser jsonParser,
-                                final DeserializationContext deserializationContext) throws IOException, JsonProcessingException
+        public WPPluginStatus deserialize(final JsonParser jsonParser,
+                                   final DeserializationContext deserializationContext) throws IOException, JsonProcessingException
         {
-            return new Version(jsonParser.getValueAsString());
+            String versionString = jsonParser.getValueAsString().trim().toLowerCase();
+
+            if ("active".equals(versionString)) return WPPluginStatus.ACTIVE;
+            if ("active-network".equals(versionString)) return WPPluginStatus.NETWORK_ACTIVE;
+
+            return WPPluginStatus.INACTIVE;
         }
     }
 }
