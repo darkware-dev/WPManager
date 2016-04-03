@@ -17,7 +17,12 @@
 
 package org.darkware.wpman.actions;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.joda.time.DateTime;
+
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 /**
  * @author jeff
@@ -31,6 +36,7 @@ public interface WPAction<T> extends Callable<T>
      *
      * @return {@code true} if the action has a timeout, {@code false} if not.
      */
+    @JsonIgnore
     boolean hasTimeout();
 
     /**
@@ -39,6 +45,7 @@ public interface WPAction<T> extends Callable<T>
      *
      * @return The timeout, in seconds, or zero if no timeout is requested.
      */
+    @JsonProperty
     int getTimeout();
 
     /**
@@ -46,5 +53,66 @@ public interface WPAction<T> extends Callable<T>
      *
      * @return The description as a {@code String}.
      */
+    @JsonProperty
     String getDescription();
+
+    /**
+     * Fetch the state of this action. This declares where the action is in the normal execution
+     * lifecycle.
+     *
+     * @return The current {@link WPActionState}.
+     */
+    @JsonProperty
+    WPActionState getState();
+
+    /**
+     * Fetch the time this action was created.
+     *
+     * @return A {@code DateTime} representing the moment this action was created.
+     */
+    @JsonProperty
+    DateTime getCreationTime();
+
+    /**
+     * Fetch the time this action began execution.
+     *
+     * @return A {@code DateTime} representing the moment this action began execution, or {@code null}
+     * if the action has not started execution.
+     */
+    @JsonProperty
+    DateTime getStartTime();
+
+    /**
+     * Fetch the time this action completed execution, regardless of the outcome.
+     *
+     * @return A {@code DateTime} representing the moment this action finished execution, or {@code null}
+     * if the action has not yet finished (or began).
+     */
+    @JsonProperty
+    DateTime getCompletionTime();
+
+    /**
+     * Register an execution {@link Future} with this action. This can be used for various
+     * job-control functions.
+     * <p>
+     * It is assumed that any non-repeating action will have its {@code Future} associated with it
+     * via this method.
+     *
+     * @param future The {@code Future} for this action.
+     */
+    void registerFuture(Future<T> future);
+
+    /**
+     * Fetch the {@code Future} registered with this action.
+     *
+     * @return A {@code Future} for this action, or {@code null} if the action is not being executed.
+     */
+    @JsonIgnore
+    Future<T> getFuture();
+
+    /**
+     * Cancels this action, attempting to prevent future execution. This relies upon a registered
+     * {@link Future} via the {@link #registerFuture(Future)} method.
+     */
+    void cancel();
 }

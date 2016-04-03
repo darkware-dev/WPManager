@@ -22,6 +22,7 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.darkware.wpman.data.Version;
+import org.darkware.wpman.rest.ActionResource;
 import org.darkware.wpman.rest.CronResource;
 import org.darkware.wpman.rest.PluginResource;
 import org.darkware.wpman.rest.SiteResource;
@@ -33,6 +34,7 @@ import org.darkware.wpman.util.serialization.PathModule;
 import org.darkware.wpman.util.serialization.PermissiveBooleanModule;
 import org.darkware.wpman.util.serialization.PluginStatusModule;
 import org.darkware.wpman.util.serialization.VersionModule;
+import org.darkware.wpman.util.serialization.WPActionModule;
 import org.darkware.wpman.util.serialization.WPDateModule;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.json.DateTimeSerializer;
@@ -70,6 +72,7 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         bootstrap.getObjectMapper().registerModule(new PluginStatusModule());
         bootstrap.getObjectMapper().registerModule(new WPDateModule());
         bootstrap.getObjectMapper().registerModule(new PermissiveBooleanModule());
+        bootstrap.getObjectMapper().registerModule(new WPActionModule());
 
         ContextManager.local().registerInstance(bootstrap.getObjectMapper());
 
@@ -93,6 +96,7 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         environment.jersey().register(new ThemeResource(manager));
         environment.jersey().register(new SiteResource(manager));
         environment.jersey().register(new CronResource(manager));
+        environment.jersey().register(new ActionResource(manager));
 
         final NoopHealthCheck healthCheck =  new NoopHealthCheck();
         environment.healthChecks().register("noop", healthCheck);

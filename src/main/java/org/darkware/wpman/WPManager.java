@@ -241,6 +241,16 @@ public class WPManager extends Thread
     }
 
     /**
+     * Fetch the {@link WPActionService} used by this manager.
+     *
+     * @return A {@code WPActionService} which is initialized and attached to this manager.
+     */
+    public WPActionService getActionService()
+    {
+        return this.actionService;
+    }
+
+    /**
      * Schedule a new action against the associated WordPress instance. The action will be executed at
      * the next available instant.
      *

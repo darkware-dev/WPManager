@@ -21,6 +21,9 @@ import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFactory;
+import org.joda.time.DateTime;
+
+import java.util.concurrent.Future;
 
 /**
  * @author jeff
@@ -30,11 +33,21 @@ public abstract class WPBasicAction<T> implements WPAction<T>
 {
     protected final WPManager manager;
     private Integer timeout;
+    private WPActionState state;
+    protected Future<T> execFuture;
+
+    protected final DateTime creationTime;
+    protected DateTime startTime;
+    protected DateTime completionTime;
 
     public WPBasicAction()
     {
         super();
+
         this.manager = ContextManager.local().getContextualInstance(WPManager.class);
+        this.state = WPActionState.INITIALIZING;
+
+        this.creationTime = DateTime.now();
     }
 
     /**
@@ -73,6 +86,30 @@ public abstract class WPBasicAction<T> implements WPAction<T>
     }
 
     @Override
+    public DateTime getCreationTime()
+    {
+        return creationTime;
+    }
+
+    @Override
+    public DateTime getStartTime()
+    {
+        return startTime;
+    }
+
+    @Override
+    public DateTime getCompletionTime()
+    {
+        return completionTime;
+    }
+
+    @Override
+    public WPActionState getState()
+    {
+        return this.state;
+    }
+
+    @Override
     public boolean hasTimeout()
     {
         return (this.timeout != null);
@@ -85,12 +122,36 @@ public abstract class WPBasicAction<T> implements WPAction<T>
         else return 0;
     }
 
+    @Override
+    public void registerFuture(final Future<T> future)
+    {
+        this.execFuture = future;
+        this.state = WPActionState.SCHEDULED;
+    }
+
+    @Override
+    public Future<T> getFuture()
+    {
+        return this.execFuture;
+    }
+
     /**
      * Fetch a description of this action.
      *
      * @return The description as a {@code String}.
      */
     abstract public String getDescription();
+
+    @Override
+    public void cancel()
+    {
+        this.state = WPActionState.CANCELLED;
+        this.completionTime = DateTime.now();
+        if (this.getFuture() != null && !this.getFuture().isCancelled())
+        {
+            this.getFuture().cancel(true);
+        }
+    }
 
     /**
      * Execute this action.
@@ -102,6 +163,32 @@ public abstract class WPBasicAction<T> implements WPAction<T>
     @Override
     public final T call() throws Exception
     {
-        return this.exec();
+        if (this.state.equals(WPActionState.CANCELLED)) return null;
+        this.state = WPActionState.RUNNING;
+        this.startTime = DateTime.now();
+
+        TimeoutCop<T> watchdog = null;
+        if (this.hasTimeout() && this.execFuture != null)
+        {
+            watchdog = new TimeoutCop<>(this, this.execFuture);
+            watchdog.start();
+        }
+
+        try
+        {
+            T returnValue = this.exec();
+            this.state = WPActionState.COMPLETE;
+            return returnValue;
+        }
+        catch (Throwable t)
+        {
+            this.state = WPActionState.ERROR;
+            throw t;
+        }
+        finally
+        {
+            this.completionTime = DateTime.now();
+            if (watchdog != null && watchdog.isAlive()) watchdog.interrupt();
+        }
     }
 }

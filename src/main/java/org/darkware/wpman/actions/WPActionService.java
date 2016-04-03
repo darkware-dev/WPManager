@@ -18,61 +18,106 @@
 package org.darkware.wpman.actions;
 
 import org.darkware.wpman.WPComponent;
+import org.darkware.wpman.WPManager;
 import org.darkware.wpman.agents.WPPeriodicAgent;
+import org.eclipse.jetty.util.ConcurrentHashSet;
+import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ExecutionException;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
+ * The {@code WPActionService} is a service facade that provides helper methods to access and
+ * monitor a {@link ScheduledExecutorService}.
+ *
  * @author jeff
  * @since 2016-01-25
  */
 public class WPActionService extends WPComponent
 {
+    /** A {@code Logger} available for package use to log various execution messages. **/
     protected static final Logger log = LoggerFactory.getLogger("Actions");
 
     private final ScheduledExecutorService execService;
 
+    private final Set<WPPeriodicAgent> periodicAgents;
+    private final Set<WPAction> scheduledActions;
+
+    /**
+     * Creates a new {@code WPActionService}, along with its own {@link ScheduledExecutorService}
+     * with a fixed thread pool size.
+     */
     public WPActionService()
     {
         super();
 
         //TODO: Make this configurable
         this.execService = Executors.newScheduledThreadPool(4);
+
+        this.periodicAgents = new ConcurrentHashSet<>();
+        this.scheduledActions = new ConcurrentHashSet<>();
     }
 
+    /**
+     * Schedule the repeated execution of a {@link WPPeriodicAgent} on the service. This creates a
+     * repeated scheduling of the agent at a rate that is fixed to the {@code ScheduledExecutorService}.
+     * It does not extend the schedule based on the runtime of any particular invocation of the agent.
+     *
+     * @param agent The agent to schedule.
+     */
     public void schedule(final WPPeriodicAgent agent)
     {
         this.execService.scheduleAtFixedRate(agent, 0, agent.getPeriod(), TimeUnit.SECONDS);
+        this.periodicAgents.add(agent);
     }
 
-    public <T> void scheduleAction(final WPAction<T> action)
+    /**
+     * Schedule a {@code WPAction} for a single execution.
+     *
+     * @param action The action to execute.
+     * @param <T> The return type of the action.
+     * @return The {@link Future} for the action execution.
+     */
+    public <T> Future<T> scheduleAction(final WPAction<T> action)
     {
-        this.execService.submit(action);
-        if (action.hasTimeout())
-        {
-            Future<T> future = this.execService.submit(action);
-            if (action.hasTimeout())
-            {
-                TimeoutCop<T> enforcer = new TimeoutCop<>(action, future);
-                enforcer.start();
-            }
-        }
+        Future<T> future = this.execService.submit(action);
+        action.registerFuture(future);
+        this.scheduledActions.add(action);
+
+        return future;
     }
 
-    public ScheduledFuture scheduleAction(final WPAction action, Seconds delay)
+    /**
+     * Schedule an action with a delay before execution. This works in a similar way to
+     * {@link #scheduleAction(WPAction)}.
+     *
+     * @param action The action to execute.
+     * @param delay The amount of time to delay execution, as {@link Seconds}
+     * @param <T> The return type of the action.
+     * @return The {@link ScheduledFuture}
+     */
+    public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, Seconds delay)
     {
-        return this.execService.schedule(action, delay.getSeconds(), TimeUnit.SECONDS);
+        ScheduledFuture<T> future = this.execService.schedule(action, delay.getSeconds(), TimeUnit.SECONDS);
+        action.registerFuture(future);
+        this.scheduledActions.add(action);
+
+        return future;
     }
 
+    /**
+     * Shut down the service and terminate the associated {@code ExecutorService}. Any jobs that are
+     * currently executing will have a chance to complete. If they take longer than the shutdown timeout
+     * value, they will be forceably terminated via {@link Thread#interrupt()}.
+     */
     public void shutdown()
     {
         try
@@ -91,46 +136,55 @@ public class WPActionService extends WPComponent
         WPActionService.log.info("Action service has shut down.");
     }
 
-    private final class TimeoutCop<T> extends Thread
+    /**
+     * Fetch the {@code WPAction}s tracked by the service. This includes actions that are waiting to be
+     * executed and actions that have recently executed.
+     *
+     * @return An unmodifiable {@code Set} of {@code WPAction} objects.
+     */
+    public Set<WPAction> getActions()
     {
-        private final WPAction<T> action;
-        private final Future<T> actionFuture;
+        this.expireActions();
 
-        public TimeoutCop(final WPAction<T> action, final Future<T> actionFuture)
+        return Collections.unmodifiableSet(this.scheduledActions);
+    }
+
+    /**
+     * Clean the actions that are expired.
+     */
+    private void expireActions()
+    {
+        int before = this.scheduledActions.size();
+        this.scheduledActions.removeIf(this::isExpired);
+        int after = this.scheduledActions.size();
+
+        WPManager.log.info("Expired " + (before - after) + " actions.");
+    }
+
+    /**
+     * Checks to see if a given action should be expired from the list of tracked actions. An action is
+     * expired if it has reached a completed state &mdash;regardless of the result&mdash; beyond the
+     * grace period where actions are kept around for reporting.
+     * <p>
+     * In checking for completion, this method will attempt to resolve a state where the execution
+     * {@code Future} reports a cancelled execution but the action is not yet aware of that.
+     *
+     * @param action The {@code WPAction} to be checked.
+     * @return {@code true} if the action has passed the expiration for action tracking, {@code false} if
+     * it should continue to be tracked.
+     */
+    private boolean isExpired(final WPAction action)
+    {
+        if (action.getCompletionTime() == null && action.getFuture().isCancelled())
         {
-            super();
-
-            this.action = action;
-            this.actionFuture = actionFuture;
+            action.cancel();
         }
 
-        public void run()
-        {
-            try
-            {
-                if (action.hasTimeout())
-                {
-                    this.actionFuture.get(action.getTimeout(), TimeUnit.SECONDS);
-                }
-            }
-            catch (TimeoutException e)
-            {
-                WPActionService.log.warn("Canceled action due to immediate timeout request: " + this.action.getDescription());
-                this.actionFuture.cancel(true);
-            }
-            catch (InterruptedException e)
-            {
-                WPActionService.log.warn("Canceled action due to immediate timeout request: " + this.action.getDescription());
-                this.actionFuture.cancel(true);
-            }
-            catch (ExecutionException e)
-            {
-                WPActionService.log.warn("Timeout canceled due to action termination: " + this.action.getDescription());
-            }
-            catch (Throwable t)
-            {
-                WPActionService.log.warn("Timeout canceled due to abnormal error: " + this.action.getDescription() + " (" + t.getLocalizedMessage() + ")");
-            }
-        }
+        DateTime expireTime = DateTime.now().minusMinutes(15);
+
+        if (action.getCompletionTime() == null) return false;
+        if (action.getCompletionTime().isBefore(expireTime)) return true;
+
+        return false;
     }
 }
