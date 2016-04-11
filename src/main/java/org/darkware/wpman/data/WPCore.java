@@ -25,6 +25,7 @@ public class WPCore extends WPDataComponent
 {
     private Version version;
     private Version updateVersion;
+    private WPLanguage language;
 
     public WPCore()
     {
@@ -35,6 +36,9 @@ public class WPCore extends WPDataComponent
     protected void refreshBaseData()
     {
         this.loadVersion();
+        this.loadUpdateVersion();
+
+        this.language = this.getManager().getDataManager().getLanguage();
     }
 
     protected void loadVersion()
@@ -64,5 +68,10 @@ public class WPCore extends WPDataComponent
     public boolean hasUpdate()
     {
         return this.getUpdateVersion().greaterThan(this.getCoreVersion());
+    }
+
+    public WPLanguage getLanguage()
+    {
+        return language;
     }
 }

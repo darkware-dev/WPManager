@@ -23,6 +23,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.rest.ActionResource;
+import org.darkware.wpman.rest.CoreResource;
 import org.darkware.wpman.rest.CronResource;
 import org.darkware.wpman.rest.PluginResource;
 import org.darkware.wpman.rest.SiteResource;
@@ -97,6 +98,7 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         environment.jersey().register(new SiteResource(manager));
         environment.jersey().register(new CronResource(manager));
         environment.jersey().register(new ActionResource(manager));
+        environment.jersey().register(new CoreResource(manager));
 
         final NoopHealthCheck healthCheck =  new NoopHealthCheck();
         environment.healthChecks().register("noop", healthCheck);

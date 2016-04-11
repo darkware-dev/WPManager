@@ -21,12 +21,14 @@ package org.darkware.wpman;
 import com.google.common.reflect.TypeToken;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.data.WPCronHook;
+import org.darkware.wpman.data.WPLanguage;
 import org.darkware.wpman.data.WPPlugin;
 import org.darkware.wpman.data.WPSite;
 import org.darkware.wpman.data.WPTheme;
 import org.darkware.wpman.data.WPThemeStatus;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFieldsOption;
+import org.darkware.wpman.wpcli.WPCLIOption;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +57,19 @@ public class WPDataManager extends WPComponent
         List<List<String>> updateData = updateCmd.readCSV();
         if (updateData.size() < 1) return currentVersion;
         else return new Version(updateData.get(0).get(0));
+    }
+
+    public WPLanguage getLanguage()
+    {
+        WPCLI languageCmd = this.buildCommand("core", "language", "list");
+        languageCmd.loadPlugins(false);
+        languageCmd.loadThemes(false);
+        languageCmd.setOption(new WPCLIFieldsOption("language", "native_name"));
+        languageCmd.setOption(new WPCLIOption<>("status", "active"));
+
+        List<WPLanguage> languages = languageCmd.readJSON(new TypeToken<List<WPLanguage>>() {});
+
+        return languages.get(0);
     }
 
     public List<WPCronHook> getCronEvents(final WPSite site)
