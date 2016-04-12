@@ -22,13 +22,7 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.darkware.wpman.data.Version;
-import org.darkware.wpman.rest.ActionResource;
-import org.darkware.wpman.rest.CoreResource;
-import org.darkware.wpman.rest.CronResource;
-import org.darkware.wpman.rest.PluginResource;
-import org.darkware.wpman.rest.SiteResource;
-import org.darkware.wpman.rest.ThemeResource;
-import org.darkware.wpman.rest.UtilityResource;
+import org.darkware.wpman.rest.*;
 import org.darkware.wpman.rest.health.NoopHealthCheck;
 import org.darkware.wpman.util.JSONHelper;
 import org.darkware.wpman.util.serialization.PathModule;
@@ -93,6 +87,7 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         WPManager manager = new WPManager(configuration);
 
         environment.jersey().register(new UtilityResource());
+        environment.jersey().register(new ConfigResource(manager));
         environment.jersey().register(new PluginResource(manager));
         environment.jersey().register(new ThemeResource(manager));
         environment.jersey().register(new SiteResource(manager));
