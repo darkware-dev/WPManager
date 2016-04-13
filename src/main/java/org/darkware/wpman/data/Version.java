@@ -106,7 +106,7 @@ public class Version implements Comparable<Version>
         if (this == o) return true;
         if (!(o instanceof Version)) return false;
         final Version version = (Version) o;
-        return Objects.equal(parts, version.parts);
+        return version.compareTo(version) == 0;
     }
 
     @Override

@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author jeff
@@ -39,6 +40,16 @@ public class VersionTests
 
         assertEquals(0, a.compareTo(b));
         assertEquals(0, b.compareTo(a));
+    }
+
+    @Test
+    public void testCompare_twoelements()
+    {
+        Version a = new Version("4.5");
+        Version b = new Version("4.5");
+
+        assertTrue(a.equals(b));
+        assertTrue(b.equals(a));
     }
 
     @Test
