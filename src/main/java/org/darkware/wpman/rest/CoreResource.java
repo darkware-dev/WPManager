@@ -18,8 +18,8 @@
 package org.darkware.wpman.rest;
 
 import org.darkware.wpman.WPManager;
-import org.darkware.wpman.WPManagerConfiguration;
 import org.darkware.wpman.data.WPCore;
+import org.darkware.wpman.events.WPCoreUpdateRequest;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -27,6 +27,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 /**
+ * This is a REST resource servicing requests for WordPress core functionality.
+ *
  * @author jeff
  * @since 2016-04-05
  */
@@ -34,16 +36,24 @@ import javax.ws.rs.core.MediaType;
 public class CoreResource
 {
     private final WPManager manager;
-    private final WPManagerConfiguration config;
 
+    /**
+     * Create a new core REST handler.
+     *
+     * @param manager The {@link WPManager} to link to.
+     */
     public CoreResource(final WPManager manager)
     {
         super();
 
         this.manager = manager;
-        this.config = manager.getConfig();
     }
 
+    /**
+     * Fetch various information about WordPress core software and the installation as a whole.
+     *
+     * @return A {@link WPCore} data object.
+     */
     @GET
     @Path("info")
     @Produces(MediaType.APPLICATION_JSON)
@@ -52,4 +62,20 @@ public class CoreResource
         return this.manager.getData().getCore();
     }
 
+    /**
+     * Request a WordPress core software update. The method does not wait for the update to complete
+     * or even start. The request is dispatched and acknowledged, but may be canceled based on the lack
+     * of available updates or other restrictions.
+     *
+     * @return A message declaring the success or failure of the request dispatching.
+     */
+    @GET
+    @Path("update")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String update()
+    {
+        WPManager.log.info("Requesting WordPress Core update via REST");
+        this.manager.dispatchEvent(new WPCoreUpdateRequest(true));
+        return "Update Scheduled.";
+    }
 }

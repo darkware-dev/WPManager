@@ -28,6 +28,7 @@ import org.darkware.wpman.util.JSONHelper;
 import org.darkware.wpman.util.serialization.PathModule;
 import org.darkware.wpman.util.serialization.PermissiveBooleanModule;
 import org.darkware.wpman.util.serialization.PluginStatusModule;
+import org.darkware.wpman.util.serialization.TimeWindowModule;
 import org.darkware.wpman.util.serialization.VersionModule;
 import org.darkware.wpman.util.serialization.WPActionModule;
 import org.darkware.wpman.util.serialization.WPDateModule;
@@ -41,13 +42,22 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Files;
 
 /**
+ * The {@code WPManagerApplication} class is the primary application driver for the DropWizard framework.
+ *
  * @author jeff
  * @since 2016-03-26
  */
 public class WPManagerApplication extends Application<WPManagerConfiguration>
 {
+    /** A public {@code Logger} facility provided as a default logging destination. */
     public static Logger log = LoggerFactory.getLogger("Startup");
 
+    /**
+     * The primary entry point for DropWizard execution.
+     *
+     * @param args The command line arguments.
+     * @throws Exception If the application encounters an error.
+     */
     public static void main(String[] args) throws Exception
     {
         new WPManagerApplication().run(args);
@@ -68,6 +78,7 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         bootstrap.getObjectMapper().registerModule(new WPDateModule());
         bootstrap.getObjectMapper().registerModule(new PermissiveBooleanModule());
         bootstrap.getObjectMapper().registerModule(new WPActionModule());
+        bootstrap.getObjectMapper().registerModule(new TimeWindowModule());
 
         ContextManager.local().registerInstance(bootstrap.getObjectMapper());
 
@@ -76,7 +87,6 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         gsonBuilder.registerTypeAdapter(DateTime.class, new DateTimeSerializer());
         gsonBuilder.registerTypeAdapter(Version.class, new VersionSerializer());
 
-        //JSONHelper.use(gsonBuilder.create());
         JSONHelper.use(bootstrap.getObjectMapper());
     }
 

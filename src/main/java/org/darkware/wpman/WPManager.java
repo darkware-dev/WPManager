@@ -19,6 +19,7 @@ package org.darkware.wpman;
 
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPActionService;
+import org.darkware.wpman.agents.WPCoreUpdateAgent;
 import org.darkware.wpman.agents.WPCronAgent;
 import org.darkware.wpman.agents.WPIntegrityCheckAgent;
 import org.darkware.wpman.agents.WPLowLatencyCronAgent;
@@ -30,6 +31,8 @@ import org.darkware.wpman.events.WPEvent;
 import org.darkware.wpman.events.WPEventManager;
 import org.darkware.wpman.events.WPStartupEvent;
 import org.darkware.wpman.services.PostNotificationService;
+import org.darkware.wpman.services.UpdateService;
+import org.darkware.wpman.util.TimeWindow;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFactory;
 import org.joda.time.Seconds;
@@ -37,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 
 /**
@@ -204,12 +208,16 @@ public class WPManager extends Thread
         // Initialize services
         PostNotificationService postNotify = new PostNotificationService();
         postNotify.activate();
+        UpdateService updateService = new UpdateService();
+        updateService.activate();
 
         // Starting up agents
         WPPluginSync pluginSync = new WPPluginSync();
         this.actionService.schedule(pluginSync);
         WPThemeSync themeSync = new WPThemeSync();
         this.actionService.schedule(themeSync);
+        WPCoreUpdateAgent coreUpdater = new WPCoreUpdateAgent();
+        this.actionService.schedule(coreUpdater);
         WPIntegrityCheckAgent integrity = new WPIntegrityCheckAgent();
         this.actionService.schedule(integrity);
 
@@ -255,10 +263,11 @@ public class WPManager extends Thread
      * the next available instant.
      *
      * @param action The {@code WPAction} to schedule.
+     * @return The {@link Future} of the scheduled action.
      */
-    public void scheduleAction(final WPAction action)
+    public <T> Future<T> scheduleAction(final WPAction<T> action)
     {
-        this.actionService.scheduleAction(action);
+        return this.actionService.scheduleAction(action);
     }
 
     /**
@@ -266,10 +275,25 @@ public class WPManager extends Thread
      * the next available instant.
      *
      * @param action The {@code WPAction} to schedule.
+     * @param seconds The number of seconds to delay execution of the action.
+     * @return The {@link ScheduledFuture} of the action.
      */
-    public ScheduledFuture scheduleAction(final WPAction action, final int seconds)
+    public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, final int seconds)
     {
         return this.actionService.scheduleAction(action, Seconds.seconds(seconds));
+    }
+
+    /**
+     * Schedule a new action against the associated WordPress instance. The action will be executed at
+     * a random time within the given {@code TimeWindow}.
+     *
+     * @param action The {@code WPAction} to schedule.
+     * @param window The {@code TimeWindow} to execute the action within.
+     * @return The {@link ScheduledFuture} of the action.
+     */
+    public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, final TimeWindow window)
+    {
+        return this.actionService.scheduleAction(action, window);
     }
 
     /**
@@ -277,6 +301,7 @@ public class WPManager extends Thread
      *
      * @return A {@code Path} containing the absolute path to the WordPress installation.
      */
+    //TODO: Deprecate and remove this method
     public Path getWPRoot()
     {
         return this.config.getWordpress().getBasePath();
@@ -287,6 +312,7 @@ public class WPManager extends Thread
      *
      * @return An absolute {@code Path} to the plugin storage directory.
      */
+    //TODO: Deprecate and remove this method
     public Path getPluginDir()
     {
         return this.getWPRoot().resolve("wp-content/plugins");
@@ -297,6 +323,7 @@ public class WPManager extends Thread
      *
      * @return An absolute {@code Path} to the plugin storage directory.
      */
+    //TODO: Deprecate and remove this method
     public Path getThemeDir()
     {
         return this.getWPRoot().resolve("wp-content/themes");

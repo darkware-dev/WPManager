@@ -53,10 +53,13 @@ public class WPDataManager extends WPComponent
     public Version getCoreUpdateVersion(Version currentVersion)
     {
         WPCLI updateCmd = this.buildCommand("core", "check-update");
+        updateCmd.loadPlugins(false);
+        updateCmd.loadThemes(false);
 
         List<List<String>> updateData = updateCmd.readCSV();
-        if (updateData.size() < 1) return currentVersion;
-        else return new Version(updateData.get(0).get(0));
+        if (updateData.size() < 2) return currentVersion;
+
+        else return new Version(updateData.get(1).get(0));
     }
 
     public WPLanguage getLanguage()

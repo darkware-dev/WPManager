@@ -20,6 +20,7 @@ package org.darkware.wpman.actions;
 import org.darkware.wpman.WPComponent;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.agents.WPPeriodicAgent;
+import org.darkware.wpman.util.TimeWindow;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
@@ -111,6 +112,21 @@ public class WPActionService extends WPComponent
         this.scheduledActions.add(action);
 
         return future;
+    }
+
+    /**
+     * Schedule an action to occur within a given {@link TimeWindow}. This works in a similar way to
+     * {@link #scheduleAction(WPAction)}, but with a delay so the execution falls within the window.
+     *
+     * @param action The action to execute.
+     * @param window The {@code TimeWindow} the action should execute within.
+     * @param <T> The return type of the action.
+     * @return The {@link ScheduledFuture}
+     * @see #scheduleAction(WPAction, Seconds)
+     */
+    public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, final TimeWindow window)
+    {
+        return this.scheduleAction(action, window.getRandomOffset());
     }
 
     /**
