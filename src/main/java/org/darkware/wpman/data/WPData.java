@@ -54,25 +54,21 @@ public class WPData extends WPComponent
 
     public WPCore getCore()
     {
-        this.core.checkRefresh();
         return core;
     }
 
     public WPSites getSites()
     {
-        this.sites.checkRefresh();
         return sites;
     }
 
     public WPPlugins getPlugins()
     {
-        this.plugins.checkRefresh();
         return plugins;
     }
 
     public WPThemes getThemes()
     {
-        this.themes.checkRefresh();
         return themes;
     }
 }

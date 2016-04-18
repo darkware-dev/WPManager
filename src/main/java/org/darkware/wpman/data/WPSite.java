@@ -39,6 +39,9 @@ public class WPSite
     @SerializedName("public") @JsonProperty("public") private boolean searchable;
     @SerializedName("deleted") @JsonProperty("deleted") private boolean deleted;
 
+    @JsonProperty("users")
+    private final WPSiteUsers users;
+
     private String subDomain;
     private final WPSitePlugins plugins;
     private final WPCron cron;
@@ -51,6 +54,7 @@ public class WPSite
         this.plugins = new WPSitePlugins(this);
         this.theme = new WPSiteTheme(this);
         this.cron = new WPCron(this);
+        this.users = new WPSiteUsers(this);
     }
 
     public int getBlogId()
@@ -132,6 +136,16 @@ public class WPSite
     public void setDeleted(final boolean deleted)
     {
         this.deleted = deleted;
+    }
+
+    /**
+     * Fetch the users assigned to this site.
+     *
+     * @return A {@link WPSiteUsers} object attached to this site.
+     */
+    public WPSiteUsers getUsers()
+    {
+        return this.users;
     }
 
     @JsonIgnore

@@ -50,17 +50,19 @@ public class WPCore extends WPDataComponent
     protected void loadUpdateVersion()
     {
         WPData.log.debug("Checking for core update.");
-        this.updateVersion = this.getManager().getDataManager().getCoreUpdateVersion(this.getCoreVersion());
+        this.updateVersion = this.getManager().getDataManager().getCoreUpdateVersion(this.version);
     }
 
     public Version getCoreVersion()
     {
+        this.checkRefresh();
         if (this.version == null) this.loadVersion();
         return this.version;
     }
 
     public Version getUpdateVersion()
     {
+        this.checkRefresh();
         if (this.updateVersion == null) this.loadUpdateVersion();
         return this.updateVersion;
     }

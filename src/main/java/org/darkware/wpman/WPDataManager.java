@@ -18,20 +18,16 @@
 package org.darkware.wpman;
 
 //import com.google.gson.reflect.TypeToken;
+
 import com.google.common.reflect.TypeToken;
-import org.darkware.wpman.data.Version;
-import org.darkware.wpman.data.WPCronHook;
-import org.darkware.wpman.data.WPLanguage;
-import org.darkware.wpman.data.WPPlugin;
-import org.darkware.wpman.data.WPSite;
-import org.darkware.wpman.data.WPTheme;
-import org.darkware.wpman.data.WPThemeStatus;
+import org.darkware.wpman.data.*;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFieldsOption;
 import org.darkware.wpman.wpcli.WPCLIOption;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author jeff
@@ -152,6 +148,32 @@ public class WPDataManager extends WPComponent
         List<WPPlugin> plugins = new ArrayList<>();
 
         return plugins;
+    }
+
+    /**
+     * Fetch the set of users associated with a given site.
+     *
+     * @param site The site to fetch users for.
+     * @return A {@code Set} of {@link WPUser}s.
+     */
+    public Set<WPUser> getUsersForSite(final WPSite site)
+    {
+        WPCLI userListCmd = this.buildCommand("user", "list");
+        userListCmd.loadPlugins(false);
+        userListCmd.loadThemes(false);
+        userListCmd.setSite(site);
+
+        WPCLIFieldsOption fields = new WPCLIFieldsOption();
+        fields.add("ID");
+        fields.add("user_login");
+        fields.add("display_name");
+        fields.add("user_email");
+        fields.add("registered");
+        fields.add("roles");
+
+        userListCmd.setOption(fields);
+
+        return userListCmd.readJSON(new TypeToken<Set<WPUser>>() {});
     }
 
     public WPTheme getThemeForSite(final WPSite site)

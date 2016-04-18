@@ -20,9 +20,12 @@ package org.darkware.wpman.rest;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.WPManagerConfiguration;
 import org.darkware.wpman.data.WPSite;
+import org.darkware.wpman.data.WPSiteUsers;
+import org.darkware.wpman.data.WPSites;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
@@ -37,6 +40,7 @@ public class SiteResource
 {
     private final WPManager manager;
     private final WPManagerConfiguration config;
+    private final WPSites sites;
 
     public SiteResource(final WPManager manager)
     {
@@ -44,6 +48,7 @@ public class SiteResource
 
         this.manager = manager;
         this.config = manager.getConfig();
+        this.sites = manager.getData().getSites();
     }
 
     @GET
@@ -51,7 +56,14 @@ public class SiteResource
     @Produces(MediaType.APPLICATION_JSON)
     public List<WPSite> list()
     {
-        return this.manager.getData().getSites().stream().collect(Collectors.toList());
+        return this.sites.stream().collect(Collectors.toList());
     }
 
+    @GET
+    @Path("{site}/users")
+    @Produces(MediaType.APPLICATION_JSON)
+    public WPSiteUsers users(@PathParam("site") final String siteDomain)
+    {
+        return this.sites.get(siteDomain).getUsers();
+    }
 }
