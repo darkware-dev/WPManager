@@ -71,11 +71,11 @@ public class WPDataManager extends WPComponent
         return languages.get(0);
     }
 
-    public List<WPCronHook> getCronEvents(final WPSite site)
+    public List<WPCronHook> getCronEvents(final WPBlog blog)
     {
         WPCLI eventListCmd = this.buildCommand("cron", "event", "list");
         eventListCmd.loadThemes(false);
-        eventListCmd.setSite(site);
+        eventListCmd.setBlog(blog);
         eventListCmd.setOption(new WPCLIFieldsOption("hook", "next_run"));
 
         return eventListCmd.readJSON(new TypeToken<List<WPCronHook>>(){});
@@ -124,7 +124,7 @@ public class WPDataManager extends WPComponent
         return themeListCmd.readJSON(new TypeToken<List<WPTheme>>(){});
     }
 
-    public List<WPSite> getSites()
+    public List<WPBlog> getBlogs()
     {
         WPCLI listCmd = this.buildCommand("site", "list");
         listCmd.loadPlugins(false);
@@ -140,10 +140,10 @@ public class WPDataManager extends WPComponent
         fields.add("deleted");
         listCmd.setOption(fields);
 
-        return listCmd.readJSON(new TypeToken<List<WPSite>>(){});
+        return listCmd.readJSON(new TypeToken<List<WPBlog>>(){});
     }
 
-    public List<WPPlugin> getPluginsForSite(final WPSite site)
+    public List<WPPlugin> getPluginsForBlog(final WPBlog blog)
     {
         List<WPPlugin> plugins = new ArrayList<>();
 
@@ -151,17 +151,17 @@ public class WPDataManager extends WPComponent
     }
 
     /**
-     * Fetch the set of users associated with a given site.
+     * Fetch the set of users associated with a given blog.
      *
-     * @param site The site to fetch users for.
+     * @param blog The blog to fetch users for.
      * @return A {@code Set} of {@link WPUser}s.
      */
-    public Set<WPUser> getUsersForSite(final WPSite site)
+    public Set<WPUser> getUsersForBlog(final WPBlog blog)
     {
         WPCLI userListCmd = this.buildCommand("user", "list");
         userListCmd.loadPlugins(false);
         userListCmd.loadThemes(false);
-        userListCmd.setSite(site);
+        userListCmd.setBlog(blog);
 
         WPCLIFieldsOption fields = new WPCLIFieldsOption();
         fields.add("ID");
@@ -176,13 +176,13 @@ public class WPDataManager extends WPComponent
         return userListCmd.readJSON(new TypeToken<Set<WPUser>>() {});
     }
 
-    public WPTheme getThemeForSite(final WPSite site)
+    public WPTheme getThemeForBlog(final WPBlog blog)
     {
-        WPCLI siteTheme = this.getThemeListCommand();
-        siteTheme.setSite(site);
-        siteTheme.restrictList("status", WPThemeStatus.ACTIVE);
+        WPCLI blogTheme = this.getThemeListCommand();
+        blogTheme.setBlog(blog);
+        blogTheme.restrictList("status", WPThemeStatus.ACTIVE);
 
-        List<WPTheme> activeThemes = siteTheme.readJSON(new TypeToken<List<WPTheme>>(){});
+        List<WPTheme> activeThemes = blogTheme.readJSON(new TypeToken<List<WPTheme>>(){});
 
         return activeThemes.get(0);
     }

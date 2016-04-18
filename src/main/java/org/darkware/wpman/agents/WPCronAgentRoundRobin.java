@@ -19,8 +19,8 @@ package org.darkware.wpman.agents;
 
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.actions.WPCronHookExec;
+import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.data.WPCronHook;
-import org.darkware.wpman.data.WPSite;
 import org.joda.time.DateTime;
 
 /**
@@ -58,17 +58,17 @@ public class WPCronAgentRoundRobin extends WPCronAgent
     }
 
     @Override
-    protected void preSiteScan() throws InterruptedException
+    protected void preBlogScan() throws InterruptedException
     {
-        super.preSiteScan();
+        super.preBlogScan();
 
         this.nextScan = DateTime.now().plusSeconds(this.scanPeriod);
     }
 
     @Override
-    protected void postSiteScan() throws InterruptedException
+    protected void postBlogScan() throws InterruptedException
     {
-        super.postSiteScan();
+        super.postBlogScan();
 
         long millisToNextScan = Math.max(0, this.nextScan.getMillis() - DateTime.now().getMillis());
         Thread.sleep(millisToNextScan);
@@ -76,12 +76,12 @@ public class WPCronAgentRoundRobin extends WPCronAgent
 
 
     @Override
-    protected void handleCronEvents(final WPSite site) throws InterruptedException
+    protected void handleCronEvents(final WPBlog blog) throws InterruptedException
     {
-        for (WPCronHook hook : site.getCron().getWaitingHooks())
+        for (WPCronHook hook : blog.getCron().getWaitingHooks())
         {
-            WPCronHookExec action = new WPCronHookExec(site, hook);
-            WPManager.log.info("Scheduling cron run for hook: {}::{}", site.getDomain(), hook.getHook());
+            WPCronHookExec action = new WPCronHookExec(blog, hook);
+            WPManager.log.info("Scheduling cron run for hook: {}::{}", blog.getDomain(), hook.getHook());
             this.getManager().scheduleAction(action);
         }
     }

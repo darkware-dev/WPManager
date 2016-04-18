@@ -24,32 +24,32 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Stream;
 
 /**
- * The {@code WPSiteUsers} object acts as a proxy collection of {@link WPUser WPUsers} that are associated
- * with a particular {@link WPSite}.
+ * The {@code WPBlogUsers} object acts as a proxy collection of {@link WPUser WPUsers} that are associated
+ * with a particular {@link WPBlog}.
  *
  * @author jeff
  * @since 2016-04-15
  */
-public class WPSiteUsers extends WPDataComponent implements Iterable<WPUser>
+public class WPBlogUsers extends WPDataComponent implements Iterable<WPUser>
 {
-    private final WPSite site;
+    private final WPBlog blog;
     private final Map<Integer, WPUser> users;
 
     /**
-     * Creates a new collection of users attached to a {@code WPSite}.
+     * Creates a new collection of users attached to a {@code WPBlog}.
      *
-     * @param site The site to collect users for.
+     * @param blog The blog to collect users for.
      */
-    public WPSiteUsers(final WPSite site)
+    public WPBlogUsers(final WPBlog blog)
     {
         super();
 
-        this.site = site;
+        this.blog = blog;
         this.users = new ConcurrentSkipListMap<>();
     }
 
     /**
-     * Fetch a {@code Stream} users assigned to the attached site.
+     * Fetch a {@code Stream} users assigned to the attached blog.
      *
      * @return A {@link Stream} of {@link WPUser}s.
      */
@@ -69,7 +69,7 @@ public class WPSiteUsers extends WPDataComponent implements Iterable<WPUser>
     @Override
     protected void refreshBaseData()
     {
-        Set<WPUser> current = this.getManager().getDataManager().getUsersForSite(this.site);
+        Set<WPUser> current = this.getManager().getDataManager().getUsersForBlog(this.blog);
 
         // Remove all items not in the current set
         this.users.entrySet().removeIf(e -> !current.contains(e.getValue()));

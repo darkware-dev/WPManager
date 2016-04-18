@@ -21,9 +21,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
 import org.darkware.wpman.actions.WPCronHookExec;
+import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.data.WPCronHook;
-import org.darkware.wpman.data.WPSite;
-import org.darkware.wpman.util.serialization.MinimalSiteSerializer;
+import org.darkware.wpman.util.serialization.MinimalBlogSerializer;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 
@@ -34,38 +34,38 @@ import java.util.Comparator;
  */
 public class CronEvent
 {
-    @JsonSerialize(using = MinimalSiteSerializer.class)
-    private final WPSite site;
+    @JsonSerialize(using = MinimalBlogSerializer.class)
+    private final WPBlog blog;
     private final String hook;
     private final DateTime execTime;
     @JsonIgnore
     private WPCronHookExec action;
 
     /**
-     * Creates a new event associating the site, hook, and execution time.
+     * Creates a new event associating the blog, hook, and execution time.
      *
-     * @param site The {@link WPSite} the hook executes against.
+     * @param blog The {@link WPBlog} the hook executes against.
      * @param hook The name of the hook to execute.
      * @param execTime The requested execution time of the hook.
      */
-    public CronEvent(final WPSite site, final String hook, final DateTime execTime)
+    public CronEvent(final WPBlog blog, final String hook, final DateTime execTime)
     {
         super();
 
-        this.site = site;
+        this.blog = blog;
         this.hook = hook;
         this.execTime = execTime.withMillisOfSecond(0);
     }
 
     /**
-     * Creates a new event associating the site and a {@link WPCronHook} instance.
+     * Creates a new event associating the blog and a {@link WPCronHook} instance.
      *
-     * @param site The {@link WPSite} the hook executes against.
+     * @param blog The {@link WPBlog} the hook executes against.
      * @param cronHook The {@link WPCronHook} encapsulating the hook execution event.
      */
-    public CronEvent(final WPSite site, final WPCronHook cronHook)
+    public CronEvent(final WPBlog blog, final WPCronHook cronHook)
     {
-        this(site, cronHook.getHook(), cronHook.getNextRun());
+        this(blog, cronHook.getHook(), cronHook.getNextRun());
     }
 
     /**
@@ -98,13 +98,13 @@ public class CronEvent
      * this would be used to decide if the other event could piggyback onto the same execution action.
      *
      * @param check The {@code CronEvent} to check against.
-     * @return {@code true} if the event is from the same site and is reasonably close to the same
+     * @return {@code true} if the event is from the same blog and is reasonably close to the same
      * execution time, otherwise {@code false}.
      */
     public boolean reasonablyCloseTo(final CronEvent check)
     {
-        // Check the site
-        if (!this.site.equals(check.site)) return false;
+        // Check the blog
+        if (!this.blog.equals(check.blog)) return false;
 
         // Check the time
         if (Math.abs(Seconds.secondsBetween(this.execTime, check.execTime).getSeconds()) > 15) return false;
@@ -112,9 +112,9 @@ public class CronEvent
         return true;
     }
 
-    public WPSite getSite()
+    public WPBlog getBlog()
     {
-        return site;
+        return blog;
     }
 
     public DateTime getExecTime()
@@ -133,7 +133,7 @@ public class CronEvent
         if (this == o) return true;
         if (!(o instanceof CronEvent)) return false;
         final CronEvent cronEvent = (CronEvent) o;
-        return Objects.equal(site, cronEvent.site) &&
+        return Objects.equal(blog, cronEvent.blog) &&
                Objects.equal(hook, cronEvent.hook) &&
                Objects.equal(execTime, cronEvent.execTime);
     }
@@ -141,7 +141,7 @@ public class CronEvent
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(site, hook, execTime);
+        return Objects.hashCode(blog, hook, execTime);
     }
 
     @Override

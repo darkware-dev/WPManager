@@ -21,7 +21,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import org.darkware.wpman.data.WPSite;
+import org.darkware.wpman.data.WPBlog;
 
 import java.io.IOException;
 
@@ -29,15 +29,15 @@ import java.io.IOException;
  * @author jeff
  * @since 2016-03-31
  */
-public class MinimalSiteSerializer extends JsonSerializer<WPSite>
+public class MinimalBlogSerializer extends JsonSerializer<WPBlog>
 {
     @Override
-    public void serialize(final WPSite wpSite, final JsonGenerator jsonGenerator,
+    public void serialize(final WPBlog wpBlog, final JsonGenerator jsonGenerator,
                           final SerializerProvider serializerProvider) throws IOException, JsonProcessingException
     {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeNumberField("blog_id", wpSite.getBlogId());
-        jsonGenerator.writeStringField("subDomain", wpSite.getSubDomain());
+        jsonGenerator.writeNumberField("blog_id", wpBlog.getBlogId());
+        jsonGenerator.writeStringField("subDomain", wpBlog.getSubDomain());
         jsonGenerator.writeEndObject();
     }
 }

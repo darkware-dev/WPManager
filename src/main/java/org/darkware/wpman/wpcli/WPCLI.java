@@ -30,7 +30,7 @@ import org.darkware.cltools.command.StringProcessReader;
 import org.darkware.cltools.utils.CSV;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.Version;
-import org.darkware.wpman.data.WPSite;
+import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.util.JSONHelper;
 import org.darkware.wpman.util.JsonFormatException;
 import org.slf4j.Logger;
@@ -196,9 +196,9 @@ public class WPCLI
         this.options.remove(name);
     }
 
-    public void setSite(final WPSite site)
+    public void setBlog(final WPBlog blog)
     {
-        this.setOption(new WPCLIOption<>("url", site.getDomain()));
+        this.setOption(new WPCLIOption<>("url", blog.getDomain()));
     }
 
     public void restrictList(final String fieldName, final Object value)

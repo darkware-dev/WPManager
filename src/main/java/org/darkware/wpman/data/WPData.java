@@ -30,7 +30,7 @@ public class WPData extends WPComponent
     protected static final Logger log = LoggerFactory.getLogger("Data");
 
     private final WPCore core;
-    private final WPSites sites;
+    private final WPBlogs blogs;
     private final WPPlugins plugins;
     private final WPThemes themes;
 
@@ -39,7 +39,7 @@ public class WPData extends WPComponent
         super();
 
         this.core = new WPCore();
-        this.sites = new WPSites();
+        this.blogs = new WPBlogs();
         this.plugins = new WPPlugins();
         this.themes = new WPThemes();
     }
@@ -47,7 +47,7 @@ public class WPData extends WPComponent
     public final void refresh()
     {
         this.core.refresh();
-        this.sites.refresh();
+        this.blogs.refresh();
         this.plugins.refresh();
         this.themes.refresh();
     }
@@ -57,9 +57,9 @@ public class WPData extends WPComponent
         return core;
     }
 
-    public WPSites getSites()
+    public WPBlogs getBlogs()
     {
-        return sites;
+        return blogs;
     }
 
     public WPPlugins getPlugins()

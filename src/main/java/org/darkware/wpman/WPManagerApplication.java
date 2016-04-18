@@ -100,7 +100,7 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         environment.jersey().register(new ConfigResource(manager));
         environment.jersey().register(new PluginResource(manager));
         environment.jersey().register(new ThemeResource(manager));
-        environment.jersey().register(new SiteResource(manager));
+        environment.jersey().register(new BlogResource(manager));
         environment.jersey().register(new CronResource(manager));
         environment.jersey().register(new ActionResource(manager));
         environment.jersey().register(new CoreResource(manager));

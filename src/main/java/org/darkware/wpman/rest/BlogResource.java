@@ -19,9 +19,9 @@ package org.darkware.wpman.rest;
 
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.WPManagerConfiguration;
-import org.darkware.wpman.data.WPSite;
-import org.darkware.wpman.data.WPSiteUsers;
-import org.darkware.wpman.data.WPSites;
+import org.darkware.wpman.data.WPBlog;
+import org.darkware.wpman.data.WPBlogUsers;
+import org.darkware.wpman.data.WPBlogs;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -35,35 +35,35 @@ import java.util.stream.Collectors;
  * @author jeff
  * @since 2016-03-30
  */
-@Path("/site")
-public class SiteResource
+@Path("/blog")
+public class BlogResource
 {
     private final WPManager manager;
     private final WPManagerConfiguration config;
-    private final WPSites sites;
+    private final WPBlogs blogs;
 
-    public SiteResource(final WPManager manager)
+    public BlogResource(final WPManager manager)
     {
         super();
 
         this.manager = manager;
         this.config = manager.getConfig();
-        this.sites = manager.getData().getSites();
+        this.blogs = manager.getData().getBlogs();
     }
 
     @GET
     @Path("list")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<WPSite> list()
+    public List<WPBlog> list()
     {
-        return this.sites.stream().collect(Collectors.toList());
+        return this.blogs.stream().collect(Collectors.toList());
     }
 
     @GET
-    @Path("{site}/users")
+    @Path("{blog}/users")
     @Produces(MediaType.APPLICATION_JSON)
-    public WPSiteUsers users(@PathParam("site") final String siteDomain)
+    public WPBlogUsers users(@PathParam("blog") final String blogDomain)
     {
-        return this.sites.get(siteDomain).getUsers();
+        return this.blogs.get(blogDomain).getUsers();
     }
 }

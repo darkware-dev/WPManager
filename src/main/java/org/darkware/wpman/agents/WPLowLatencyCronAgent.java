@@ -18,8 +18,8 @@
 package org.darkware.wpman.agents;
 
 import org.darkware.wpman.actions.WPCronHookExec;
+import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.data.WPCronHook;
-import org.darkware.wpman.data.WPSite;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 
@@ -64,12 +64,12 @@ public class WPLowLatencyCronAgent extends WPCronAgent
     }
 
     @Override
-    protected void handleCronEvents(final WPSite site) throws InterruptedException
+    protected void handleCronEvents(final WPBlog blog) throws InterruptedException
     {
         DateTime now = DateTime.now();
-        for (WPCronHook hook : site.getCron())
+        for (WPCronHook hook : blog.getCron())
         {
-            CronEvent event = new CronEvent(site, hook);
+            CronEvent event = new CronEvent(blog, hook);
             if (this.isEventScheduled(event)) continue;
 
             ScheduledFuture future = null;
@@ -87,7 +87,7 @@ public class WPLowLatencyCronAgent extends WPCronAgent
 
             if (matching == null)
             {
-                WPCronHookExec action = new WPCronHookExec(site, hook);
+                WPCronHookExec action = new WPCronHookExec(blog, hook);
                 event.attachAction(action);
                 int secondsUntilExec = Seconds.secondsBetween(now, hook.getNextRun()).getSeconds();
                 future = this.getManager().scheduleAction(action, secondsUntilExec);
@@ -100,7 +100,7 @@ public class WPLowLatencyCronAgent extends WPCronAgent
                 future = this.getScheduledFuture(matching);
             }
 
-            WPCronAgent.log.info("Scheduling cron hook: {}::{} @ {}", site.getSubDomain(), hook.getHook(), hook.getNextRun());
+            WPCronAgent.log.info("Scheduling cron hook: {}::{} @ {}", blog.getSubDomain(), hook.getHook(), hook.getNextRun());
 
             // Don't schedule the event again
             this.addToSchedule(event, future);
@@ -108,17 +108,17 @@ public class WPLowLatencyCronAgent extends WPCronAgent
     }
 
     @Override
-    protected void preSiteScan() throws InterruptedException
+    protected void preBlogScan() throws InterruptedException
     {
-        super.preSiteScan();
+        super.preBlogScan();
 
         this.nextScan = DateTime.now().plusMinutes(5);
     }
 
     @Override
-    protected void postSiteScan() throws InterruptedException
+    protected void postBlogScan() throws InterruptedException
     {
-        super.postSiteScan();
+        super.postBlogScan();
 
         this.cleanHookCache();
 

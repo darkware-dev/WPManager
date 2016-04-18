@@ -29,21 +29,21 @@ import java.util.concurrent.ConcurrentSkipListSet;
  */
 public class WPCron extends WPDataComponent implements Iterable<WPCronHook>
 {
-    private final WPSite site;
+    private final WPBlog blog;
     private final Set<WPCronHook> hooks;
 
-    public WPCron(final WPSite site)
+    public WPCron(final WPBlog blog)
     {
         super();
 
-        this.site = site;
+        this.blog = blog;
         this.hooks = new ConcurrentSkipListSet<>();
     }
 
     @Override
     protected void refreshBaseData()
     {
-        List<WPCronHook> hookData = this.getManager().getDataManager().getCronEvents(site);
+        List<WPCronHook> hookData = this.getManager().getDataManager().getCronEvents(blog);
 
         this.hooks.clear();
         if (hookData == null) return;

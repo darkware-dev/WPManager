@@ -22,7 +22,7 @@ import com.google.common.base.Objects;
 import org.joda.time.DateTime;
 
 /**
- * A {@code WPUser} is an individual record of a user in relation to a given {@link WPSite}.
+ * A {@code WPUser} is an individual record of a user in relation to a given {@link WPBlog}.
  *
  * @author jeff
  * @since 2016-04-13

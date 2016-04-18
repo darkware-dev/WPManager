@@ -18,7 +18,7 @@
 package org.darkware.wpman.actions;
 
 import org.darkware.wpman.WPManager;
-import org.darkware.wpman.data.WPSite;
+import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIError;
 
@@ -28,19 +28,19 @@ import org.darkware.wpman.wpcli.WPCLIError;
  */
 public class WPDatabaseUpdate extends WPBasicAction<Boolean>
 {
-    private final WPSite site;
+    private final WPBlog blog;
 
-    public WPDatabaseUpdate(final WPSite site)
+    public WPDatabaseUpdate(final WPBlog blog)
     {
         super();
 
-        this.site = site;
+        this.blog = blog;
     }
 
     @Override
     public String getDescription()
     {
-        return "Updating database schema for site: " + this.site.getSubDomain();
+        return "Updating database schema for blog: " + this.blog.getSubDomain();
     }
 
     @Override
@@ -51,16 +51,16 @@ public class WPDatabaseUpdate extends WPBasicAction<Boolean>
             WPCLI updateDb = this.getManager().getBuilder().build("core", "update-db");
             updateDb.loadPlugins(false);
             updateDb.loadThemes(false);
-            updateDb.setSite(site);
+            updateDb.setBlog(this.blog);
 
             updateDb.execute();
-            WPManager.log.info("Updated database for site: {}", site.getSubDomain());
+            WPManager.log.info("Updated database for blog: {}", this.blog.getSubDomain());
 
             return true;
         }
         catch (WPCLIError error)
         {
-            WPManager.log.error("Error updating core database for {}: {}", site.getSubDomain(), error.getLocalizedMessage());
+            WPManager.log.error("Error updating core database for {}: {}", this.blog.getSubDomain(), error.getLocalizedMessage());
 
             return false;
         }

@@ -28,7 +28,7 @@ import org.joda.time.DateTime;
  * @author jeff
  * @since 2016-01-23
  */
-public class WPSite
+public class WPBlog
 {
     @SerializedName("blog_id") @JsonProperty("blog_id") private int blogId;
     @SerializedName("domain") @JsonProperty("domain") private String domain;
@@ -40,21 +40,21 @@ public class WPSite
     @SerializedName("deleted") @JsonProperty("deleted") private boolean deleted;
 
     @JsonProperty("users")
-    private final WPSiteUsers users;
+    private final WPBlogUsers users;
 
     private String subDomain;
-    private final WPSitePlugins plugins;
+    private final WPBlogPlugins plugins;
     private final WPCron cron;
-    private WPSiteTheme theme;
+    private WPBlogTheme theme;
 
-    public WPSite()
+    public WPBlog()
     {
         super();
 
-        this.plugins = new WPSitePlugins(this);
-        this.theme = new WPSiteTheme(this);
+        this.plugins = new WPBlogPlugins(this);
+        this.theme = new WPBlogTheme(this);
         this.cron = new WPCron(this);
-        this.users = new WPSiteUsers(this);
+        this.users = new WPBlogUsers(this);
     }
 
     public int getBlogId()
@@ -129,7 +129,7 @@ public class WPSite
 
     public boolean isDeleted()
     {
-        WPManager.log.info("Site:" + this.getBlogId() + " deleted=" + this.deleted);
+        WPManager.log.info("Blog:" + this.getBlogId() + " deleted=" + this.deleted);
         return this.deleted;
     }
 
@@ -139,23 +139,23 @@ public class WPSite
     }
 
     /**
-     * Fetch the users assigned to this site.
+     * Fetch the users assigned to this blog.
      *
-     * @return A {@link WPSiteUsers} object attached to this site.
+     * @return A {@link WPBlogUsers} object attached to this blog.
      */
-    public WPSiteUsers getUsers()
+    public WPBlogUsers getUsers()
     {
         return this.users;
     }
 
     @JsonIgnore
-    public WPSitePlugins getPlugins()
+    public WPBlogPlugins getPlugins()
     {
         return plugins;
     }
 
     @JsonIgnore
-    public WPSiteTheme getTheme()
+    public WPBlogTheme getTheme()
     {
         return this.theme;
     }
@@ -170,9 +170,9 @@ public class WPSite
     public boolean equals(final Object o)
     {
         if (this == o) return true;
-        if (!(o instanceof WPSite)) return false;
-        final WPSite wpSite = (WPSite) o;
-        return blogId == wpSite.blogId;
+        if (!(o instanceof WPBlog)) return false;
+        final WPBlog wpBlog = (WPBlog) o;
+        return blogId == wpBlog.blogId;
     }
 
     @Override

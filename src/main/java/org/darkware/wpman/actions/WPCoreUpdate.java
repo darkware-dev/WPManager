@@ -19,7 +19,7 @@ package org.darkware.wpman.actions;
 
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.Version;
-import org.darkware.wpman.data.WPSite;
+import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.wpcli.WPCLI;
 
 /**
@@ -81,9 +81,9 @@ public class WPCoreUpdate extends WPBasicAction<Boolean>
                 WPManager.log.info("Updated WordPress core to {}", newVersion);
             }
 
-            for (WPSite site : this.getManager().getData().getSites())
+            for (WPBlog blog : this.getManager().getData().getBlogs())
             {
-                final WPDatabaseUpdate updateAction = new WPDatabaseUpdate(site);
+                final WPDatabaseUpdate updateAction = new WPDatabaseUpdate(blog);
                 this.getManager().scheduleAction(updateAction);
             }
 

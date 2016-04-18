@@ -19,8 +19,8 @@ package org.darkware.wpman.agents;
 
 import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
-import org.darkware.wpman.data.WPSite;
-import org.darkware.wpman.data.WPSites;
+import org.darkware.wpman.data.WPBlog;
+import org.darkware.wpman.data.WPBlogs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +46,7 @@ public abstract class WPCronAgent extends WPAgent
     /** The public logging facility for all agents. */
     protected final static Logger log = LoggerFactory.getLogger("Cron");
 
-    private WPSites sites;
+    private WPBlogs blogs;
     private final AtomicBoolean enabled;
     private final Map<CronEvent, ScheduledFuture> scheduledEvents;
 
@@ -83,15 +83,15 @@ public abstract class WPCronAgent extends WPAgent
     }
 
     /**
-     * Fetch the collection of {@link WPSite}s to inspect for cron hooks.
+     * Fetch the collection of {@link WPBlog}s to inspect for cron hooks.
      *
-     * @return A {@code WPSites} collection object.
+     * @return A {@code WPBlogs} collection object.
      */
-    public WPSites getSites()
+    public WPBlogs getBlogs()
     {
-        if (this.sites == null) this.sites = this.getManager().getData().getSites();
+        if (this.blogs == null) this.blogs = this.getManager().getData().getBlogs();
 
-        return sites;
+        return this.blogs;
     }
 
     /**
@@ -137,8 +137,8 @@ public abstract class WPCronAgent extends WPAgent
         {
             while (this.enabled.get())
             {
-                this.preSiteScan();
-                for (WPSite site : this.getSites())
+                this.preBlogScan();
+                for (WPBlog blog : this.getBlogs())
                 {
                     if (!this.enabled.get())
                     {
@@ -146,10 +146,10 @@ public abstract class WPCronAgent extends WPAgent
                         return;
                     }
 
-                    WPCronAgent.log.debug("Processing cron events for {}", site.getDomain());
-                    this.handleCronEvents(site);
+                    WPCronAgent.log.debug("Processing cron events for {}", blog.getDomain());
+                    this.handleCronEvents(blog);
                 }
-                this.postSiteScan();
+                this.postBlogScan();
             }
         }
         catch (InterruptedException e)
@@ -163,32 +163,32 @@ public abstract class WPCronAgent extends WPAgent
     }
 
     /**
-     * Performs any necessary operations prior to beginning a scan of sites for cron events.
-     * This is a popular place for performing initialization or bookkeeping prior to a site scan.
+     * Performs any necessary operations prior to beginning a scan of blogs for cron events.
+     * This is a popular place for performing initialization or bookkeeping prior to a blog scan.
      *
      * @throws InterruptedException If the thread is interrupted
      */
-    protected void preSiteScan() throws InterruptedException
+    protected void preBlogScan() throws InterruptedException
     {
         // Do nothing
     }
 
     /**
-     * Performs any necessary operations following the completion a scan of sites for cron events.
+     * Performs any necessary operations following the completion a scan of blogs for cron events.
      * This is a popular place to put per-scan-round time delays or cleanup routines.
      *
      * @throws InterruptedException If the thread is interrupted
      */
-    protected void postSiteScan() throws InterruptedException
+    protected void postBlogScan() throws InterruptedException
     {
         // Do nothing
     }
 
     /**
-     * Analyzes the given site for cron events to run.
+     * Analyzes the given blog for cron events to run.
      *
-     * @param site The {@link WPSite} to analyze.
+     * @param blog The {@link WPBlog} to analyze.
      * @throws InterruptedException If the thread is interrupted
      */
-    protected abstract void handleCronEvents(final WPSite site) throws InterruptedException;
+    protected abstract void handleCronEvents(final WPBlog blog) throws InterruptedException;
 }

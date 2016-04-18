@@ -25,17 +25,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class PostNotificationConfig
 {
-    private String site;
+    private String blog;
 
-    @JsonProperty("site")
-    public String getSite()
+    @JsonProperty("blog")
+    public String getBlog()
     {
-        return site;
+        return blog;
     }
 
-    @JsonProperty("site")
-    public void setSite(final String site)
+    @JsonProperty("blog")
+    public void setBlog(final String blog)
     {
-        this.site = site;
+        this.blog = blog;
     }
 }

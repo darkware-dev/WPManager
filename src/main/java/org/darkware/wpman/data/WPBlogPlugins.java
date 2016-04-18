@@ -17,32 +17,32 @@
 
 package org.darkware.wpman.data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
+ *
+ *
  * @author jeff
  * @since 2016-01-31
  */
-public class WPSiteTheme extends WPDataComponent
+public class WPBlogPlugins extends WPDataComponent
 {
-    private final WPSite site;
-    private WPTheme theme;
+    private final WPBlog blog;
+    private final List<WPPlugin> plugins;
 
-    public WPSiteTheme(final WPSite site)
+    public WPBlogPlugins(final WPBlog blog)
     {
         super();
 
-        this.site = site;
-    }
-
-    public WPTheme activeTheme()
-    {
-        this.checkRefresh();
-        return this.theme;
+        this.blog = blog;
+        this.plugins = new ArrayList<>();
     }
 
     @Override
     protected void refreshBaseData()
     {
-        WPData.log.info("Loading active theme for site: {}", this.site.getBlogId());
-        this.theme = this.getManager().getDataManager().getThemeForSite(this.site);
+        this.plugins.clear();
+        this.plugins.addAll(this.getManager().getDataManager().getPluginsForBlog(this.blog));
     }
 }

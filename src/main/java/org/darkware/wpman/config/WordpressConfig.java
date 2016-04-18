@@ -83,7 +83,7 @@ public class WordpressConfig
 
     /**
      * Fetches the default hostname to use when issuing WP-CLI commands. This will be overridden for
-     * most site-related invocations, but for instance-wide commands WordPress still likes getting a
+     * most blog-related invocations, but for instance-wide commands WordPress still likes getting a
      * valid, configured host declaration.
      *
      * @return The default hostname to use.
@@ -195,7 +195,7 @@ public class WordpressConfig
     /**
      * Sets the base upload directory used the WordPress media library.
      *
-     * @param uploadDir The root directory for all sites uploaded files.
+     * @param uploadDir The root directory for all blogs' uploaded files.
      */
     @JsonProperty("uploadDir")
     public void setUploadDir(final Path uploadDir)

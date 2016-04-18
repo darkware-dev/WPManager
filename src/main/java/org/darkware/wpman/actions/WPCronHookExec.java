@@ -17,8 +17,8 @@
 
 package org.darkware.wpman.actions;
 
+import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.data.WPCronHook;
-import org.darkware.wpman.data.WPSite;
 import org.darkware.wpman.wpcli.WPCLIFormat;
 
 import java.util.HashSet;
@@ -31,18 +31,18 @@ import java.util.stream.Collectors;
  */
 public class WPCronHookExec extends WPCLIAction
 {
-    private final WPSite site;
+    private final WPBlog blog;
     private final Set<WPCronHook> hooks;
 
-    public WPCronHookExec(final WPSite site, final WPCronHook cron)
+    public WPCronHookExec(final WPBlog blog, final WPCronHook cron)
     {
         super("cron", "event", "run", cron.getHook());
 
-        this.site = site;
+        this.blog = blog;
         this.hooks = new HashSet<>();
         this.addHook(cron);
 
-        this.getCommand().setSite(site);
+        this.getCommand().setBlog(blog);
         this.getCommand().loadThemes(false);
         this.getCommand().setFormat(WPCLIFormat.DEFAULT);
 
@@ -63,6 +63,6 @@ public class WPCronHookExec extends WPCLIAction
     @Override
     public String getDescription()
     {
-        return "Cron::" + this.site.getDomain() + " [" + this.hooks.stream().map(h -> h.getHook()).collect(Collectors.joining(", ")) + "]";
+        return "Cron::" + this.blog.getDomain() + " [" + this.hooks.stream().map(h -> h.getHook()).collect(Collectors.joining(", ")) + "]";
     }
 }

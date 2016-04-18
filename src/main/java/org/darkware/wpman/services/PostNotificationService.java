@@ -18,7 +18,7 @@
 package org.darkware.wpman.services;
 
 import com.google.common.eventbus.Subscribe;
-import org.darkware.wpman.data.WPSite;
+import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.events.WPStartupEvent;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIOption;
@@ -37,7 +37,7 @@ public class PostNotificationService extends WPService
 {
     protected static final Logger log = LoggerFactory.getLogger("PostNotify");
 
-    public WPSite postSite;
+    public WPBlog postBlog;
 
     /**
      * Create a new {@code PostNotificationService} based on the current context.
@@ -52,16 +52,16 @@ public class PostNotificationService extends WPService
     {
         super.beforeActivation();
 
-        String postSiteName = this.getConfig().getWordpress().getNotification().getPostNotification().getSite();
-        this.postSite = this.getManager().getData().getSites().get(postSiteName);
-        if (this.postSite == null) throw new IllegalStateException("Notification post site does not exist.");
+        String postBlogName = this.getConfig().getWordpress().getNotification().getPostNotification().getBlog();
+        this.postBlog = this.getManager().getData().getBlogs().get(postBlogName);
+        if (this.postBlog == null) throw new IllegalStateException("Notification post blog does not exist.");
     }
 
     protected WPCLI createPost(final String title)
     {
         WPCLI poster = this.getManager().getBuilder().build("post", "create", "-");
 
-        poster.setSite(this.postSite);
+        poster.setBlog(this.postBlog);
         //poster.setOption(new WPCLIOption<>("post_type", "page"));
         poster.setOption(new WPCLIOption<>("post_title", title));
         poster.setOption(new WPCLIOption<>("post_status", "publish"));
