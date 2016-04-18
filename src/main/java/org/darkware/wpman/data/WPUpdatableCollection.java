@@ -33,35 +33,39 @@ import java.util.stream.Stream;
  */
 public abstract class WPUpdatableCollection<T extends WPUpdatableComponent> extends WPDataComponent implements Iterable<T>
 {
+    private final String collectionName;
     private final Map<String, T> internalList;
 
     /**
      * Create a new collection of updatable items.
+     *
+     * @param collectionName An identifiable name for this collection. This is commonly used in logging or
+     * various outputs to identify the collection being used.
      */
-    public WPUpdatableCollection()
+    public WPUpdatableCollection(final String collectionName)
     {
         super();
 
+        this.collectionName = collectionName;
         this.internalList = new ConcurrentSkipListMap<>();
     }
 
     @Override
     protected final void refreshBaseData()
     {
+        WPData.log.info("Refreshing collection: {}", this.collectionName);
         List<T> rawList = this.fetchNewItems();
 
         // Get a set of all new plugin ids
         Set<String> newIds = rawList.stream().map(WPUpdatableComponent::getId).collect(Collectors.toSet());
 
         // Remove all current plugins not in the new set
-        this.internalList.keySet().stream().filter(id -> !newIds.contains(id)).forEach(this.internalList::remove);
+        this.internalList.keySet().removeIf(id -> !newIds.contains(id));
 
         // Update all new plugin data
-        for (T plug : rawList)
-        {
-            WPData.log.debug("Loaded plugin info: {}", plug.getId());
-            this.internalList.put(plug.getId(), plug);
-        }
+        rawList.stream().forEach(p -> this.internalList.put(p.getId(), p));
+
+        this.internalList.values().forEach(p -> WPData.log.info("ITEM: {} v{}", p.getId(), p.getVersion()));
     }
 
     /**

@@ -27,7 +27,7 @@ public class WPPlugins extends WPUpdatableCollection<WPPlugin> implements Iterab
 {
     public WPPlugins()
     {
-        super();
+        super("plugins");
     }
 
     @Override

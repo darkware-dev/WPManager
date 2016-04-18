@@ -27,7 +27,7 @@ public class WPThemes extends WPUpdatableCollection<WPTheme>
 {
     public WPThemes()
     {
-        super();
+        super("themes");
     }
 
     @Override
