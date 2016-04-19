@@ -64,8 +64,6 @@ public abstract class WPUpdatableCollection<T extends WPUpdatableComponent> exte
 
         // Update all new plugin data
         rawList.stream().forEach(p -> this.internalList.put(p.getId(), p));
-
-        this.internalList.values().forEach(p -> WPData.log.info("ITEM: {} v{}", p.getId(), p.getVersion()));
     }
 
     /**
