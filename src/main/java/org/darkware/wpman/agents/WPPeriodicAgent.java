@@ -17,7 +17,7 @@
 
 package org.darkware.wpman.agents;
 
-import org.joda.time.Duration;
+import java.time.Duration;
 
 /**
  * @author jeff
@@ -36,6 +36,6 @@ public abstract class WPPeriodicAgent extends WPAgent
 
     public long getPeriod()
     {
-        return this.interval.getStandardSeconds();
+        return this.interval.getSeconds();
     }
 }

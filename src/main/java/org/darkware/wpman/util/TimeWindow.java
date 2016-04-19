@@ -18,12 +18,16 @@
 package org.darkware.wpman.util;
 
 import org.apache.commons.lang3.RandomUtils;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
-import org.joda.time.Seconds;
+
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 
 /**
- * A {@code TimeWindow} is a helper object for generating {@link DateTime} or {@link Duration} objects which
+ * A {@code TimeWindow} is a helper object for generating {@link LocalDateTime} or {@link Duration} objects which
  * fall within a given span of time.
  *
  * @author jeff
@@ -39,9 +43,9 @@ public class TimeWindow
      * @return A {@code DateTime} corresponding to the hour and minute declared which is explicitly after
      * the current time.
      */
-    public static DateTime nextTime(final int hour, final int minute)
+    public static LocalDateTime nextTime(final int hour, final int minute)
     {
-        return TimeWindow.nextTime(DateTime.now(), hour, minute);
+        return TimeWindow.nextTime(LocalDateTime.now(), hour, minute);
     }
 
     /**
@@ -53,17 +57,16 @@ public class TimeWindow
      * @return A {@code DateTime} corresponding to the hour and minute declared which is explicitly after
      * the start time.
      */
-    public static DateTime nextTime(final DateTime after, final int hour, final int minute)
+    public static LocalDateTime nextTime(final LocalDateTime after, final int hour, final int minute)
     {
-        DateTime next = after.withHourOfDay(hour).withMinuteOfHour(minute).withSecondOfMinute(0).withMillisOfSecond(0);
-
-        if (next.isBefore(after)) next = next.plusDays(1);
-
-        return next;
+        LocalTime time = LocalTime.of(hour, minute);
+        LocalDate afterDate = after.toLocalDate();
+        if (!time.isAfter(after.toLocalTime())) afterDate = afterDate.plus(1, ChronoUnit.DAYS);
+        return time.atDate(afterDate);
     }
 
-    private DateTime earliest;
-    private DateTime latest;
+    private LocalDateTime earliest;
+    private LocalDateTime latest;
 
     /**
      * Creates a new time window with the declared start and stop times.
@@ -71,7 +74,7 @@ public class TimeWindow
      * @param earliest The earliest allowed time in the window.
      * @param latest The latest allowed time in the window.
      */
-    public TimeWindow(final DateTime earliest, final DateTime latest)
+    public TimeWindow(final LocalDateTime earliest, final LocalDateTime latest)
     {
         super();
 
@@ -85,7 +88,7 @@ public class TimeWindow
      * @param earliest The earliest allowed time in the window.
      * @param duration The length of the window.
      */
-    public TimeWindow(final DateTime earliest, final Duration duration)
+    public TimeWindow(final LocalDateTime earliest, final TemporalAmount duration)
     {
         this(earliest, earliest.plus(duration));
     }
@@ -99,7 +102,7 @@ public class TimeWindow
      * @param latestHour The latest allowed time in the window, as the next hour after the start.
      * @param latestMinute The minutes past the latest hour allowed.
      */
-    protected TimeWindow(final DateTime earliest, final int latestHour, final int latestMinute)
+    protected TimeWindow(final LocalDateTime earliest, final int latestHour, final int latestMinute)
     {
         this(earliest, TimeWindow.nextTime(earliest, latestHour, latestMinute));
     }
@@ -137,7 +140,7 @@ public class TimeWindow
      *
      * @return A {@code DateTime} representing the earliest possible time in this window.
      */
-    public DateTime getEarliestMoment()
+    public LocalDateTime getEarliestMoment()
     {
         return this.earliest;
     }
@@ -147,7 +150,7 @@ public class TimeWindow
      *
      * @return A {@code DateTime} representing the latest possible time in this window.
      */
-    public DateTime getLatestMoment()
+    public LocalDateTime getLatestMoment()
     {
         return this.latest;
     }
@@ -158,9 +161,10 @@ public class TimeWindow
      * @return A {@code DateTime} representing a random moment which is explicitly between the earliest
      * and latest moments in the window.
      */
-    public DateTime getRandomMoment()
+    public LocalDateTime getRandomMoment()
     {
-        return this.earliest.plusSeconds(RandomUtils.nextInt(0, Seconds.secondsBetween(this.earliest, this.latest).getSeconds()));
+        long durationSeconds = this.earliest.until(this.latest, ChronoUnit.SECONDS);
+        return this.earliest.plus(RandomUtils.nextLong(0, durationSeconds), ChronoUnit.SECONDS);
     }
 
     /**
@@ -168,8 +172,8 @@ public class TimeWindow
      *
      * @return A number of seconds to a moment that is within the time window.
      */
-    public Seconds getRandomOffset()
+    public Duration getRandomOffset()
     {
-        return Seconds.secondsBetween(DateTime.now(), this.getRandomMoment());
+        return Duration.between(LocalDateTime.now(), this.getRandomMoment());
     }
 }

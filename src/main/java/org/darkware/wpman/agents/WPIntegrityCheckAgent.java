@@ -24,9 +24,9 @@ import org.darkware.wpman.events.InstallationFileChange;
 import org.darkware.wpman.security.ChecksumDatabase;
 import org.darkware.wpman.security.DirectoryScanner;
 import org.darkware.wpman.security.ScanResults;
-import org.joda.time.Duration;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Set;
 
 /**
@@ -49,7 +49,7 @@ public class WPIntegrityCheckAgent extends WPPeriodicAgent
      */
     public WPIntegrityCheckAgent()
     {
-        super("integrity", Duration.standardMinutes(30));
+        super("integrity", Duration.ofMinutes(30));
 
         this.config = ContextManager.local().getContextualInstance(WPManagerConfiguration.class);
         if (ContextManager.local().has(ChecksumDatabase.class))

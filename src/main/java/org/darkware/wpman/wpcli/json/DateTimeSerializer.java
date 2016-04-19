@@ -25,28 +25,27 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import org.darkware.wpman.WPManager;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import java.lang.reflect.Type;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * @author jeff
  * @since 2016-01-23
  */
-public class DateTimeSerializer implements JsonSerializer<DateTime>, JsonDeserializer<DateTime>
+public class DateTimeSerializer implements JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime>
 {
-    private final static DateTimeFormatter format = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss");
+    private final static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public JsonElement serialize(DateTime src, Type srcType, JsonSerializationContext context)
+    public JsonElement serialize(LocalDateTime src, Type srcType, JsonSerializationContext context)
     {
         return new JsonPrimitive(src.toString());
     }
 
     @Override
-    public DateTime deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException
+    public LocalDateTime deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException
     {
         String dateString = json.getAsString();
 
@@ -54,12 +53,12 @@ public class DateTimeSerializer implements JsonSerializer<DateTime>, JsonDeseria
 
         try
         {
-            return DateTime.parse(dateString, DateTimeSerializer.format);
+            return LocalDateTime.parse(dateString, DateTimeSerializer.format);
         }
         catch (Throwable t)
         {
             WPManager.log.error("Error parsing date '" + dateString + "' in cron entry: " + t.getLocalizedMessage());
-            return DateTime.now();
+            return LocalDateTime.now();
         }
     }
 }

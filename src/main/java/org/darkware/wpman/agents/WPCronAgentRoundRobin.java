@@ -21,7 +21,9 @@ import org.darkware.wpman.WPManager;
 import org.darkware.wpman.actions.WPCronHookExec;
 import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.data.WPCronHook;
-import org.joda.time.DateTime;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 /**
  * @author jeff
@@ -30,7 +32,7 @@ import org.joda.time.DateTime;
 public class WPCronAgentRoundRobin extends WPCronAgent
 {
     private final int scanPeriod;
-    private DateTime nextScan;
+    private LocalDateTime nextScan;
 
     /**
      * Creates a new periodic round-robin {@link WPCronAgent}. The agent will only scan for
@@ -62,7 +64,7 @@ public class WPCronAgentRoundRobin extends WPCronAgent
     {
         super.preBlogScan();
 
-        this.nextScan = DateTime.now().plusSeconds(this.scanPeriod);
+        this.nextScan = LocalDateTime.now().plusSeconds(this.scanPeriod);
     }
 
     @Override
@@ -70,7 +72,7 @@ public class WPCronAgentRoundRobin extends WPCronAgent
     {
         super.postBlogScan();
 
-        long millisToNextScan = Math.max(0, this.nextScan.getMillis() - DateTime.now().getMillis());
+        long millisToNextScan = Math.max(0, LocalDateTime.now().until(this.nextScan, ChronoUnit.MILLIS));
         Thread.sleep(millisToNextScan);
     }
 

@@ -20,9 +20,10 @@ package org.darkware.wpman.agents;
 import org.darkware.wpman.actions.WPCronHookExec;
 import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.data.WPCronHook;
-import org.joda.time.DateTime;
-import org.joda.time.Seconds;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -50,7 +51,7 @@ import java.util.concurrent.ScheduledFuture;
 public class WPLowLatencyCronAgent extends WPCronAgent
 {
     private final ScheduledExecutorService cronExecutor;
-    private DateTime nextScan;
+    private LocalDateTime nextScan;
 
     /**
      * Creates a new {@link WPCronAgent} which attempts to execute cron hooks with a
@@ -66,7 +67,6 @@ public class WPLowLatencyCronAgent extends WPCronAgent
     @Override
     protected void handleCronEvents(final WPBlog blog) throws InterruptedException
     {
-        DateTime now = DateTime.now();
         for (WPCronHook hook : blog.getCron())
         {
             CronEvent event = new CronEvent(blog, hook);
@@ -89,8 +89,7 @@ public class WPLowLatencyCronAgent extends WPCronAgent
             {
                 WPCronHookExec action = new WPCronHookExec(blog, hook);
                 event.attachAction(action);
-                int secondsUntilExec = Seconds.secondsBetween(now, hook.getNextRun()).getSeconds();
-                future = this.getManager().scheduleAction(action, secondsUntilExec);
+                future = this.getManager().getActionService().scheduleAction(action, Duration.between(LocalDateTime.now(), hook.getNextRun()));
             }
             else
             {
@@ -112,7 +111,7 @@ public class WPLowLatencyCronAgent extends WPCronAgent
     {
         super.preBlogScan();
 
-        this.nextScan = DateTime.now().plusMinutes(5);
+        this.nextScan = LocalDateTime.now().plusMinutes(5);
     }
 
     @Override
@@ -122,7 +121,7 @@ public class WPLowLatencyCronAgent extends WPCronAgent
 
         this.cleanHookCache();
 
-        long millisToNextScan = Math.max(0, this.nextScan.getMillis() - DateTime.now().getMillis());
+        long millisToNextScan = Math.max(0, LocalDateTime.now().until(this.nextScan, ChronoUnit.MILLIS));
         Thread.sleep(millisToNextScan);
     }
 

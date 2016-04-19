@@ -35,7 +35,6 @@ import org.darkware.wpman.services.UpdateService;
 import org.darkware.wpman.util.TimeWindow;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFactory;
-import org.joda.time.Seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -278,9 +277,9 @@ public class WPManager extends Thread
      * @param seconds The number of seconds to delay execution of the action.
      * @return The {@link ScheduledFuture} of the action.
      */
-    public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, final int seconds)
+    public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, final long seconds)
     {
-        return this.actionService.scheduleAction(action, Seconds.seconds(seconds));
+        return this.actionService.scheduleAction(action, seconds);
     }
 
     /**

@@ -19,8 +19,8 @@ package org.darkware.wpman.actions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.joda.time.DateTime;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -71,7 +71,7 @@ public interface WPAction<T> extends Callable<T>
      * @return A {@code DateTime} representing the moment this action was created.
      */
     @JsonProperty
-    DateTime getCreationTime();
+    LocalDateTime getCreationTime();
 
     /**
      * Fetch the time this action began execution.
@@ -80,7 +80,7 @@ public interface WPAction<T> extends Callable<T>
      * if the action has not started execution.
      */
     @JsonProperty
-    DateTime getStartTime();
+    LocalDateTime getStartTime();
 
     /**
      * Fetch the time this action completed execution, regardless of the outcome.
@@ -89,7 +89,7 @@ public interface WPAction<T> extends Callable<T>
      * if the action has not yet finished (or began).
      */
     @JsonProperty
-    DateTime getCompletionTime();
+    LocalDateTime getCompletionTime();
 
     /**
      * Register an execution {@link Future} with this action. This can be used for various

@@ -18,9 +18,9 @@
 package org.darkware.wpman.data;
 
 import org.darkware.wpman.WPComponent;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
-import org.joda.time.ReadableDuration;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 /**
  * @author jeff
@@ -28,8 +28,8 @@ import org.joda.time.ReadableDuration;
  */
 public abstract class WPDataComponent extends WPComponent
 {
-    private DateTime nextRefresh;
-    private ReadableDuration refreshDuration;
+    private LocalDateTime nextRefresh;
+    private Duration refreshDuration;
 
     public WPDataComponent()
     {
@@ -41,12 +41,12 @@ public abstract class WPDataComponent extends WPComponent
 
     public void expire()
     {
-        this.nextRefresh = DateTime.now().minusSeconds(1);
+        this.nextRefresh = LocalDateTime.now().minusSeconds(1);
     }
 
     protected Duration loadRefreshDuration()
     {
-        return Duration.standardSeconds(60);
+        return Duration.ofSeconds(60);
     }
 
     protected final void refresh()
@@ -54,7 +54,7 @@ public abstract class WPDataComponent extends WPComponent
         synchronized (this)
         {
             this.refreshBaseData();
-            this.nextRefresh = DateTime.now().plus(this.refreshDuration);
+            this.nextRefresh = LocalDateTime.now().plus(this.refreshDuration);
         }
     }
 
@@ -62,7 +62,7 @@ public abstract class WPDataComponent extends WPComponent
     {
         synchronized (this)
         {
-            if (this.nextRefresh.isBeforeNow()) this.refresh();
+            if (this.nextRefresh.isBefore(LocalDateTime.now())) this.refresh();
         }
     }
 

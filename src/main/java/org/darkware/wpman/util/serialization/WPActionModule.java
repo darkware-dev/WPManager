@@ -23,9 +23,9 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.darkware.wpman.actions.WPAction;
-import org.joda.time.DateTime;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +56,7 @@ public class WPActionModule extends SimpleModule
             if (future != null && future instanceof ScheduledFuture)
             {
                 Long delay = ((ScheduledFuture)future).getDelay(TimeUnit.SECONDS);
-                jsonGenerator.writeObjectField("executionTime", DateTime.now().plusSeconds(delay.intValue()));
+                jsonGenerator.writeObjectField("executionTime", LocalDateTime.now().plusSeconds(delay.intValue()));
             }
             jsonGenerator.writeObjectField("creationTime", wpAction.getCreationTime());
             jsonGenerator.writeObjectField("startTime", wpAction.getStartTime());

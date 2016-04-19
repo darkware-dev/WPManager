@@ -22,7 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.gson.annotations.SerializedName;
 import org.darkware.wpman.WPManager;
-import org.joda.time.DateTime;
+
+import java.time.LocalDateTime;
 
 /**
  * @author jeff
@@ -33,8 +34,8 @@ public class WPBlog
     @SerializedName("blog_id") @JsonProperty("blog_id") private int blogId;
     @SerializedName("domain") @JsonProperty("domain") private String domain;
     @SerializedName("url") @JsonProperty("url") private String url;
-    @SerializedName("last_updated") @JsonProperty("last_updated") private DateTime lastModified;
-    @SerializedName("registered") @JsonProperty("registered") private DateTime creationDate;
+    @SerializedName("last_updated") @JsonProperty("last_updated") private LocalDateTime lastModified;
+    @SerializedName("registered") @JsonProperty("registered") private LocalDateTime creationDate;
 
     @SerializedName("public") @JsonProperty("public") private boolean searchable;
     @SerializedName("deleted") @JsonProperty("deleted") private boolean deleted;
@@ -97,22 +98,22 @@ public class WPBlog
         this.url = url;
     }
 
-    public DateTime getLastModified()
+    public LocalDateTime getLastModified()
     {
         return this.lastModified;
     }
 
-    public void setLastModified(final DateTime lastModified)
+    public void setLastModified(final LocalDateTime lastModified)
     {
         this.lastModified = lastModified;
     }
 
-    public DateTime getCreationDate()
+    public LocalDateTime getCreationDate()
     {
         return this.creationDate;
     }
 
-    public void setCreationDate(final DateTime creationDate)
+    public void setCreationDate(final LocalDateTime creationDate)
     {
         this.creationDate = creationDate;
     }

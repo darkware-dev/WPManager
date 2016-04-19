@@ -19,7 +19,8 @@ package org.darkware.wpman.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import org.joda.time.DateTime;
+
+import java.time.LocalDateTime;
 
 /**
  * A {@code WPUser} is an individual record of a user in relation to a given {@link WPBlog}.
@@ -42,7 +43,7 @@ public class WPUser implements Comparable<WPUser>
     private String email;
 
     @JsonProperty("registered")
-    private DateTime registrationDate;
+    private LocalDateTime registrationDate;
 
     @JsonProperty("roles")
     private String role;
@@ -101,12 +102,12 @@ public class WPUser implements Comparable<WPUser>
         this.email = email;
     }
 
-    public DateTime getRegistrationDate()
+    public LocalDateTime getRegistrationDate()
     {
         return this.registrationDate;
     }
 
-    public void setRegistrationDate(final DateTime registrationDate)
+    public void setRegistrationDate(final LocalDateTime registrationDate)
     {
         this.registrationDate = registrationDate;
     }

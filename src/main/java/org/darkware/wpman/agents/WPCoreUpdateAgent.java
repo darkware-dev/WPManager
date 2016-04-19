@@ -19,8 +19,8 @@ package org.darkware.wpman.agents;
 
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.actions.WPCoreUpdate;
-import org.joda.time.Duration;
 
+import java.time.Duration;
 import java.util.concurrent.ScheduledFuture;
 
 /**
@@ -38,7 +38,7 @@ public class WPCoreUpdateAgent extends WPPeriodicAgent
      */
     public WPCoreUpdateAgent()
     {
-        super("Core Update Check", Duration.standardHours(4));
+        super("Core Update Check", Duration.ofHours(4));
     }
 
 

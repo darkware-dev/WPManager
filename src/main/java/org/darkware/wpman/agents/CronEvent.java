@@ -24,9 +24,9 @@ import org.darkware.wpman.actions.WPCronHookExec;
 import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.data.WPCronHook;
 import org.darkware.wpman.util.serialization.MinimalBlogSerializer;
-import org.joda.time.DateTime;
-import org.joda.time.Seconds;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 
 /**
@@ -37,7 +37,7 @@ public class CronEvent
     @JsonSerialize(using = MinimalBlogSerializer.class)
     private final WPBlog blog;
     private final String hook;
-    private final DateTime execTime;
+    private final LocalDateTime execTime;
     @JsonIgnore
     private WPCronHookExec action;
 
@@ -48,13 +48,13 @@ public class CronEvent
      * @param hook The name of the hook to execute.
      * @param execTime The requested execution time of the hook.
      */
-    public CronEvent(final WPBlog blog, final String hook, final DateTime execTime)
+    public CronEvent(final WPBlog blog, final String hook, final LocalDateTime execTime)
     {
         super();
 
         this.blog = blog;
         this.hook = hook;
-        this.execTime = execTime.withMillisOfSecond(0);
+        this.execTime = execTime.withNano(0);
     }
 
     /**
@@ -107,24 +107,41 @@ public class CronEvent
         if (!this.blog.equals(check.blog)) return false;
 
         // Check the time
-        if (Math.abs(Seconds.secondsBetween(this.execTime, check.execTime).getSeconds()) > 15) return false;
+        if (Math.abs((check.execTime.until(this.execTime, ChronoUnit.SECONDS))) > 15) return false;
 
         return true;
     }
 
+    /**
+     * Fetch the blog this event is running against.
+     *
+     * @return The {@link WPBlog} linked to this event.
+     */
     public WPBlog getBlog()
     {
-        return blog;
+        return this.blog;
     }
 
-    public DateTime getExecTime()
+    /**
+     * Fetch the target execution time for this event. This is not a guaranteed time. The time may be
+     * shifted somewhat in order to group it with temporally nearby events or execution might be delayed
+     * due to a lack of available threads in the pool.
+     *
+     * @return The target execution time as a {@link LocalDateTime}.
+     */
+    public LocalDateTime getExecTime()
     {
-        return execTime;
+        return this.execTime;
     }
 
+    /**
+     * Fetch the identifier of the hook to execute.
+     *
+     * @return The {@code String} identifier of the hook.
+     */
     public String getHook()
     {
-        return hook;
+        return this.hook;
     }
 
     @Override
@@ -133,15 +150,15 @@ public class CronEvent
         if (this == o) return true;
         if (!(o instanceof CronEvent)) return false;
         final CronEvent cronEvent = (CronEvent) o;
-        return Objects.equal(blog, cronEvent.blog) &&
-               Objects.equal(hook, cronEvent.hook) &&
-               Objects.equal(execTime, cronEvent.execTime);
+        return Objects.equal(this.blog, cronEvent.blog) &&
+               Objects.equal(this.hook, cronEvent.hook) &&
+               Objects.equal(this.execTime, cronEvent.execTime);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(blog, hook, execTime);
+        return Objects.hashCode(this.blog, this.hook, this.execTime);
     }
 
     @Override
@@ -150,6 +167,10 @@ public class CronEvent
         return this.hook + "@" + this.execTime;
     }
 
+    /**
+     * This is a {@link Comparator} for {@link CronEvent}s which is based solely upon the target execution
+     * time.
+     */
     public static class ExecTimeComparator implements Comparator<CronEvent>
     {
         @Override

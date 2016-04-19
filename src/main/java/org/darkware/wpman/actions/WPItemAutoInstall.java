@@ -136,7 +136,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
             }
             else if (preInstall != null && postInstall.getVersion().equals(preInstall.getVersion()))
             {
-                WPManager.log.info("Looking for {} v{} (was v{}).", preInstall.getId(), preInstall.getUpdateVersion(), preInstall.getVersion());
+                WPManager.log.info("Looking for {} v{} (was v{}, is v{}).", preInstall.getId(), preInstall.getUpdateVersion(), preInstall.getVersion(), postInstall.getVersion());
                 WPManager.log.warn("The {} '{}' didn't register a version change. Forcing a reinstall.", this.getItemType(), this.installToken);
                 this.doInstall();
             }

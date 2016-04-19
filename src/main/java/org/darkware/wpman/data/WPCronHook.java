@@ -20,7 +20,8 @@ package org.darkware.wpman.data;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.gson.annotations.SerializedName;
-import org.joda.time.DateTime;
+
+import java.time.LocalDateTime;
 
 /**
  * @author jeff
@@ -29,19 +30,19 @@ import org.joda.time.DateTime;
 public class WPCronHook implements Comparable<WPCronHook>
 {
     private String hook;
-    @SerializedName("next_run") @JsonProperty("next_run") private DateTime nextRun;
+    @SerializedName("next_run") @JsonProperty("next_run") private LocalDateTime nextRun;
 
     public WPCronHook()
     {
         super();
     }
 
-    public DateTime getNextRun()
+    public LocalDateTime getNextRun()
     {
-        return nextRun;
+        return this.nextRun;
     }
 
-    protected void setNextRun(final DateTime nextRun)
+    protected void setNextRun(final LocalDateTime nextRun)
     {
         this.nextRun = nextRun;
     }
@@ -58,7 +59,7 @@ public class WPCronHook implements Comparable<WPCronHook>
 
     public boolean isWaiting()
     {
-        return (this.nextRun.isBefore(DateTime.now()));
+        return (this.nextRun.isBefore(LocalDateTime.now()));
     }
 
     @Override

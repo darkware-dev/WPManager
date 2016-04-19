@@ -17,10 +17,10 @@
 
 package org.darkware.wpman;
 
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.junit.Test;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * @author jeff
@@ -31,11 +31,11 @@ public class DateParseTest
     @Test
     public void parseSimple()
     {
-        final DateTimeFormatter format = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss");
+        final DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         final String dateString = "2015-07-28 14:44:29";
 
-        DateTime date = DateTime.parse(dateString, format);
+        LocalDateTime date = LocalDateTime.parse(dateString, format);
 
         System.out.println(date);
     }

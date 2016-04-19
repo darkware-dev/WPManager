@@ -22,11 +22,12 @@ import org.darkware.wpman.WPManager;
 import org.darkware.wpman.agents.WPPeriodicAgent;
 import org.darkware.wpman.util.TimeWindow;
 import org.eclipse.jetty.util.ConcurrentHashSet;
-import org.joda.time.DateTime;
-import org.joda.time.Seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -101,17 +102,31 @@ public class WPActionService extends WPComponent
      * {@link #scheduleAction(WPAction)}.
      *
      * @param action The action to execute.
-     * @param delay The amount of time to delay execution, as {@link Seconds}
+     * @param delay The number of seconds to delay execution
      * @param <T> The return type of the action.
      * @return The {@link ScheduledFuture}
      */
-    public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, Seconds delay)
+    public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, long delay)
     {
-        ScheduledFuture<T> future = this.execService.schedule(action, delay.getSeconds(), TimeUnit.SECONDS);
+        ScheduledFuture<T> future = this.execService.schedule(action, delay, TimeUnit.SECONDS);
         action.registerFuture(future);
         this.scheduledActions.add(action);
 
         return future;
+    }
+
+    /**
+     * Schedule an action with a delay before execution. This works in a similar way to
+     * {@link #scheduleAction(WPAction)}.
+     *
+     * @param action The action to execute.
+     * @param delay The number of seconds to delay execution
+     * @param <T> The return type of the action.
+     * @return The {@link ScheduledFuture}
+     */
+    public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, final Duration delay)
+    {
+        return this.scheduleAction(action, delay.get(ChronoUnit.SECONDS));
     }
 
     /**
@@ -122,7 +137,7 @@ public class WPActionService extends WPComponent
      * @param window The {@code TimeWindow} the action should execute within.
      * @param <T> The return type of the action.
      * @return The {@link ScheduledFuture}
-     * @see #scheduleAction(WPAction, Seconds)
+     * @see #scheduleAction(WPAction, Duration)
      */
     public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, final TimeWindow window)
     {
@@ -196,7 +211,7 @@ public class WPActionService extends WPComponent
             action.cancel();
         }
 
-        DateTime expireTime = DateTime.now().minusMinutes(15);
+        LocalDateTime expireTime = LocalDateTime.now().minusMinutes(15);
 
         if (action.getCompletionTime() == null) return false;
         if (action.getCompletionTime().isBefore(expireTime)) return true;

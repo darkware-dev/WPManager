@@ -20,8 +20,11 @@ package org.darkware.wpman.log;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.LayoutBase;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 /**
  * @author jeff
@@ -30,17 +33,20 @@ import org.joda.time.format.DateTimeFormatter;
 public class StandardLayout extends LayoutBase<ILoggingEvent>
 {
     private final DateTimeFormatter timeFormat;
+    private final ZoneOffset tzOffset;
 
     public StandardLayout()
     {
         super();
 
-        this.timeFormat = DateTimeFormat.forPattern("yyyy-MM-DD HH:mm:ss.SSS");
+        this.timeFormat = DateTimeFormatter.ofPattern("yyyy-MM-DD HH:mm:ss.SSS");
+        this.tzOffset = OffsetDateTime.now().getOffset();
     }
 
     public String doLayout(ILoggingEvent event) {
         StringBuffer sbuf = new StringBuffer(128);
-        sbuf.append(this.timeFormat.print(event.getTimeStamp()));
+
+        sbuf.append(this.timeFormat.format(LocalDateTime.ofEpochSecond(event.getTimeStamp(), 0, this.tzOffset)));
         sbuf.append(" [");
         sbuf.append(event.getLevel());
         sbuf.append("] ");

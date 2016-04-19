@@ -60,10 +60,10 @@ public class TimeWindowModule extends SimpleModule
                               final SerializerProvider serializerProvider) throws IOException
         {
             String windowString = String.format("%02d:%02d-%02d:%02d",
-                                                window.getEarliestMoment().getHourOfDay(),
-                                                window.getEarliestMoment().getMinuteOfHour(),
-                                                window.getLatestMoment().getHourOfDay(),
-                                                window.getLatestMoment().getMinuteOfHour());
+                                                window.getEarliestMoment().getHour(),
+                                                window.getEarliestMoment().getMinute(),
+                                                window.getLatestMoment().getHour(),
+                                                window.getLatestMoment().getMinute());
 
             jsonGenerator.writeString(windowString);
         }

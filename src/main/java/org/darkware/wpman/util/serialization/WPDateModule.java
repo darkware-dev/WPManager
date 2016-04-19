@@ -26,47 +26,62 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.darkware.wpman.WPManager;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
+ * This is a Jackson serialization {@link SimpleModule} which is designed to parse the date formats and
+ * conventions used by WordPress. This includes the rather unhelpful practice of returning nonsense dates
+ * of year, month, and day set to zero.
+ *
  * @author jeff
  * @since 2016-03-30
  */
 public class WPDateModule extends SimpleModule
 {
-    private final static DateTimeFormatter format = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss");
+    private final static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    /**
+     * Create a new module to handle serialization of WordPress date formats.
+     */
     public WPDateModule()
     {
         super();
 
-        this.addSerializer(DateTime.class, new PluginStatusSerializer());
-        this.addDeserializer(DateTime.class, new PluginStatusDeserializer());
+        this.addSerializer(LocalDateTime.class, new PluginStatusSerializer());
+        this.addDeserializer(LocalDateTime.class, new PluginStatusDeserializer());
     }
 
-    public static class PluginStatusSerializer extends JsonSerializer<DateTime>
+    /**
+     * This is a serializer capable of writing dates into WordPress's date formats.
+     */
+    public static class PluginStatusSerializer extends JsonSerializer<LocalDateTime>
     {
         @Override
-        public void serialize(final DateTime version, final JsonGenerator jsonGenerator,
+        public void serialize(final LocalDateTime version, final JsonGenerator jsonGenerator,
                               final SerializerProvider serializerProvider) throws IOException, JsonProcessingException
         {
             jsonGenerator.writeString(version.toString());
         }
     }
 
-    public static class PluginStatusDeserializer extends StdScalarDeserializer<DateTime>
+    /**
+     * This is a deserializer capable of parsing WordPress data formats.
+     */
+    public static class PluginStatusDeserializer extends StdScalarDeserializer<LocalDateTime>
     {
+        /**
+         * Creates a new Jackson deserializer for WordPress date formats.
+         */
         public PluginStatusDeserializer()
         {
-            super(DateTime.class);
+            super(LocalDateTime.class);
         }
 
         @Override
-        public DateTime deserialize(final JsonParser jsonParser,
+        public LocalDateTime deserialize(final JsonParser jsonParser,
                                    final DeserializationContext deserializationContext) throws IOException, JsonProcessingException
         {
             String dateString = jsonParser.getValueAsString();
@@ -75,12 +90,12 @@ public class WPDateModule extends SimpleModule
 
             try
             {
-                return DateTime.parse(dateString, WPDateModule.format);
+                return LocalDateTime.parse(dateString, WPDateModule.format);
             }
             catch (Throwable t)
             {
-                WPManager.log.error("Error parsing date '" + dateString + "' in cron entry: " + t.getLocalizedMessage());
-                return DateTime.now();
+                WPManager.log.error("Error parsing date '" + dateString + "': " + t.getLocalizedMessage());
+                return LocalDateTime.now();
             }
         }
     }
