@@ -18,7 +18,6 @@
 package org.darkware.wpman.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 
 import java.lang.reflect.Type;
 
@@ -29,11 +28,6 @@ import java.lang.reflect.Type;
 public abstract class JSONHelper
 {
     private static JSONHelper helper;
-
-    public static void use(final Gson gson)
-    {
-        JSONHelper.helper = new JsonHelperGson(gson);
-    }
 
     public static void use(final ObjectMapper mapper)
     {

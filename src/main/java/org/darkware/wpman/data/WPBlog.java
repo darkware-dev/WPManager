@@ -20,7 +20,6 @@ package org.darkware.wpman.data;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.google.gson.annotations.SerializedName;
 import org.darkware.wpman.WPManager;
 
 import java.time.LocalDateTime;
@@ -31,14 +30,14 @@ import java.time.LocalDateTime;
  */
 public class WPBlog
 {
-    @SerializedName("blog_id") @JsonProperty("blog_id") private int blogId;
-    @SerializedName("domain") @JsonProperty("domain") private String domain;
-    @SerializedName("url") @JsonProperty("url") private String url;
-    @SerializedName("last_updated") @JsonProperty("last_updated") private LocalDateTime lastModified;
-    @SerializedName("registered") @JsonProperty("registered") private LocalDateTime creationDate;
+    @JsonProperty("blog_id") private int blogId;
+    @JsonProperty("domain") private String domain;
+    @JsonProperty("url") private String url;
+    @JsonProperty("last_updated") private LocalDateTime lastModified;
+    @JsonProperty("registered") private LocalDateTime creationDate;
 
-    @SerializedName("public") @JsonProperty("public") private boolean searchable;
-    @SerializedName("deleted") @JsonProperty("deleted") private boolean deleted;
+    @JsonProperty("public") private boolean searchable;
+    @JsonProperty("deleted") private boolean deleted;
 
     @JsonProperty("users")
     private final WPBlogUsers users;

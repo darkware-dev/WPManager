@@ -18,7 +18,6 @@
 package org.darkware.wpman.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.annotations.SerializedName;
 import org.darkware.wpman.config.UpdatableCollectionConfig;
 import org.darkware.wpman.config.UpdatableConfig;
 
@@ -30,9 +29,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class WPUpdatableComponent extends WPDataComponent
 {
-    @SerializedName("name") @JsonProperty("name") private String id;
+    @JsonProperty("name") private String id;
     private Version version;
-    @SerializedName("update_version") @JsonProperty("update_version") private Version latestVersion;
+    @JsonProperty("update_version") private Version latestVersion;
 
     private AtomicBoolean configured;
     private boolean allowUpdates;

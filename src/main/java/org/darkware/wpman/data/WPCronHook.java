@@ -19,7 +19,6 @@ package org.darkware.wpman.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.google.gson.annotations.SerializedName;
 
 import java.time.LocalDateTime;
 
@@ -30,7 +29,7 @@ import java.time.LocalDateTime;
 public class WPCronHook implements Comparable<WPCronHook>
 {
     private String hook;
-    @SerializedName("next_run") @JsonProperty("next_run") private LocalDateTime nextRun;
+    @JsonProperty("next_run") private LocalDateTime nextRun;
 
     public WPCronHook()
     {

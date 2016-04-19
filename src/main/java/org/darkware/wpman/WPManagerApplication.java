@@ -17,11 +17,9 @@
 
 package org.darkware.wpman;
 
-import com.google.gson.GsonBuilder;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import org.darkware.wpman.data.Version;
 import org.darkware.wpman.rest.*;
 import org.darkware.wpman.rest.health.NoopHealthCheck;
 import org.darkware.wpman.util.JSONHelper;
@@ -33,13 +31,10 @@ import org.darkware.wpman.util.serialization.VersionModule;
 import org.darkware.wpman.util.serialization.WPActionModule;
 import org.darkware.wpman.util.serialization.WPDateModule;
 import org.darkware.wpman.wpcli.WPCLI;
-import org.darkware.wpman.wpcli.json.DateTimeSerializer;
-import org.darkware.wpman.wpcli.json.VersionSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
-import java.time.LocalDateTime;
 
 /**
  * The {@code WPManagerApplication} class is the primary application driver for the DropWizard framework.
@@ -81,11 +76,6 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         bootstrap.getObjectMapper().registerModule(new TimeWindowModule());
 
         ContextManager.local().registerInstance(bootstrap.getObjectMapper());
-
-        GsonBuilder gsonBuilder = new GsonBuilder();
-
-        gsonBuilder.registerTypeAdapter(LocalDateTime.class, new DateTimeSerializer());
-        gsonBuilder.registerTypeAdapter(Version.class, new VersionSerializer());
 
         JSONHelper.use(bootstrap.getObjectMapper());
     }
