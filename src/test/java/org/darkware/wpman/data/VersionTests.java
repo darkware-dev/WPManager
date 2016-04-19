@@ -23,8 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author jeff
@@ -40,6 +39,28 @@ public class VersionTests
 
         assertEquals(0, a.compareTo(b));
         assertEquals(0, b.compareTo(a));
+    }
+
+    @Test
+    public void testCompare_negative()
+    {
+        Version a = new Version("1.2.3");
+        Version b = new Version("1.2.5");
+
+        assertEquals(-1, a.compareTo(b));
+        assertEquals(1, b.compareTo(a));
+        assertNotEquals(a, b);
+    }
+
+    @Test
+    public void testCompare_negative_differentElementCount()
+    {
+        Version a = new Version("1.2");
+        Version b = new Version("1.2.5");
+
+        assertNotEquals(a, b);
+        assertTrue(a.compareTo(b) < 0);
+        assertTrue(b.compareTo(a) > 0);
     }
 
     @Test
