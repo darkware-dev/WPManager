@@ -73,6 +73,8 @@ public class PermissiveBooleanModule extends SimpleModule
             if (strValue.equals("no")) return Boolean.FALSE;
             if (strValue.equals("on")) return Boolean.TRUE;
             if (strValue.equals("off")) return Boolean.FALSE;
+            if ("enabled".equals(strValue)) return Boolean.TRUE;
+            if ("disabled".equals(strValue)) return Boolean.FALSE;
 
             // Okay, try the integer version
             long value = jsonParser.getValueAsLong();

@@ -18,14 +18,47 @@
 package org.darkware.wpman.config;
 
 /**
+ *
+ *
  * @author jeff
  * @since 2016-03-28
  */
 public class ThemeListConfig extends UpdatableCollectionConfig<ThemeConfig>
 {
+    private Boolean defaultEnabled;
+
+    public ThemeListConfig()
+    {
+        super();
+
+        this.defaultEnabled = null;
+    }
+
     @Override
     protected ThemeConfig defaultDetails(final String itemId)
     {
         return new ThemeConfig(itemId);
+    }
+
+    /**
+     * Fetch the default activation state for themes on the network.
+     *
+     * @return {@code true} if themes are activated by default, {@code false} if they are deactivated
+     * by default, and {@code null} if no default policy should be used.
+     */
+    public Boolean getDefaultEnabled()
+    {
+        return this.defaultEnabled;
+    }
+
+    /**
+     * Set the default activation state for themes on the network.
+     *
+     * @param defaultEnabled {@code true} if themes are activated by default, {@code false} if they
+     * are deactivated by default, and {@code null} if no default policy should be used.
+     */
+    public void setDefaultEnabled(final Boolean defaultEnabled)
+    {
+        this.defaultEnabled = defaultEnabled;
     }
 }

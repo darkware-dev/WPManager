@@ -112,6 +112,7 @@ public class WPDataManager extends WPComponent
         fields.add("status");
         fields.add("version");
         fields.add("update_version");
+        fields.add("enabled");
         themeListCmd.setOption(fields);
 
         return themeListCmd;

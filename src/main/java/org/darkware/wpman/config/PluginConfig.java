@@ -17,21 +17,56 @@
 
 package org.darkware.wpman.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
+ * This class is a configuration container for an individual instance plugin.
+ *
  * @author jeff
  * @since 2016-03-28
  */
 public class PluginConfig extends UpdatableConfig
 {
+    @JsonProperty("networkEnable")
+    private boolean networkEnabled;
+
+    /**
+     * Create a new configuration container with default settings.
+     */
     public PluginConfig()
     {
         super();
+
+        this.networkEnabled = false;
     }
 
+    /**
+     * Create a new configuration container for a plugin with the given ID.
+     *
+     * @param id The plugin ID.
+     */
     public PluginConfig(final String id)
     {
         this();
+    }
 
+    /**
+     * Check if this plugin should be enabled across the network.
+     *
+     * @return {@code true} if the plugin should be network enabled, {@code false} if it should not.
+     */
+    public boolean isNetworkEnabled()
+    {
+        return this.networkEnabled;
+    }
 
+    /**
+     * Declare if this plugin should be network enabled.
+     *
+     * @param networkEnabled A flag declaring if the plugin should be enabled for all sites.
+     */
+    protected void setNetworkEnabled(final boolean networkEnabled)
+    {
+        this.networkEnabled = networkEnabled;
     }
 }

@@ -23,6 +23,7 @@ import org.darkware.wpman.agents.WPCoreUpdateAgent;
 import org.darkware.wpman.agents.WPCronAgent;
 import org.darkware.wpman.agents.WPIntegrityCheckAgent;
 import org.darkware.wpman.agents.WPLowLatencyCronAgent;
+import org.darkware.wpman.agents.WPNetworkPolicyAgent;
 import org.darkware.wpman.agents.WPPluginSync;
 import org.darkware.wpman.agents.WPThemeSync;
 import org.darkware.wpman.data.Version;
@@ -219,6 +220,8 @@ public class WPManager extends Thread
         this.actionService.schedule(coreUpdater);
         WPIntegrityCheckAgent integrity = new WPIntegrityCheckAgent();
         this.actionService.schedule(integrity);
+        WPNetworkPolicyAgent networkPolicy = new WPNetworkPolicyAgent();
+        this.actionService.schedule(networkPolicy);
 
         WPManager.log.info("Starting cron runner.");
         this.cron.startThread();

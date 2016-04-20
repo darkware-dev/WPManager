@@ -18,20 +18,54 @@
 package org.darkware.wpman.config;
 
 /**
+ * A configuration container for a single installed theme on the WordPress instance.
+ *
  * @author jeff
  * @since 2016-03-28
  */
 public class ThemeConfig extends UpdatableConfig
 {
+    private Boolean enabled;
+
+    /**
+     * Creates a new theme configuration container with default settings.
+     */
     public ThemeConfig()
     {
         super();
+
+        this.enabled = null;
     }
 
+    /**
+     * Creates a new theme configuration container with the given ID.
+     *
+     * @param id The theme ID for the configuration.
+     */
     public ThemeConfig(final String id)
     {
         this();
+    }
 
+    /**
+     * Check to see if this theme should be enabled on the network.
+     *
+     * @return {@code true} if the theme should be enabled for network use, {@code false} if it should
+     * be denied for all use on the network, and {@code null} if the default policy should be used.
+     */
+    public Boolean getEnabled()
+    {
+        return this.enabled;
+    }
 
+    /**
+     * Sets the network policy for this theme.
+     *
+     * @param enabled {@code true} if the theme should be enabled for network use, {@code false} if it should
+     * be denied for all use on the network, and {@code null} if the default policy should be used.
+     */
+    public void setEnabled(final Boolean enabled)
+    {
+        this.enabled = enabled;
     }
 }

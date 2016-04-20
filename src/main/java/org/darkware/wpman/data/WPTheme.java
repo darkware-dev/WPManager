@@ -18,6 +18,8 @@
 package org.darkware.wpman.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.darkware.wpman.util.serialization.ThemeEnabledDeserializer;
 
 /**
  * @author jeff
@@ -29,6 +31,8 @@ public class WPTheme extends WPUpdatableComponent
     private String description;
 
     private WPThemeStatus status;
+    @JsonDeserialize(using = ThemeEnabledDeserializer.class)
+    private boolean enabled;
 
     public WPTheme()
     {
@@ -69,5 +73,15 @@ public class WPTheme extends WPUpdatableComponent
     public void setStatus(final WPThemeStatus status)
     {
         this.status = status;
+    }
+
+    public boolean isEnabled()
+    {
+        return this.enabled;
+    }
+
+    public void setEnabled(final boolean enabled)
+    {
+        this.enabled = enabled;
     }
 }
