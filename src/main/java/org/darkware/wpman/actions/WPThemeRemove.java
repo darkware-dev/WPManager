@@ -36,7 +36,7 @@ public class WPThemeRemove extends WPBasicAction<Boolean>
 
     public WPThemeRemove(final String themeToken)
     {
-        super();
+        super(WPActionCategory.MAINTENANCE);
 
         this.themeToken = themeToken;
     }

@@ -19,6 +19,9 @@ package org.darkware.wpman.actions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.darkware.wpman.data.WPBlog;
+import org.darkware.wpman.util.serialization.MinimalBlogSerializer;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.Callable;
@@ -101,6 +104,24 @@ public interface WPAction<T> extends Callable<T>
      * @param future The {@code Future} for this action.
      */
     void registerFuture(Future<T> future);
+
+    /**
+     * Fetch the {@link WPActionCategory} describing this action.
+     *
+     * @return A {@link WPActionCategory}.
+     */
+    @JsonProperty
+    WPActionCategory getCategory();
+
+    /**
+     * Fetch the {@link WPBlog} associated with this action. If the action is targeting the network itself
+     * or simply is not targeting any particular site, this value may be {@code null}.
+     *
+     * @return The {@link WPBlog} linked to the action, or {@code null} if no blog is linked.
+     */
+    @JsonProperty
+    @JsonSerialize(using = MinimalBlogSerializer.class)
+    WPBlog getBlog();
 
     /**
      * Fetch the {@code Future} registered with this action.

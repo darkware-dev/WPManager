@@ -36,7 +36,7 @@ public class WPPluginRemove extends WPBasicAction<Boolean>
 
     public WPPluginRemove(final String pluginToken)
     {
-        super();
+        super(WPActionCategory.MAINTENANCE);
 
         this.pluginToken = pluginToken;
     }

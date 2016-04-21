@@ -72,7 +72,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
      */
     public WPItemAutoInstall(final String itemType, final String installToken)
     {
-        super();
+        super(WPActionCategory.INSTALL);
 
         this.installToken = installToken;
         this.itemType = itemType;

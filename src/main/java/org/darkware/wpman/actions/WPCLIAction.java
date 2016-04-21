@@ -17,6 +17,7 @@
 
 package org.darkware.wpman.actions;
 
+import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIError;
 
@@ -33,13 +34,16 @@ public abstract class WPCLIAction extends WPBasicAction<Boolean>
     /**
      * Creates a new {@code WPAction}.
      *
+     * @param category The {@link WPActionCategory} for this action.
+     * @param blog The {@link WPBlog} this action is associated with, or {@code null} if no particular
+     * blog is linked.
      * @param actionGroup The WP-CLI command group
      * @param command The WP-CLI command
      * @param args Extra command arguments
      */
-    public WPCLIAction(final String actionGroup, final String command, final String ... args)
+    public WPCLIAction(final WPActionCategory category, final WPBlog blog, final String actionGroup, final String command, final String ... args)
     {
-        super();
+        super(category, blog);
 
         this.command = this.getManager().getBuilder().build(actionGroup, command, args);
     }

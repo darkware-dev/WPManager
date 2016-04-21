@@ -43,13 +43,25 @@ public class WPActionModule extends SimpleModule
         this.addSerializer(WPAction.class, new WPActonSerializer());
     }
 
-    public static class WPActonSerializer extends JsonSerializer<WPAction>
+    public class WPActonSerializer extends JsonSerializer<WPAction>
     {
+        private final MinimalBlogSerializer blogSerializer;
+
+        public WPActonSerializer()
+        {
+            super();
+
+            this.blogSerializer = new MinimalBlogSerializer();
+        }
+
         @Override
         public void serialize(final WPAction wpAction, final JsonGenerator jsonGenerator,
                               final SerializerProvider serializerProvider) throws IOException, JsonProcessingException
         {
             jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName("blog");
+            this.blogSerializer.serialize(wpAction.getBlog(), jsonGenerator, serializerProvider);
+            jsonGenerator.writeObjectField("category", wpAction.getCategory());
             jsonGenerator.writeStringField("state", wpAction.getState().toString());
             jsonGenerator.writeStringField("description", wpAction.getDescription());
             Future future = wpAction.getFuture();

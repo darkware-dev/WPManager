@@ -33,7 +33,7 @@ public class WPCoreUpdate extends WPBasicAction<Boolean>
 
     public WPCoreUpdate()
     {
-        super();
+        super(WPActionCategory.INSTALL);
 
         this.originalVersion = this.getManager().getData().getCore().getCoreVersion();
         this.updateTargetVersion = this.getManager().getData().getCore().getUpdateVersion();

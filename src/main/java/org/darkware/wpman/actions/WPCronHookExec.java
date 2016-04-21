@@ -36,7 +36,7 @@ public class WPCronHookExec extends WPCLIAction
 
     public WPCronHookExec(final WPBlog blog, final WPCronHook cron)
     {
-        super("cron", "event", "run", cron.getHook());
+        super(WPActionCategory.CRON, blog, "cron", "event", "run", cron.getHook());
 
         this.blog = blog;
         this.hooks = new HashSet<>();

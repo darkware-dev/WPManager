@@ -19,6 +19,7 @@ package org.darkware.wpman.actions;
 
 import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
+import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFactory;
 
@@ -26,6 +27,10 @@ import java.time.LocalDateTime;
 import java.util.concurrent.Future;
 
 /**
+ * This class provides a base implementation of the {@link WPAction} interface, including the bulk of the
+ * support methods and trivial code necessary to support it. This allows concrete subclasses to focus on
+ * just the execution logic.
+ *
  * @author jeff
  * @since 2016-02-10
  */
@@ -33,6 +38,8 @@ public abstract class WPBasicAction<T> implements WPAction<T>
 {
     protected final WPManager manager;
     private Integer timeout;
+    private final WPActionCategory category;
+    private final WPBlog blog;
     private WPActionState state;
     protected Future<T> execFuture;
 
@@ -40,14 +47,34 @@ public abstract class WPBasicAction<T> implements WPAction<T>
     protected LocalDateTime startTime;
     protected LocalDateTime completionTime;
 
-    public WPBasicAction()
+    /**
+     * Instantiate a new basic action.
+     *
+     * @param category The {@link WPActionCategory} for this action.
+     * @param blog The {@link WPBlog} this action is associated with, or {@code null} if no particular
+     * blog is linked.
+     */
+    public WPBasicAction(final WPActionCategory category, final WPBlog blog)
     {
         super();
 
         this.manager = ContextManager.local().getContextualInstance(WPManager.class);
         this.state = WPActionState.INITIALIZING;
 
+        this.category = category;
+        this.blog = blog;
+
         this.creationTime = LocalDateTime.now();
+    }
+
+    /**
+     * Instantiate a new basic action without any associated {@link WPBlog}.
+     *
+     * @param category The {@link WPActionCategory} for this action.
+     */
+    public WPBasicAction(final WPActionCategory category)
+    {
+        this(category, null);
     }
 
     /**
@@ -57,7 +84,7 @@ public abstract class WPBasicAction<T> implements WPAction<T>
      */
     public WPManager getManager()
     {
-        return manager;
+        return this.manager;
     }
 
     /**
@@ -82,7 +109,7 @@ public abstract class WPBasicAction<T> implements WPAction<T>
     {
         if (seconds == 0) this.timeout = null;
         else if (seconds < 1) throw new IllegalArgumentException("Timeout cannot be negative.");
-        this.timeout = new Integer(seconds);
+        this.timeout = seconds;
     }
 
     @Override
@@ -127,6 +154,18 @@ public abstract class WPBasicAction<T> implements WPAction<T>
     {
         this.execFuture = future;
         this.state = WPActionState.SCHEDULED;
+    }
+
+    @Override
+    public WPActionCategory getCategory()
+    {
+        return this.category;
+    }
+
+    @Override
+    public WPBlog getBlog()
+    {
+        return this.blog;
     }
 
     @Override

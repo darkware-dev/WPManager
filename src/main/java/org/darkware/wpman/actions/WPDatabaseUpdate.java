@@ -32,7 +32,7 @@ public class WPDatabaseUpdate extends WPBasicAction<Boolean>
 
     public WPDatabaseUpdate(final WPBlog blog)
     {
-        super();
+        super(WPActionCategory.INSTALL);
 
         this.blog = blog;
     }
