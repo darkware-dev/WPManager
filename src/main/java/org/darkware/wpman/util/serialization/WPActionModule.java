@@ -40,14 +40,14 @@ public class WPActionModule extends SimpleModule
     {
         super();
 
-        this.addSerializer(WPAction.class, new WPActonSerializer());
+        this.addSerializer(WPAction.class, new WPActionSerializer());
     }
 
-    public class WPActonSerializer extends JsonSerializer<WPAction>
+    public class WPActionSerializer extends JsonSerializer<WPAction>
     {
         private final MinimalBlogSerializer blogSerializer;
 
-        public WPActonSerializer()
+        public WPActionSerializer()
         {
             super();
 
