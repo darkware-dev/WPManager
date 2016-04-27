@@ -17,6 +17,7 @@
 
 package org.darkware.wpman.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.darkware.wpman.config.UpdatableCollectionConfig;
 import org.darkware.wpman.config.UpdatableConfig;
@@ -106,6 +107,7 @@ public abstract class WPUpdatableComponent extends WPDataComponent
         return true;
     }
 
+    @JsonIgnore
     public final Version getUpdateVersion()
     {
         if (this.hasUpdate())
