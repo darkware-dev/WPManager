@@ -31,14 +31,12 @@ import java.util.stream.Collectors;
  */
 public class WPCronHookExec extends WPCLIAction
 {
-    private final WPBlog blog;
     private final Set<WPCronHook> hooks;
 
     public WPCronHookExec(final WPBlog blog, final WPCronHook cron)
     {
         super(WPActionCategory.CRON, blog, "cron", "event", "run", cron.getHook());
 
-        this.blog = blog;
         this.hooks = new HashSet<>();
         this.addHook(cron);
 
@@ -63,6 +61,6 @@ public class WPCronHookExec extends WPCLIAction
     @Override
     public String getDescription()
     {
-        return "Cron::" + this.blog.getDomain() + " [" + this.hooks.stream().map(h -> h.getHook()).collect(Collectors.joining(", ")) + "]";
+        return this.hooks.stream().map(h -> h.getHook()).collect(Collectors.joining(", "));
     }
 }

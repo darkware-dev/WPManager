@@ -65,17 +65,13 @@ public abstract class WPCLIAction extends WPBasicAction<Boolean>
     @Override
     public Boolean exec()
     {
-        WPActionService.log.info("Starting action: {}", this.getDescription());
-
         try
         {
             this.command.execute();
-            WPActionService.log.info("Completed action: {}", this.getDescription());
             return true;
         }
         catch (WPCLIError error)
         {
-            WPActionService.log.error("Error running action: {}", error.getLocalizedMessage());
             return false;
         }
     }

@@ -206,6 +206,9 @@ public abstract class WPBasicAction<T> implements WPAction<T>
         this.state = WPActionState.RUNNING;
         this.startTime = LocalDateTime.now();
 
+        String subdomain = "site";
+        if (this.getBlog() != null) subdomain = this.getBlog().getSubDomain();
+
         TimeoutCop<T> watchdog = null;
         if (this.hasTimeout() && this.execFuture != null)
         {
@@ -215,13 +218,16 @@ public abstract class WPBasicAction<T> implements WPAction<T>
 
         try
         {
+            WPActionService.log.info("Starting action: {} ({}:{})", this.getDescription(), subdomain, this.getCategory());
             T returnValue = this.exec();
             this.state = WPActionState.COMPLETE;
+            WPActionService.log.info("Completed action: {} ({}:{})", this.getDescription(), subdomain, this.getCategory());
             return returnValue;
         }
         catch (Throwable t)
         {
             this.state = WPActionState.ERROR;
+            WPActionService.log.error("Cancelled action: {} ({}:{}): ", this.getDescription(), subdomain, this.getCategory(), t.getLocalizedMessage());
             throw t;
         }
         finally
