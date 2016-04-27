@@ -19,8 +19,8 @@ package org.darkware.wpman.agents;
 
 import org.darkware.cltools.utils.ListFile;
 import org.darkware.wpman.WPManager;
-import org.darkware.wpman.WPManagerConfiguration;
 import org.darkware.wpman.actions.WPAction;
+import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.data.WPUpdatableComponent;
 
 import java.nio.file.Path;
@@ -109,9 +109,9 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
      */
     protected final Path getAutoInstallListPath()
     {
-        WPManagerConfiguration config = this.getManager().getConfig();
+        WordpressConfig config = this.getManager().getConfig();
 
-        return config.getWordpress().getUpdateableCollection(this.getObjectType()).getAutoInstallList();
+        return config.getUpdateableCollection(this.getObjectType()).getAutoInstallList();
     }
 
     /**
@@ -122,9 +122,9 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
      */
     protected final Path getIgnoreListPath()
     {
-        WPManagerConfiguration config = this.getManager().getConfig();
+        WordpressConfig config = this.getManager().getConfig();
 
-        return config.getWordpress().getUpdateableCollection(this.getObjectType()).getIgnoreList();
+        return config.getUpdateableCollection(this.getObjectType()).getIgnoreList();
     }
 
     /**

@@ -17,7 +17,7 @@
 
 package org.darkware.wpman.wpcli;
 
-import org.darkware.wpman.WPManagerConfiguration;
+import org.darkware.wpman.config.WordpressConfig;
 
 import java.nio.file.Path;
 
@@ -34,7 +34,7 @@ import java.nio.file.Path;
  */
 public class WPCLIFactory
 {
-    private final WPManagerConfiguration config;
+    private final WordpressConfig config;
 
     private Path wordpressDir;
     private String defaultUrl;
@@ -46,14 +46,14 @@ public class WPCLIFactory
      *
      * @param config The configuration to attach the factory to.
      */
-    public WPCLIFactory(final WPManagerConfiguration config)
+    public WPCLIFactory(final WordpressConfig config)
     {
         super();
 
         this.config = config;
 
-        this.wordpressDir = this.config.getWordpress().getBasePath();
-        this.defaultUrl = this.config.getWordpress().getDefaultHost();
+        this.wordpressDir = this.config.getBasePath();
+        this.defaultUrl = this.config.getDefaultHost();
     }
 
     /**

@@ -86,7 +86,7 @@ public class WPPluginRemove extends WPBasicAction<Boolean>
                 catch (IOException e)
                 {
                     WPManager.log.warn("Error while trying to remove plugin directory: {}", pluginDir);
-                    Path pluginGutter = this.getManager().getConfig().getWordpress().getPluginListConfig().getGutterDir();
+                    Path pluginGutter = this.getManager().getConfig().getPluginListConfig().getGutterDir();
 
                     try
                     {

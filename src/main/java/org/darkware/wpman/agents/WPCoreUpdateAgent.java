@@ -59,7 +59,7 @@ public class WPCoreUpdateAgent extends WPPeriodicAgent
         if (this.getManager().getData().getCore().hasUpdate())
         {
             WPManager.log.info("Scheduling a core update in the core update window.");
-            this.waitingFuture = this.getManager().scheduleAction(new WPCoreUpdate(), this.getManager().getConfig().getWordpress().getCoreUpdateWindow());
+            this.waitingFuture = this.getManager().scheduleAction(new WPCoreUpdate(), this.getManager().getConfig().getCoreUpdateWindow());
         }
     }
 }

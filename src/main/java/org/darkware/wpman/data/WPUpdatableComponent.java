@@ -54,7 +54,7 @@ public abstract class WPUpdatableComponent extends WPDataComponent
 
     protected void readConfig()
     {
-        UpdatableCollectionConfig collectionConfig = this.getManager().getConfig().getWordpress().getUpdateableCollection(this.getConfigSection());
+        UpdatableCollectionConfig collectionConfig = this.getManager().getConfig().getUpdateableCollection(this.getConfigSection());
         UpdatableConfig config = collectionConfig.getDetails(this.getId());
 
         this.allowUpdates = config.getUpdatable();

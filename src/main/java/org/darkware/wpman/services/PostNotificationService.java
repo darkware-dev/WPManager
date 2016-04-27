@@ -52,7 +52,7 @@ public class PostNotificationService extends WPService
     {
         super.beforeActivation();
 
-        String postBlogName = this.getConfig().getWordpress().getNotification().getPostNotification().getBlog();
+        String postBlogName = this.getConfig().getNotification().getPostNotification().getBlog();
         this.postBlog = this.getManager().getData().getBlogs().get(postBlogName);
         if (this.postBlog == null) throw new IllegalStateException("Notification post blog does not exist.");
     }

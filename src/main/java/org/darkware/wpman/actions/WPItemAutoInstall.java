@@ -268,7 +268,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
      */
     protected Path getGutterDirectory() throws IOException
     {
-        Path gutter = this.getManager().getConfig().getWordpress().getUpdateableCollection(this.getItemType()).getGutterDir();
+        Path gutter = this.getManager().getConfig().getUpdateableCollection(this.getItemType()).getGutterDir();
         if (!Files.exists(gutter)) Files.createDirectories(gutter);
         return gutter;
     }

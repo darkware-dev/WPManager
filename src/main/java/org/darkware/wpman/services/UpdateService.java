@@ -44,6 +44,6 @@ public class UpdateService extends WPService
         WPManager.log.info("Submitting Core Update action.");
 
         if (request.isImmediate()) this.getManager().scheduleAction(new WPCoreUpdate());
-        else this.getManager().scheduleAction(new WPCoreUpdate(), this.getConfig().getWordpress().getCoreUpdateWindow());
+        else this.getManager().scheduleAction(new WPCoreUpdate(), this.getConfig().getCoreUpdateWindow());
     }
 }

@@ -19,7 +19,7 @@ package org.darkware.wpman.services;
 
 import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
-import org.darkware.wpman.WPManagerConfiguration;
+import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.events.WPEvent;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class WPService
 {
     private final WPManager manager;
-    private final WPManagerConfiguration config;
+    private final WordpressConfig config;
     private final AtomicBoolean active;
 
     public WPService()
@@ -46,7 +46,7 @@ public abstract class WPService
         super();
 
         this.manager = ContextManager.local().getContextualInstance(WPManager.class);
-        this.config = ContextManager.local().getContextualInstance(WPManagerConfiguration.class);
+        this.config = ContextManager.local().getContextualInstance(WordpressConfig.class);
         this.active = new AtomicBoolean(false);
     }
 
@@ -65,7 +65,7 @@ public abstract class WPService
      *
      * @return A {@code Config} collection.
      */
-    protected final WPManagerConfiguration getConfig()
+    protected final WordpressConfig getConfig()
     {
         return config;
     }

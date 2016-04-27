@@ -18,7 +18,7 @@
 package org.darkware.wpman.rest;
 
 import org.darkware.wpman.WPManager;
-import org.darkware.wpman.WPManagerConfiguration;
+import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.data.WPTheme;
 
 import javax.ws.rs.GET;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class ThemeResource
 {
     private final WPManager manager;
-    private final WPManagerConfiguration config;
+    private final WordpressConfig config;
 
     public ThemeResource(final WPManager manager)
     {

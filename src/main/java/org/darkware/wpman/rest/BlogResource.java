@@ -18,7 +18,7 @@
 package org.darkware.wpman.rest;
 
 import org.darkware.wpman.WPManager;
-import org.darkware.wpman.WPManagerConfiguration;
+import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.data.WPBlog;
 import org.darkware.wpman.data.WPBlogUsers;
 import org.darkware.wpman.data.WPBlogs;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 public class BlogResource
 {
     private final WPManager manager;
-    private final WPManagerConfiguration config;
+    private final WordpressConfig config;
     private final WPBlogs blogs;
 
     public BlogResource(final WPManager manager)

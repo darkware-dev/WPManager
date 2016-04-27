@@ -21,9 +21,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sun.istack.internal.NotNull;
 import io.dropwizard.Configuration;
 import org.darkware.wpman.config.WPCLIConfiguration;
-import org.darkware.wpman.config.WordpressConfig;
 
 import javax.validation.Valid;
+import java.nio.file.Path;
 
 /**
  * @author jeff
@@ -36,8 +36,8 @@ public class WPManagerConfiguration extends Configuration
     private WPCLIConfiguration wpcli = new WPCLIConfiguration();
 
     @NotNull
-    @Valid
-    private WordpressConfig wordpress = new WordpressConfig();
+    @JsonProperty("policyFile")
+    private Path policyFIle;
 
     /**
      * Fetch the configuration for WP-CLI.
@@ -51,6 +51,16 @@ public class WPManagerConfiguration extends Configuration
     }
 
     /**
+     * Fetch the path to the active policy configuration file.
+     *
+     * @return The {@link Path} to the file containing the policy configuration.
+     */
+    public Path getPolicyFile()
+    {
+        return this.policyFIle;
+    }
+
+    /**
      * Set the WP-CLI configuration.
      *
      * @param wpcli The {@code WPCLIConfiguration} to use.
@@ -59,17 +69,5 @@ public class WPManagerConfiguration extends Configuration
     public void setWpcli(final WPCLIConfiguration wpcli)
     {
         this.wpcli = wpcli;
-    }
-
-    @JsonProperty("wordpress")
-    public WordpressConfig getWordpress()
-    {
-        return wordpress;
-    }
-
-    @JsonProperty("wordpress")
-    public void setWordpress(final WordpressConfig wordpress)
-    {
-        this.wordpress = wordpress;
     }
 }

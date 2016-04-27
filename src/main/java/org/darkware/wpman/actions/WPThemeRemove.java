@@ -86,7 +86,7 @@ public class WPThemeRemove extends WPBasicAction<Boolean>
                 catch (IOException e)
                 {
                     WPManager.log.warn("Error while trying to remove theme directory: {}", themeDir);
-                    Path themeGutter = this.getManager().getConfig().getWordpress().getThemeListConfig().getGutterDir();
+                    Path themeGutter = this.getManager().getConfig().getThemeListConfig().getGutterDir();
 
                     try
                     {

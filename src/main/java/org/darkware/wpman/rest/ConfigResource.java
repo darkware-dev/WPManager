@@ -18,7 +18,6 @@
 package org.darkware.wpman.rest;
 
 import org.darkware.wpman.WPManager;
-import org.darkware.wpman.WPManagerConfiguration;
 import org.darkware.wpman.config.WordpressConfig;
 
 import javax.ws.rs.GET;
@@ -34,7 +33,7 @@ import javax.ws.rs.core.MediaType;
 public class ConfigResource
 {
     private final WPManager manager;
-    private final WPManagerConfiguration config;
+    private final WordpressConfig config;
 
     public ConfigResource(final WPManager manager)
     {
@@ -50,6 +49,6 @@ public class ConfigResource
     @Produces(MediaType.APPLICATION_JSON)
     public WordpressConfig getConfig()
     {
-        return this.config.getWordpress();
+        return this.config;
     }
 }

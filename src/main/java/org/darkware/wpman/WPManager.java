@@ -26,6 +26,7 @@ import org.darkware.wpman.agents.WPLowLatencyCronAgent;
 import org.darkware.wpman.agents.WPNetworkPolicyAgent;
 import org.darkware.wpman.agents.WPPluginSync;
 import org.darkware.wpman.agents.WPThemeSync;
+import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.data.WPData;
 import org.darkware.wpman.events.WPEvent;
@@ -65,7 +66,7 @@ public class WPManager extends Thread
 
     private final ContextManager context;
 
-    private final WPManagerConfiguration config;
+    private final WordpressConfig config;
     private final WPData data;
     private final WPCLIFactory builder;
     private final WPActionService actionService;
@@ -78,7 +79,7 @@ public class WPManager extends Thread
      *
      * @param config The configuration for the manager.
      */
-    public WPManager(final WPManagerConfiguration config)
+    public WPManager(final WordpressConfig config)
     {
         super();
 
@@ -114,7 +115,7 @@ public class WPManager extends Thread
      *
      * @return The current configuration.
      */
-    public WPManagerConfiguration getConfig()
+    public WordpressConfig getConfig()
     {
         return this.config;
     }
@@ -194,7 +195,7 @@ public class WPManager extends Thread
             //TODO: Check config to see if wP-CLI updates are allowed
             WPCLI.update();
         }
-        WPManager.log.info("WP Root at: {}", this.config.getWordpress().getBasePath());
+        WPManager.log.info("WP Root at: {}", this.config.getBasePath());
 
         WPData report = new WPData();
 
@@ -306,7 +307,7 @@ public class WPManager extends Thread
     //TODO: Deprecate and remove this method
     public Path getWPRoot()
     {
-        return this.config.getWordpress().getBasePath();
+        return this.config.getBasePath();
     }
 
     /**
