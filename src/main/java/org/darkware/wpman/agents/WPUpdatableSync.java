@@ -20,6 +20,7 @@ package org.darkware.wpman.agents;
 import org.darkware.cltools.utils.ListFile;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.actions.WPAction;
+import org.darkware.wpman.config.UpdatableCollectionConfig;
 import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.data.WPUpdatableComponent;
 
@@ -144,6 +145,8 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
     @Override
     public void executeAction()
     {
+        UpdatableCollectionConfig collectionConfig = this.getManager().getConfig().getUpdateableCollection(this.getObjectType());
+
         WPManager.log.info("Starting {} synchronization.", this.getObjectType());
 
         ListFile ignoreFile = new ListFile(this.getIgnoreListPath());
@@ -167,10 +170,13 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
                       .forEach(this::installItem);
 
         // Remove extraneous items
-        installedItems.stream()
-                      .filter(i -> !ignore.contains(i))
-                      .filter(p -> !requestedItems.contains(p))
-                      .forEach(this::removeItem);
+        if (collectionConfig.getRemoveUnknown())
+        {
+            installedItems.stream()
+                          .filter(i -> !ignore.contains(i))
+                          .filter(p -> !requestedItems.contains(p))
+                          .forEach(this::removeItem);
+        }
 
         // Find items to update, ignoring any item scheduled for removal
         this.getUpdatableList()

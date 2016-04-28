@@ -19,6 +19,8 @@ package org.darkware.wpman.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.darkware.wpman.util.serialization.PermissiveBooleanModule;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -37,6 +39,7 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig>
     private Path ignoreList;
     private Path baseDir;
     private Path gutterDir;
+    private boolean removeUnknown = false;
     private Map<String, T> items = new HashMap<>();
 
     @JsonIgnore
@@ -73,6 +76,30 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig>
     public void setAutoInstallList(final Path autoInstallList)
     {
         this.autoInstallList = autoInstallList;
+    }
+
+    /**
+     * Check if unknown items should be removed from the instance.
+     *
+     * @return {@code true} if items that aren't in the list should be removed, {@code false} if they should
+     * simply be ignored.
+     */
+    @JsonProperty("removeUnknown")
+    @JsonDeserialize(using = PermissiveBooleanModule.PermissiveBooleanDeserializer.class)
+    public boolean getRemoveUnknown()
+    {
+        return this.removeUnknown;
+    }
+
+    /**
+     * Sets the behavior for handling items that aren't found in the list of known items.
+     *
+     * @param removeUnknown {@code true} if items that aren't in the list should be removed, {@code false} if
+     * they should simply be ignored.
+     */
+    protected void setRemoveUnknown(final boolean removeUnknown)
+    {
+        this.removeUnknown = removeUnknown;
     }
 
     @JsonProperty("ignoreList")
