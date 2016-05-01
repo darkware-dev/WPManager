@@ -78,7 +78,6 @@ public class WPCLI
     private static Path toolPath = Paths.get("/opt/wpcli/wp");
     public static void setPath(final Path toolPath)
     {
-        //FileSystemTools.require(toolPath, "efrx");
         WPCLI.toolPath = toolPath;
     }
 
@@ -93,9 +92,14 @@ public class WPCLI
         updateCheck.setOption(new WPCLIFlag("allow-root"));
         updateCheck.setOption(new WPCLIFlag("no-color"));
 
-        Version updateVersion = updateCheck.readJSON(Version.class);
+        WPCLIFieldsOption fields = new WPCLIFieldsOption();
+        fields.add("version");
+        updateCheck.setOption(fields);
 
-        return updateVersion;
+        List<String> lines = updateCheck.readLines();
+
+        if (lines.size() == 2) return new Version(lines.get(1));
+        return null;
     }
 
     /**
