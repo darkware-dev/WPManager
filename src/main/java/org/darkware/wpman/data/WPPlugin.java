@@ -31,7 +31,7 @@ public class WPPlugin extends WPUpdatableComponent
 
     public WPPlugin()
     {
-        super();
+        super(WPUpdatableType.PLUGIN);
     }
 
     @Override

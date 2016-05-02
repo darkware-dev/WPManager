@@ -74,7 +74,7 @@ public class WPNetworkPolicyAgent extends WPPeriodicAgent
      */
     private void examinePlugin(final WPPlugin plugin)
     {
-        this.examinePlugin(plugin, this.getManager().getConfig().getPluginListConfig().getDetails(plugin.getId()));
+        this.examinePlugin(plugin, this.getManager().getConfig().getPluginListConfig().getConfig(plugin.getId()));
     }
 
     /**
@@ -135,7 +135,7 @@ public class WPNetworkPolicyAgent extends WPPeriodicAgent
     private void examineTheme(final WPTheme theme)
     {
         ThemeListConfig listConfig = this.getManager().getConfig().getThemeListConfig();
-        this.examineTheme(theme, listConfig, listConfig.getDetails(theme.getId()));
+        this.examineTheme(theme, listConfig, listConfig.getConfig(theme.getId()));
     }
 
     /**

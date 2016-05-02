@@ -17,8 +17,12 @@
 
 package org.darkware.wpman.config;
 
+import org.darkware.wpman.data.WPUpdatableType;
+
 /**
- *
+ * This is a configuration container for various configuration data controlling the themes that
+ * are installed and how the list should be managed. Individual theme configuration is handled by
+ * a collection of {@link ThemeConfig} objects.
  *
  * @author jeff
  * @since 2016-03-28
@@ -27,15 +31,19 @@ public class ThemeListConfig extends UpdatableCollectionConfig<ThemeConfig>
 {
     private Boolean defaultEnabled;
 
+    /**
+     * Create a new theme list configuration object. In order to be fully functional, it will need
+     * to be registered with a {@link WordpressConfig} object via {@link #setWpConfig(WordpressConfig)}.
+     */
     public ThemeListConfig()
     {
-        super();
+        super(WPUpdatableType.THEME);
 
         this.defaultEnabled = null;
     }
 
     @Override
-    protected ThemeConfig defaultDetails(final String itemId)
+    protected ThemeConfig defaultOverrides(final String itemId)
     {
         return new ThemeConfig(itemId);
     }

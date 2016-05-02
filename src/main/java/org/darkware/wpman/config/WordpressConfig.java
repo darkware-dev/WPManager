@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sun.istack.internal.NotNull;
 import org.darkware.wpman.WPManager;
+import org.darkware.wpman.data.WPUpdatableType;
 import org.darkware.wpman.util.TimeWindow;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -127,7 +128,6 @@ public class WordpressConfig
     {
         this.pluginListConfig = pluginListConfig;
         this.pluginListConfig.setWpConfig(this);
-        this.pluginListConfig.setCollectionType("plugins");
     }
 
     /**
@@ -151,7 +151,6 @@ public class WordpressConfig
     {
         this.themeListConfig = themeListConfig;
         this.themeListConfig.setWpConfig(this);
-        this.themeListConfig.setCollectionType("themes");
     }
 
     /**
@@ -279,16 +278,22 @@ public class WordpressConfig
      * two named collections: {@code plugin} and {@code theme}. This method supports some level of abstraction
      * for code wishing to handle these collections in a generic manner.
      *
-     * @param name The name of the collection to fetch.
+     * @param componentType The type of component to fetch the collection for.
      * @return An {@code UpdatableCollection}.
      */
     @JsonIgnore
     //TODO: This is apparently misspelled.
-    public UpdatableCollectionConfig getUpdateableCollection(final String name)
+    public UpdatableCollectionConfig getUpdateableCollection(final WPUpdatableType componentType)
     {
-        if ("plugin".endsWith(name)) return this.getPluginListConfig();
-        else if ("theme".equals(name)) return this.getThemeListConfig();
-        else throw new IllegalArgumentException("Unknown updatable collection: " + name);
+        switch (componentType)
+        {
+            case PLUGIN:
+                return this.getPluginListConfig();
+            case THEME:
+                return this.getThemeListConfig();
+            default:
+                throw new IllegalArgumentException("Unknown updatable collection: " + componentType);
+        }
     }
 
     /**

@@ -17,14 +17,28 @@
 
 package org.darkware.wpman.config;
 
+import org.darkware.wpman.data.WPUpdatableType;
+
 /**
+ * This is a configuration container for various configuration data controlling the plugins that
+ * are installed and how the list should be managed. Individual plugin configuration is handled by
+ * a collection of {@link PluginConfig} objects.
+ *
  * @author jeff
  * @since 2016-03-28
  */
 public class PluginListConfig extends UpdatableCollectionConfig<PluginConfig>
 {
+    /**
+     * Create a new plugin list configuration container.
+     */
+    public PluginListConfig()
+    {
+        super(WPUpdatableType.PLUGIN);
+    }
+
     @Override
-    protected PluginConfig defaultDetails(final String itemId)
+    protected PluginConfig defaultOverrides(final String itemId)
     {
         return new PluginConfig(itemId);
     }

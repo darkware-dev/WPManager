@@ -21,6 +21,7 @@ import org.darkware.cltools.utils.FileSystemTools;
 import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.WPUpdatableComponent;
+import org.darkware.wpman.data.WPUpdatableType;
 import org.darkware.wpman.security.ChecksumDatabase;
 import org.darkware.wpman.security.DirectoryScanner;
 import org.darkware.wpman.wpcli.WPCLI;
@@ -59,8 +60,8 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
 {
     /** The item ID which declares which item is being installed. */
     protected final String installToken;
-    /** The type of WordPress item being installed. Usually {@code theme} or {@code plugin}. */
-    protected final String itemType;
+    /** The type of WordPress item being installed. */
+    protected final WPUpdatableType itemType;
     /** The {@code ChecksumDatabase} tracking the file changes for this item. */
     protected final ChecksumDatabase checksums;
 
@@ -70,7 +71,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
      * @param itemType The type of item to install.
      * @param installToken The ID of the item to install.
      */
-    public WPItemAutoInstall(final String itemType, final String installToken)
+    public WPItemAutoInstall(final WPUpdatableType itemType, final String installToken)
     {
         super(WPActionCategory.INSTALL);
 
@@ -80,14 +81,13 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
     }
 
     /**
-     * Fetch the type of item which is being installed. For now, this should be limited to just
-     * {@code theme} or {@code plugin}.
+     * Fetch the {@link WPUpdatableType} of the item which is being installed.
      *
-     * @return The item type, as a {@code String}.
+     * @return The item type, as a {@code WPUpdatableType}.
      */
-    public final String getItemType()
+    public final WPUpdatableType getItemType()
     {
-        return itemType;
+        return this.itemType;
     }
 
     @Override
@@ -168,7 +168,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
             // Suppress change notices on the item directory
             this.checksums.suppress(this.getItemDirectory());
 
-            WPCLI update = this.getWPCWpcliFactory().build(this.getItemType(), "update", this.installToken);
+            WPCLI update = this.getWPCWpcliFactory().build(this.getItemType().getToken(), "update", this.installToken);
 
             if (update.checkSuccess())
             {
@@ -217,7 +217,7 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
             }
 
             // Run an install
-            WPCLI update = this.getWPCWpcliFactory().build(this.getItemType(), "install", this.installToken);
+            WPCLI update = this.getWPCWpcliFactory().build(this.getItemType().getToken(), "install", this.installToken);
             update.loadThemes(false);
             update.loadPlugins(false);
             update.setOption(new WPCLIFlag("force"));

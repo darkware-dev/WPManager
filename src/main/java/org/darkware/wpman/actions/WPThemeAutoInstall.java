@@ -18,6 +18,7 @@
 package org.darkware.wpman.actions;
 
 import org.darkware.wpman.data.WPTheme;
+import org.darkware.wpman.data.WPUpdatableType;
 
 import java.nio.file.Path;
 
@@ -39,7 +40,7 @@ public class WPThemeAutoInstall extends WPItemAutoInstall<WPTheme>
      */
     public WPThemeAutoInstall(final String installToken)
     {
-        super("theme", installToken);
+        super(WPUpdatableType.THEME, installToken);
     }
 
     @Override

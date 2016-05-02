@@ -22,6 +22,7 @@ import org.darkware.wpman.actions.WPPluginAutoInstall;
 import org.darkware.wpman.actions.WPPluginRemove;
 import org.darkware.wpman.data.WPPlugin;
 import org.darkware.wpman.data.WPUpdatableComponent;
+import org.darkware.wpman.data.WPUpdatableType;
 
 import java.time.Duration;
 import java.util.Set;
@@ -41,7 +42,7 @@ public class WPPluginSync extends WPUpdatableSync<WPPlugin>
      */
     public WPPluginSync()
     {
-        super("Plugin Sync", "plugin", Duration.ofMinutes(360));
+        super("Plugin Sync", WPUpdatableType.PLUGIN, Duration.ofMinutes(360));
     }
 
     /**

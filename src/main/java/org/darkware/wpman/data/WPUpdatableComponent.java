@@ -22,9 +22,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.darkware.wpman.config.UpdatableCollectionConfig;
 import org.darkware.wpman.config.UpdatableConfig;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
+ * This is a base implementation of a single updatable WordPress component. All updatable
+ * components share some similar behavior, particularly with respect to the handling of
+ * updates and the metadata used to support them (<em>eg:</em> versions).
+ *
  * @author jeff
  * @since 2016-01-25
  */
@@ -32,30 +34,40 @@ public abstract class WPUpdatableComponent extends WPDataComponent
 {
     @JsonProperty("name") private String id;
     private Version version;
-    @JsonProperty("update_version") private Version latestVersion;
+    @JsonProperty("update_version")
+    private Version latestVersion;
 
-    private AtomicBoolean configured;
+    @JsonIgnore
+    private final WPUpdatableType componentType;
     private boolean allowUpdates;
     private Version updateLimit;
 
-    public WPUpdatableComponent()
+    /**
+     * Create a new base instance of an updatable component.
+     *
+     * @param componentType The type of component in the concrete implementation
+     */
+    public WPUpdatableComponent(final WPUpdatableType componentType)
     {
         super();
-        this.configured = new AtomicBoolean(false);
+
+        this.componentType = componentType;
     }
 
+    @Deprecated
     protected abstract String getConfigSection();
 
     @Override
     protected void refreshBaseData()
     {
-
+        // Not currently supported.
     }
+
 
     protected void readConfig()
     {
-        UpdatableCollectionConfig collectionConfig = this.getManager().getConfig().getUpdateableCollection(this.getConfigSection());
-        UpdatableConfig config = collectionConfig.getDetails(this.getId());
+        UpdatableCollectionConfig collectionConfig = this.getManager().getConfig().getUpdateableCollection(this.componentType);
+        UpdatableConfig config = collectionConfig.getConfig(this.getId());
 
         this.allowUpdates = config.getUpdatable();
         this.updateLimit = config.getMaxVersion();

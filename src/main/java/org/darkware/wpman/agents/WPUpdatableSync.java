@@ -23,6 +23,7 @@ import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.config.UpdatableCollectionConfig;
 import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.data.WPUpdatableComponent;
+import org.darkware.wpman.data.WPUpdatableType;
 
 import java.nio.file.Path;
 import java.time.Duration;
@@ -41,7 +42,7 @@ import java.util.stream.Stream;
 public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WPPeriodicAgent
 {
     /** The type of updatable object being synchronized. */
-    protected String objectType;
+    protected WPUpdatableType objectType;
 
     /**
      * Creates a new {@code WPUpdatableSync} instance.
@@ -50,7 +51,7 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
      * @param objectType The type of updatable object being synchronized.
      * @param interval The amount of time between agent runs.
      */
-    public WPUpdatableSync(final String name, final String objectType, final Duration interval)
+    public WPUpdatableSync(final String name, final WPUpdatableType objectType, final Duration interval)
     {
         super(name, interval);
         this.objectType = objectType;
@@ -87,7 +88,7 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
      *
      * @return The type of WordPress object.
      */
-    protected final String getObjectType()
+    protected final WPUpdatableType getObjectType()
     {
         return this.objectType;
     }
@@ -100,7 +101,7 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
      */
     protected final String getObjectTypePlural()
     {
-        return this.objectType + "s";
+        return this.objectType.getPlural();
     }
 
     /**

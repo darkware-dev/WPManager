@@ -22,6 +22,7 @@ import org.darkware.wpman.actions.WPThemeAutoInstall;
 import org.darkware.wpman.actions.WPThemeRemove;
 import org.darkware.wpman.data.WPTheme;
 import org.darkware.wpman.data.WPUpdatableComponent;
+import org.darkware.wpman.data.WPUpdatableType;
 
 import java.time.Duration;
 import java.util.Set;
@@ -37,11 +38,11 @@ import java.util.stream.Stream;
 public class WPThemeSync extends WPUpdatableSync<WPTheme>
 {
     /**
-     * Create a plugin synchronization agent.
+     * Create a theme synchronization agent.
      */
     public WPThemeSync()
     {
-        super("Theme Sync", "theme", Duration.ofMinutes(480));
+        super("Theme Sync", WPUpdatableType.THEME, Duration.ofMinutes(480));
     }
 
     protected Set<String> getInstalledItemIds()

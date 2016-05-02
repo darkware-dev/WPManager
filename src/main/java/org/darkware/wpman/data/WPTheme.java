@@ -29,14 +29,13 @@ public class WPTheme extends WPUpdatableComponent
 {
     @JsonProperty("title") private String name;
     private String description;
-
     private WPThemeStatus status;
     @JsonDeserialize(using = ThemeEnabledDeserializer.class)
     private boolean enabled;
 
     public WPTheme()
     {
-        super();
+        super(WPUpdatableType.THEME);
     }
 
     @Override

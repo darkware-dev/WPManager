@@ -18,6 +18,7 @@
 package org.darkware.wpman.actions;
 
 import org.darkware.wpman.data.WPPlugin;
+import org.darkware.wpman.data.WPUpdatableType;
 
 import java.nio.file.Path;
 
@@ -39,7 +40,7 @@ public class WPPluginAutoInstall extends WPItemAutoInstall<WPPlugin>
      */
     public WPPluginAutoInstall(final String installToken)
     {
-        super("plugin", installToken);
+        super(WPUpdatableType.PLUGIN, installToken);
     }
 
     @Override

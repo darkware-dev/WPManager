@@ -20,6 +20,7 @@ package org.darkware.wpman.config;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.darkware.wpman.data.WPUpdatableType;
 import org.darkware.wpman.util.serialization.PermissiveBooleanModule;
 
 import java.nio.file.Path;
@@ -27,12 +28,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * This is a base configuration implementation for any updatable list of objects. For now (and
+ * the foreseeable future) this is just themes and plugins. The concrete implementations of this
+ * are the {@link PluginListConfig} and {@link ThemeListConfig} classes. Common configuration
+ * facilities for these updatable lists include some directory fields, an external, simplified list
+ * of items to sync the installed list against, another list of items that should be excluded from
+ * list syncs or other management actions, and some extra configuration for the handling of those lists.
+ * <p>
+ * This base implementation includes support for a generic list of {@link UpdatableConfig} objects
+ * with lazy-creation of default config objects on attempt to access a non-existent configuration
+ * object.
+ *
  * @author jeff
  * @since 2016-03-28
  */
 public abstract class UpdatableCollectionConfig<T extends UpdatableConfig>
 {
-    protected String collectionType;
+    protected final WPUpdatableType collectionType;
     protected WordpressConfig wpConfig;
 
     private Path autoInstallList;
@@ -42,16 +54,23 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig>
     private boolean removeUnknown = false;
     private Map<String, T> items = new HashMap<>();
 
-    @JsonIgnore
-    public String getCollectionType()
+    public UpdatableCollectionConfig(final WPUpdatableType collectionType)
     {
-        return collectionType;
+        super();
+
+        this.collectionType = collectionType;
     }
 
+    /**
+     * Fetch the human-readable type token for this collection. Currently supported values are
+     * either "themes" or "plugins".
+     *
+     * @return The type as a simple {@code String}.
+     */
     @JsonIgnore
-    public void setCollectionType(final String collectionType)
+    public WPUpdatableType getCollectionType()
     {
-        this.collectionType = collectionType;
+        return this.collectionType;
     }
 
     @JsonIgnore
@@ -117,7 +136,7 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig>
     @JsonProperty("dir")
     public Path getBaseDir()
     {
-        if (this.gutterDir == null) this.gutterDir = this.wpConfig.getContentDir().resolve(this.collectionType);
+        if (this.gutterDir == null) this.gutterDir = this.wpConfig.getContentDir().resolve(this.collectionType.getPlural());
         return baseDir;
     }
 
@@ -140,23 +159,23 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig>
         this.gutterDir = (gutterDir.isAbsolute()) ? gutterDir : this.wpConfig.getContentDir().resolve(gutterDir);
     }
 
-    @JsonProperty("details")
+    @JsonProperty("items")
     public Map<String, T> getItems()
     {
         return items;
     }
 
-    @JsonProperty("details")
     public void setItems(final Map<String, T> items)
     {
         this.items = items;
     }
 
-    public T getDetails(final String itemId)
+    @JsonIgnore
+    public T getConfig(final String itemId)
     {
-        if (!this.getItems().containsKey(itemId)) this.getItems().put(itemId, this.defaultDetails(itemId));
+        if (!this.getItems().containsKey(itemId)) this.getItems().put(itemId, this.defaultOverrides(itemId));
         return this.getItems().get(itemId);
     }
 
-    protected abstract T defaultDetails(final String itemId);
+    protected abstract T defaultOverrides(final String itemId);
 }
