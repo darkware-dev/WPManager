@@ -39,10 +39,14 @@ public class Version implements Comparable<Version>
      * Converts the given version string into a {@link Comparable} object.
      *
      * @param versionString The version, as a {@code String}.
+     * @throws IllegalArgumentException If the string to parse is null or empty.
      */
-    public Version(String versionString)
+    public Version(final String versionString)
     {
         super();
+
+        if (versionString == null) throw new IllegalArgumentException("Version string cannot be null.");
+        if (versionString.length() < 1) throw new IllegalArgumentException("Version string cannot be zero-length.");
 
         this.stringValue = versionString;
 
