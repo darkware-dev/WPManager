@@ -113,7 +113,7 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
     {
         WordpressConfig config = this.getManager().getConfig();
 
-        return config.getUpdateableCollection(this.getObjectType()).getAutoInstallList();
+        return config.getUpdatableCollection(this.getObjectType()).getAutoInstallList();
     }
 
     /**
@@ -126,7 +126,7 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
     {
         WordpressConfig config = this.getManager().getConfig();
 
-        return config.getUpdateableCollection(this.getObjectType()).getIgnoreList();
+        return config.getUpdatableCollection(this.getObjectType()).getIgnoreList();
     }
 
     /**
@@ -146,7 +146,7 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
     @Override
     public void executeAction()
     {
-        UpdatableCollectionConfig collectionConfig = this.getManager().getConfig().getUpdateableCollection(this.getObjectType());
+        UpdatableCollectionConfig collectionConfig = this.getManager().getConfig().getUpdatableCollection(this.getObjectType());
 
         WPManager.log.info("Starting {} synchronization.", this.getObjectType());
 

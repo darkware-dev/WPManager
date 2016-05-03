@@ -76,7 +76,6 @@ public class WordpressConfig
      *
      * @param basePath The path to the WordPress root directory.
      */
-    @JsonProperty("root")
     public void setBasePath(final Path basePath)
     {
         this.basePath = basePath;
@@ -283,7 +282,7 @@ public class WordpressConfig
      */
     @JsonIgnore
     //TODO: This is apparently misspelled.
-    public UpdatableCollectionConfig getUpdateableCollection(final WPUpdatableType componentType)
+    public UpdatableCollectionConfig getUpdatableCollection(final WPUpdatableType componentType)
     {
         switch (componentType)
         {
