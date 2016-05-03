@@ -17,26 +17,26 @@
 
 package org.darkware.wpman.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.darkware.wpman.data.Version;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.nio.file.Path;
 
 /**
  * @author jeff
- * @since 2016-03-28
+ * @since 2016-05-03
  */
-public class UpdatableConfig extends ItemConfig
+public class ItemConfig
 {
-    private Boolean updatable = true;
-    private Version maxVersion;
+    protected transient final Path src;
 
     /**
      * Create a new item configuration.
      */
-    public UpdatableConfig()
+    public ItemConfig()
     {
         super();
+
+        this.src = null;
     }
 
     /**
@@ -44,32 +44,33 @@ public class UpdatableConfig extends ItemConfig
      *
      * @param srcFile The {@link Path} to the fragment file which generated this configuration.
      */
-    public UpdatableConfig(final Path srcFile)
+    public ItemConfig(final Path srcFile)
     {
-        super(srcFile);
+        super();
+
+        this.src = srcFile;
     }
 
-    @JsonProperty("updatable")
-    public Boolean getUpdatable()
+    /**
+     * Fetches the path to the file which provided the configuration for this item.
+     *
+     * @return A {@link Path} to the configuration fragment, or {@code null} if the item is configured in the
+     * master configuration.
+     */
+    @JsonIgnore
+    public Path getPolicyFile()
     {
-        return updatable;
+        return this.src;
     }
 
-    @JsonProperty("updatable")
-    public void setUpdatable(final Boolean updatable)
+    /**
+     * Checks to see if this item was configured via policy fragment file, or the global policy.
+     * @return {@code true} if the item has a corresponding policy fragment, {@code false} if it was configured
+     * in the global policy file.
+     */
+    @JsonIgnore
+    public boolean hasPolicyFile()
     {
-        this.updatable = updatable;
-    }
-
-    @JsonProperty("maxVersion")
-    public Version getMaxVersion()
-    {
-        return maxVersion;
-    }
-
-    @JsonProperty("maxVersion")
-    public void setMaxVersion(final Version maxVersion)
-    {
-        this.maxVersion = maxVersion;
+        return this.src != null;
     }
 }

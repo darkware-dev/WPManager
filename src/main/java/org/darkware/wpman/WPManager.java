@@ -91,7 +91,7 @@ public class WPManager extends Thread
         context.registerInstance(this);
 
         this.config = config;
-        context.registerInstance(this.config);
+        context.registerInstance(this.config, WordpressConfig.class);
 
         this.eventManager = new WPEventManager();
         context.registerInstance(this.eventManager);

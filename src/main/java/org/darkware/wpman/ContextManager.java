@@ -89,11 +89,16 @@ public class ContextManager
         return this.instances.containsKey(typeToken.getType());
     }
 
+    public <T> void registerInstance(T instance, Type type)
+    {
+        this.instances.put(type, instance);
+        WPManager.log.debug("Registered instance for: {}@{}", type, Thread.currentThread().getId());
+    }
+
     public <T> void registerInstance(T instance)
     {
         final Type instanceType = TypeToken.of(instance.getClass()).getType();
-        this.instances.put(instanceType, instance);
-        WPManager.log.debug("Registered instance for: {}@{}", instanceType, Thread.currentThread().getId());
+        this.registerInstance(instance, instanceType);
     }
 
     private final static class ContextManagerException extends RuntimeException

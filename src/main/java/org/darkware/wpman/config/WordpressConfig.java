@@ -19,45 +19,27 @@ package org.darkware.wpman.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sun.istack.internal.NotNull;
-import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.WPUpdatableType;
 import org.darkware.wpman.util.TimeWindow;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.Valid;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class is a container and serialization object for WordPress and {@link WPManager} configuration.
- *
  * @author jeff
- * @since 2016-03-28
+ * @since 2016-05-03
  */
-public class WordpressConfig
+public interface WordpressConfig
 {
-    @NotNull
-    private Path basePath;
-    private Path contentDir;
-    private Path uploadDir;
-
-    @NotEmpty
-    private String defaultHost;
-
-    @Valid
-    private TimeWindow coreUpdateWindow = new TimeWindow(0, 2);
-
-    @Valid
-    private PluginListConfig pluginListConfig = new PluginListConfig();
-
-    @Valid
-    private ThemeListConfig themeListConfig = new ThemeListConfig();
-
-    private NotificationConfig notification = new NotificationConfig();
-
-    private Map<String, Path> dataFiles = new HashMap<>();
+    /**
+     * Make a best effort to reload as much of the configuration data as possible. The reload must
+     * allow for continuously available configuration data. For example, at no time should an attempt
+     * to fetch data be fetching data that was configured in the data files at some point, but is not
+     * reflected in the current configuration data. It's acceptable for data to be out-of-date, but
+     * non-existent.
+     */
+    void reload();
 
     /**
      * Fetch the path to the top level of the WordPress install
@@ -66,20 +48,7 @@ public class WordpressConfig
      */
     @JsonProperty("root")
     @Valid
-    public Path getBasePath()
-    {
-        return this.basePath;
-    }
-
-    /**
-     * Sets the path to the WordPress root directory.
-     *
-     * @param basePath The path to the WordPress root directory.
-     */
-    public void setBasePath(final Path basePath)
-    {
-        this.basePath = basePath;
-    }
+    Path getBasePath();
 
     /**
      * Fetches the default hostname to use when issuing WP-CLI commands. This will be overridden for
@@ -89,22 +58,15 @@ public class WordpressConfig
      * @return The default hostname to use.
      */
     @JsonProperty("defaultHost")
-    public String getDefaultHost()
-    {
-        return this.defaultHost;
-    }
+    String getDefaultHost();
 
     /**
-     * Sets the default hostname to use for WP-CLI requests. This should be a valid hostname recognized
-     * by the WordPress installation.
+     * Fetch the root directory for storing modular policy fragments.
      *
-     * @param defaultHost A valid WordPress hostname
+     * @return The root directory as a {@code Path}.
      */
-    @JsonProperty("defaultHost")
-    public void setDefaultHost(final String defaultHost)
-    {
-        this.defaultHost = defaultHost;
-    }
+    @JsonProperty("policyRoot")
+    Path getPolicyRoot();
 
     /**
      * Fetch the configuration container for plugin configuration.
@@ -112,22 +74,7 @@ public class WordpressConfig
      * @return A populated {@link PluginListConfig} object.
      */
     @JsonProperty("plugins")
-    public PluginListConfig getPluginListConfig()
-    {
-        return this.pluginListConfig;
-    }
-
-    /**
-     * Sets the plugin configuration object for this configuration container.
-     *
-     * @param pluginListConfig The plugin configuration to use.
-     */
-    @JsonProperty("plugins")
-    protected void setPluginListConfig(final PluginListConfig pluginListConfig)
-    {
-        this.pluginListConfig = pluginListConfig;
-        this.pluginListConfig.setWpConfig(this);
-    }
+    PluginListConfig getPluginListConfig();
 
     /**
      * Fetch the configuration container for theme configuration.
@@ -135,22 +82,7 @@ public class WordpressConfig
      * @return A populated {@link ThemeListConfig} object.
      */
     @JsonProperty("themes")
-    public ThemeListConfig getThemeListConfig()
-    {
-        return this.themeListConfig;
-    }
-
-    /**
-     * Sets the theme configuration object for this configuration container.
-     *
-     * @param themeListConfig The theme configuration to use.
-     */
-    @JsonProperty("themes")
-    protected void setThemeListConfig(final ThemeListConfig themeListConfig)
-    {
-        this.themeListConfig = themeListConfig;
-        this.themeListConfig.setWpConfig(this);
-    }
+    ThemeListConfig getThemeListConfig();
 
     /**
      * Fetch the path to the WordPress content directory. By default this would point to the
@@ -159,22 +91,7 @@ public class WordpressConfig
      * @return The path to the WordPress content directory.
      */
     @JsonProperty("contentDir")
-    public Path getContentDir()
-    {
-        if (this.contentDir == null) this.contentDir = this.getBasePath().resolve("wp-content");
-        return this.contentDir;
-    }
-
-    /**
-     * Set the path to the WordPress content directory.
-     *
-     * @param contentDir The path to the content directory.
-     */
-    @JsonProperty("contentDir")
-    public void setContentDir(final Path contentDir)
-    {
-        this.contentDir = (contentDir.isAbsolute()) ? contentDir : this.getBasePath().resolve(contentDir);
-    }
+    Path getContentDir();
 
     /**
      * Fetch the path to the directory WordPress uses for uploaded media. This is the root directory for
@@ -184,22 +101,7 @@ public class WordpressConfig
      * @return A {@code Path} pointing to the root upload directory.
      */
     @JsonProperty("uploadDir")
-    public Path getUploadDir()
-    {
-        if (this.uploadDir == null) this.uploadDir = this.getContentDir().resolve("uploads");
-        return this.uploadDir;
-    }
-
-    /**
-     * Sets the base upload directory used the WordPress media library.
-     *
-     * @param uploadDir The root directory for all blogs' uploaded files.
-     */
-    @JsonProperty("uploadDir")
-    public void setUploadDir(final Path uploadDir)
-    {
-        this.uploadDir = (uploadDir.isAbsolute()) ? uploadDir : this.getContentDir().resolve("uploads");
-    }
+    Path getUploadDir();
 
     /**
      * Fetch the dictionary of named data files. These is a generic storage mechanism for data files used
@@ -208,21 +110,7 @@ public class WordpressConfig
      * @return A {@code Map} of {@code Path} objects, indexed by unique names.
      */
     @JsonProperty("dataFiles")
-    public Map<String, Path> getDataFiles()
-    {
-        return this.dataFiles;
-    }
-
-    /**
-     * Set or replace the {@code Map} of extra data files.
-     *
-     * @param dataFiles A {@code Map} of {@code Path} objects, indexed by unique names.
-     */
-    @JsonProperty("dataFiles")
-    public void setDataFiles(final Map<String, Path> dataFiles)
-    {
-        this.dataFiles = dataFiles;
-    }
+    Map<String, Path> getDataFiles();
 
     /**
      * Fetch the notifications configuration container. This declares various configurations for how
@@ -231,21 +119,7 @@ public class WordpressConfig
      * @return The notifications configuration container.
      */
     @JsonProperty("notification")
-    public NotificationConfig getNotification()
-    {
-        return this.notification;
-    }
-
-    /**
-     * Sets the notifications configuration container.
-     *
-     * @param notification The notifications configuration container to use.
-     */
-    @JsonProperty("notification")
-    protected void setNotification(final NotificationConfig notification)
-    {
-        this.notification = notification;
-    }
+    NotificationConfig getNotification();
 
     /**
      * Fetch the {@link TimeWindow} to use for normal WordPress core updates. Core updates are more disruptive
@@ -254,23 +128,7 @@ public class WordpressConfig
      *
      * @return A {@code TimeWindow} to use, or {@code null} if no window is defined.
      */
-    public TimeWindow getCoreUpdateWindow()
-    {
-        return this.coreUpdateWindow;
-    }
-
-    /**
-     * Declares the {@code TimeWindow} to use for WordPress core updates. Setting this value to {@code null}
-     * will allow updates to occur at any time.
-     *
-     * @param coreUpdateWindow The {@code TimeWindow} to use, or {@code null} if no window is desired.
-     */
-    public void setCoreUpdateWindow(final TimeWindow coreUpdateWindow)
-    {
-        this.coreUpdateWindow = coreUpdateWindow;
-    }
-
-    // Special Accessors
+    TimeWindow getCoreUpdateWindow();
 
     /**
      * Fetch the {@link UpdatableCollectionConfig} for the given collection name. Currently, there are only
@@ -281,19 +139,7 @@ public class WordpressConfig
      * @return An {@code UpdatableCollection}.
      */
     @JsonIgnore
-    //TODO: This is apparently misspelled.
-    public UpdatableCollectionConfig getUpdatableCollection(final WPUpdatableType componentType)
-    {
-        switch (componentType)
-        {
-            case PLUGIN:
-                return this.getPluginListConfig();
-            case THEME:
-                return this.getThemeListConfig();
-            default:
-                throw new IllegalArgumentException("Unknown updatable collection: " + componentType);
-        }
-    }
+    UpdatableCollectionConfig getUpdatableCollection(WPUpdatableType componentType);
 
     /**
      * Fetch the named data file. The files are declared in the set returned by {@link #getDataFiles()}.
@@ -302,8 +148,5 @@ public class WordpressConfig
      * @return A {@code Path} to the data file, or {@code null} if no matching file was found.
      */
     @JsonIgnore
-    public Path getDataFile(final String id)
-    {
-        return this.getDataFiles().get(id);
-    }
+    Path getDataFile(String id);
 }

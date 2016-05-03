@@ -24,8 +24,6 @@ import org.darkware.wpman.data.WPUpdatableType;
 import org.darkware.wpman.util.serialization.PermissiveBooleanModule;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This is a base configuration implementation for any updatable list of objects. For now (and
@@ -42,17 +40,15 @@ import java.util.Map;
  * @author jeff
  * @since 2016-03-28
  */
-public abstract class UpdatableCollectionConfig<T extends UpdatableConfig>
+public abstract class UpdatableCollectionConfig<T extends UpdatableConfig> extends CollectionConfig<T>
 {
     protected final WPUpdatableType collectionType;
-    protected WordpressConfig wpConfig;
 
     private Path autoInstallList;
     private Path ignoreList;
     private Path baseDir;
     private Path gutterDir;
     private boolean removeUnknown = false;
-    private Map<String, T> items = new HashMap<>();
 
     public UpdatableCollectionConfig(final WPUpdatableType collectionType)
     {
@@ -73,16 +69,16 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig>
         return this.collectionType;
     }
 
+    /**
+     * Fetch the default subdirectory name for configuration fragments.
+     *
+     * @return The subdirectory name as a simple {@code String}.
+     */
+    @Override
     @JsonIgnore
-    public WordpressConfig getWpConfig()
+    protected String getDefaultPolicySubdirectory()
     {
-        return wpConfig;
-    }
-
-    @JsonIgnore
-    public void setWpConfig(final WordpressConfig wpConfig)
-    {
-        this.wpConfig = wpConfig;
+        return this.getCollectionType().getPlural();
     }
 
     @JsonProperty("autoInstallList")
@@ -136,46 +132,27 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig>
     @JsonProperty("dir")
     public Path getBaseDir()
     {
-        if (this.gutterDir == null) this.gutterDir = this.wpConfig.getContentDir().resolve(this.collectionType.getPlural());
+        if (this.gutterDir == null) this.gutterDir = this.getWpConfig().getContentDir().resolve(this.collectionType.getPlural());
         return baseDir;
     }
 
     @JsonProperty("dir")
     public void setBaseDir(final Path baseDir)
     {
-        this.baseDir = (baseDir.isAbsolute()) ? baseDir : this.wpConfig.getContentDir().resolve(baseDir);
+        this.baseDir = (baseDir.isAbsolute()) ? baseDir : this.getWpConfig().getContentDir().resolve(baseDir);
     }
 
     @JsonProperty("gutterDir")
     public Path getGutterDir()
     {
-        if (this.gutterDir == null) this.gutterDir = this.wpConfig.getContentDir().resolve(this.collectionType + ".gutter");
+        if (this.gutterDir == null) this.gutterDir = this.getWpConfig().getContentDir().resolve(this.collectionType + ".gutter");
         return gutterDir;
     }
 
     @JsonProperty("gutterDir")
     public void setGutterDir(final Path gutterDir)
     {
-        this.gutterDir = (gutterDir.isAbsolute()) ? gutterDir : this.wpConfig.getContentDir().resolve(gutterDir);
+        this.gutterDir = (gutterDir.isAbsolute()) ? gutterDir : this.getWpConfig().getContentDir().resolve(gutterDir);
     }
 
-    @JsonProperty("items")
-    public Map<String, T> getItems()
-    {
-        return items;
-    }
-
-    public void setItems(final Map<String, T> items)
-    {
-        this.items = items;
-    }
-
-    @JsonIgnore
-    public T getConfig(final String itemId)
-    {
-        if (!this.getItems().containsKey(itemId)) this.getItems().put(itemId, this.defaultOverrides(itemId));
-        return this.getItems().get(itemId);
-    }
-
-    protected abstract T defaultOverrides(final String itemId);
 }

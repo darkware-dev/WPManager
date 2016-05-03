@@ -22,6 +22,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.darkware.wpman.config.ReloadableWordpressConfig;
 import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.rest.*;
 import org.darkware.wpman.rest.health.NoopHealthCheck;
@@ -37,7 +38,6 @@ import org.darkware.wpman.wpcli.WPCLI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.file.Files;
 
 /**
@@ -94,37 +94,31 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
     {
         WPManagerApplication.log.info("WP-CLI is at: " + configuration.getWpcli().getBinaryPath());
 
-        try
-        {
-            // Make a new object mapper with YAML support.
-            //   The currently registered ContextManager object isn't set up for Yaml support.
-            ObjectMapper om = new ObjectMapper(new YAMLFactory());
-            this.registerMappingModules(om);
-            WordpressConfig config = om.readValue(configuration.getPolicyFile().toFile(), WordpressConfig.class);
+        // Make a new object mapper with YAML support.
+        //   The currently registered ContextManager object isn't set up for Yaml support.
+        ObjectMapper om = new ObjectMapper(new YAMLFactory());
+        this.registerMappingModules(om);
 
-            // Create the all-important manager object.
-            WPManager manager = new WPManager(config);
+        WordpressConfig config = new ReloadableWordpressConfig(configuration.getPolicyFile(), om);
 
-            environment.jersey().register(new UtilityResource());
-            environment.jersey().register(new ConfigResource(manager));
-            environment.jersey().register(new PluginResource(manager));
-            environment.jersey().register(new ThemeResource(manager));
-            environment.jersey().register(new BlogResource(manager));
-            environment.jersey().register(new CronResource(manager));
-            environment.jersey().register(new ActionResource(manager));
-            environment.jersey().register(new CoreResource(manager));
+        // Create the all-important manager object.
+        WPManager manager = new WPManager(config);
 
-            final NoopHealthCheck healthCheck = new NoopHealthCheck();
-            environment.healthChecks().register("noop", healthCheck);
+        environment.jersey().register(new UtilityResource());
+        environment.jersey().register(new ConfigResource(manager));
+        environment.jersey().register(new PluginResource(manager));
+        environment.jersey().register(new ThemeResource(manager));
+        environment.jersey().register(new BlogResource(manager));
+        environment.jersey().register(new CronResource(manager));
+        environment.jersey().register(new ActionResource(manager));
+        environment.jersey().register(new CoreResource(manager));
 
-            // Initialize a WPManager
-            WPCLI.setPath(configuration.getWpcli().getBinaryPath());
-            if (Files.notExists(configuration.getWpcli().getBinaryPath())) WPCLI.update();
-            manager.start();
-        }
-        catch (IOException e)
-        {
-            WPManager.log.error("Could not open the policy file: {}", configuration.getPolicyFile(), e);
-        }
+        final NoopHealthCheck healthCheck = new NoopHealthCheck();
+        environment.healthChecks().register("noop", healthCheck);
+
+        // Initialize a WPManager
+        WPCLI.setPath(configuration.getWpcli().getBinaryPath());
+        if (Files.notExists(configuration.getWpcli().getBinaryPath())) WPCLI.update();
+        manager.start();
     }
 }

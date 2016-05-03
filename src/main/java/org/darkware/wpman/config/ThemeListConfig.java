@@ -33,7 +33,7 @@ public class ThemeListConfig extends UpdatableCollectionConfig<ThemeConfig>
 
     /**
      * Create a new theme list configuration object. In order to be fully functional, it will need
-     * to be registered with a {@link WordpressConfig} object via {@link #setWpConfig(WordpressConfig)}.
+     * to be registered with a {@link WordpressConfigData} object via {@link #setWpConfig(WordpressConfig)}.
      */
     public ThemeListConfig()
     {
