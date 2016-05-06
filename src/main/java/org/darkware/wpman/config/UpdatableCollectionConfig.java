@@ -132,7 +132,7 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig> exten
     @JsonProperty("dir")
     public Path getBaseDir()
     {
-        if (this.gutterDir == null) this.gutterDir = this.getWpConfig().getContentDir().resolve(this.collectionType.getPlural());
+        if (this.baseDir == null) this.baseDir = this.getWpConfig().getContentDir().resolve(this.collectionType.getPlural());
         return baseDir;
     }
 
