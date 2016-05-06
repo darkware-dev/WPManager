@@ -145,7 +145,7 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig> exten
     @JsonProperty("gutterDir")
     public Path getGutterDir()
     {
-        if (this.gutterDir == null) this.gutterDir = this.getWpConfig().getContentDir().resolve(this.collectionType + ".gutter");
+        if (this.gutterDir == null) this.gutterDir = this.getWpConfig().getContentDir().resolve(this.collectionType.getPlural() + ".gutter");
         return gutterDir;
     }
 
