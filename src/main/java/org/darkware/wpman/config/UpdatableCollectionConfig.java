@@ -24,6 +24,7 @@ import org.darkware.wpman.data.WPUpdatableType;
 import org.darkware.wpman.util.serialization.PermissiveBooleanModule;
 
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 
 /**
  * This is a base configuration implementation for any updatable list of objects. For now (and
@@ -49,12 +50,16 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig> exten
     private Path baseDir;
     private Path gutterDir;
     private boolean removeUnknown = false;
+    private String requirePermissions;
+    private String forbidPermissions;
 
     public UpdatableCollectionConfig(final WPUpdatableType collectionType)
     {
         super();
 
         this.collectionType = collectionType;
+        this.requirePermissions = "rw-r-----";
+        this.forbidPermissions = "--x--xrwx";
     }
 
     /**
@@ -155,4 +160,49 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig> exten
         this.gutterDir = (gutterDir.isAbsolute()) ? gutterDir : this.getWpConfig().getContentDir().resolve(gutterDir);
     }
 
+    /**
+     * Fetch the set of permissions to force on all filesystem items within the collection directory. This applies
+     * to both files and directories, though additional changes will be made to directories to retain sane
+     * filesystem behavior.
+     *
+     * @return The set of permissions, formatted according to {@link PosixFilePermissions#fromString(String)}.
+     */
+    @JsonProperty("requirePermissions")
+    public String getRequirePermissions()
+    {
+        return this.requirePermissions;
+    }
+
+    /**
+     * Set the permissions to force on all filesystem items in the collection directory.
+     *
+     * @param requirePermissions The set of permissions, formatted according to {@link PosixFilePermissions#fromString(String)}.
+     */
+    public void setRequirePermissions(final String requirePermissions)
+    {
+        this.requirePermissions = requirePermissions;
+    }
+
+    /**
+     * Fetch the set of permissions to forbid on all filesystem items within the collection directory. This applies
+     * to both files and directories, though additional changes will be made to directories to retain sane
+     * filesystem behavior.
+     *
+     * @return The set of permissions, formatted according to {@link PosixFilePermissions#fromString(String)}.
+     */
+    @JsonProperty("forbidPermissions")
+    public String getForbidPermissions()
+    {
+        return this.forbidPermissions;
+    }
+
+    /**
+     * Set the permissions to forbid on all filesystem items in the collection directory.
+     *
+     * @param forbidPermissions The set of permissions, formatted according to {@link PosixFilePermissions#fromString(String)}.
+     */
+    public void setForbidPermissions(final String forbidPermissions)
+    {
+        this.forbidPermissions = forbidPermissions;
+    }
 }

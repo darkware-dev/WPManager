@@ -115,6 +115,13 @@ public class ReloadableWordpressConfig implements WordpressConfig
     }
 
     @Override
+    @JsonProperty("uploads")
+    public UploadsConfig getUploadsConfig()
+    {
+        return data.getUploadsConfig();
+    }
+
+    @Override
     @JsonProperty("contentDir")
     public Path getContentDir()
     {
@@ -146,6 +153,18 @@ public class ReloadableWordpressConfig implements WordpressConfig
     public TimeWindow getCoreUpdateWindow()
     {
         return data.getCoreUpdateWindow();
+    }
+
+    @Override
+    public String getRequirePermissions()
+    {
+        return this.data.getRequirePermissions();
+    }
+
+    @Override
+    public String getForbidPermissions()
+    {
+        return this.data.getForbidPermissions();
     }
 
     @Override

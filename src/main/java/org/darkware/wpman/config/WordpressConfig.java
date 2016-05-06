@@ -24,6 +24,7 @@ import org.darkware.wpman.util.TimeWindow;
 
 import javax.validation.Valid;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Map;
 
 /**
@@ -85,6 +86,14 @@ public interface WordpressConfig
     ThemeListConfig getThemeListConfig();
 
     /**
+     * Fetches the uploads configuration for this configuration container.
+     *
+     * @return An {@link UploadsConfig} object for this container.
+     */
+    @JsonProperty("uploads")
+    UploadsConfig getUploadsConfig();
+
+    /**
      * Fetch the path to the WordPress content directory. By default this would point to the
      * {@code wp-content} directory under the installation root.
      *
@@ -129,6 +138,27 @@ public interface WordpressConfig
      * @return A {@code TimeWindow} to use, or {@code null} if no window is defined.
      */
     TimeWindow getCoreUpdateWindow();
+
+
+    /**
+     * Fetch the set of permissions to force on all filesystem items within the base directory. This applies
+     * to both files and directories, though additional changes will be made to directories to retain sane
+     * filesystem behavior.
+     *
+     * @return The set of permissions, formatted according to {@link PosixFilePermissions#fromString(String)}.
+     */
+    @JsonProperty("requirePermissions")
+    String getRequirePermissions();
+
+    /**
+     * Fetch the set of permissions to forbid on all filesystem items within the base directory. This applies
+     * to both files and directories, though additional changes will be made to directories to retain sane
+     * filesystem behavior.
+     *
+     * @return The set of permissions, formatted according to {@link PosixFilePermissions#fromString(String)}.
+     */
+    @JsonProperty("forbidPermissions")
+    String getForbidPermissions();
 
     /**
      * Fetch the {@link UpdatableCollectionConfig} for the given collection name. Currently, there are only

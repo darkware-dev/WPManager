@@ -19,13 +19,7 @@ package org.darkware.wpman;
 
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPActionService;
-import org.darkware.wpman.agents.WPCoreUpdateAgent;
-import org.darkware.wpman.agents.WPCronAgent;
-import org.darkware.wpman.agents.WPIntegrityCheckAgent;
-import org.darkware.wpman.agents.WPLowLatencyCronAgent;
-import org.darkware.wpman.agents.WPNetworkPolicyAgent;
-import org.darkware.wpman.agents.WPPluginSync;
-import org.darkware.wpman.agents.WPThemeSync;
+import org.darkware.wpman.agents.*;
 import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.data.WPData;
@@ -223,6 +217,8 @@ public class WPManager extends Thread
         this.actionService.schedule(integrity);
         WPNetworkPolicyAgent networkPolicy = new WPNetworkPolicyAgent();
         this.actionService.schedule(networkPolicy);
+        WPPermissionScanner permScanner = new WPPermissionScanner();
+        this.actionService.schedule(permScanner);
 
         WPManager.log.info("Starting cron runner.");
         this.cron.startThread();
