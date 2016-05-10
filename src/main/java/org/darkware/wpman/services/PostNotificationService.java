@@ -19,11 +19,17 @@ package org.darkware.wpman.services;
 
 import com.google.common.eventbus.Subscribe;
 import org.darkware.wpman.data.WPBlog;
+import org.darkware.wpman.events.WPPluginInstallEvent;
+import org.darkware.wpman.events.WPPluginUpdateEvent;
 import org.darkware.wpman.events.WPStartupEvent;
+import org.darkware.wpman.events.WPThemeInstallEvent;
+import org.darkware.wpman.events.WPThemeUpdateEvent;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.PrintWriter;
 
 /**
  * A {@code PostNotificationService} is a {@link WPService} which listens for various events and
@@ -81,4 +87,116 @@ public class PostNotificationService extends WPService
         PostNotificationService.log.info("Posted new notification: WP Startup");
         */
     }
+
+    /**
+     * This is the event handler to post notifications that plugins have been updated.
+     *
+     * @param event The event describing the update.
+     */
+    @Subscribe
+    public void onPluginUpdate(WPPluginUpdateEvent event)
+    {
+        try
+        {
+            WPCLI post = this.createPost("Updated Plugin: " + event.getItem().getName());
+
+            PrintWriter postContent = post.getStdin();
+            postContent.printf("<h4>Plugin Update: %s</h4>\n", event.getItem().getName());
+            postContent.printf("<p><span style=\"color: #999999; font-size: 80%%;\">Previous Version:</span> %s<br/>" +
+                               "<span style=\"color: #999999; font-size: 80%%;\">Updated Version:</span> %s</p>\n",
+                               event.getItem().getVersion(), event.getPreviousVersion());
+            postContent.printf("<p>%s</p>\n", event.getItem().getDescription());
+
+            post.execute();
+            PostNotificationService.log.info("Posted new notification: Updated Plugin - " + event.getItem().getName());
+        }
+        catch (Throwable t)
+        {
+            PostNotificationService.log.error("Failed to create notification: {}", t.getLocalizedMessage(), t);
+        }
+    }
+
+    /**
+     * This is the event handler to post notifications that themes have been updated.
+     *
+     * @param event The event describing the update.
+     */
+    @Subscribe
+    public void onThemeUpdate(WPThemeUpdateEvent event)
+    {
+        try
+        {
+            WPCLI post = this.createPost("Updated Theme: " + event.getItem().getName());
+
+            PrintWriter postContent = post.getStdin();
+            postContent.printf("<h4>Theme Update: %s</h4>\n", event.getItem().getName());
+            postContent.printf("<p><span style=\"color: #999999; font-size: 80%%;\">Previous Version:</span> %s<br/>" +
+                               "<span style=\"color: #999999; font-size: 80%%;\">Updated Version:</span> %s</p>\n",
+                               event.getItem().getVersion(), event.getPreviousVersion());
+            postContent.printf("<p>%s</p>\n", event.getItem().getDescription());
+
+            post.execute();
+            PostNotificationService.log.info("Posted new notification: Updated Theme - " + event.getItem().getName());
+        }
+        catch (Throwable t)
+        {
+            PostNotificationService.log.error("Failed to create notification: {}", t.getLocalizedMessage(), t);
+        }
+    }
+
+    /**
+     * This is the event handler to post notifications that plugins have been updated.
+     *
+     * @param event The event describing the update.
+     */
+    @Subscribe
+    public void onPluginInstall(WPPluginInstallEvent event)
+    {
+        try
+        {
+            WPCLI post = this.createPost("Installed Plugin: " + event.getItem().getName());
+
+            PrintWriter postContent = post.getStdin();
+            postContent.printf("<h4>Plugin Install: %s</h4>\n", event.getItem().getName());
+            postContent.printf("<p><span style=\"color: #999999; font-size: 80%%;\">Installed Version:</span> %s</p>\n",
+                               event.getItem().getVersion());
+            postContent.printf("<p>%s</p>\n", event.getItem().getDescription());
+
+            post.execute();
+            PostNotificationService.log.info(
+                    "Posted new notification: Installed Plugin - " + event.getItem().getName());
+        }
+        catch (Throwable t)
+        {
+            PostNotificationService.log.error("Failed to create notification: {}", t.getLocalizedMessage(), t);
+        }
+    }
+
+    /**
+     * This is the event handler to post notifications that themes have been updated.
+     *
+     * @param event The event describing the update.
+     */
+    @Subscribe
+    public void onThemeInstall(WPThemeInstallEvent event)
+    {
+        try
+        {
+            WPCLI post = this.createPost("Updated Theme: " + event.getItem().getName());
+
+            PrintWriter postContent = post.getStdin();
+            postContent.printf("<h4>Theme Update: %s</h4>\n", event.getItem().getName());
+            postContent.printf("<p><span style=\"color: #999999; font-size: 80%%;\">Installed Version:</span> %s</p>\n",
+                               event.getItem().getVersion());
+            postContent.printf("<p>%s</p>\n", event.getItem().getDescription());
+
+            post.execute();
+            PostNotificationService.log.info("Posted new notification: Installed Theme - " + event.getItem().getName());
+        }
+        catch (Throwable t)
+        {
+            PostNotificationService.log.error("Failed to create notification: {}", t.getLocalizedMessage(), t);
+        }
+    }
+
 }

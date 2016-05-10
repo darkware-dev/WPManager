@@ -22,6 +22,7 @@ import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.WPUpdatableComponent;
 import org.darkware.wpman.data.WPUpdatableType;
+import org.darkware.wpman.events.WPInstallEvent;
 import org.darkware.wpman.security.ChecksumDatabase;
 import org.darkware.wpman.security.DirectoryScanner;
 import org.darkware.wpman.wpcli.WPCLI;
@@ -143,6 +144,16 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
             else
             {
                 WPManager.log.info("Successfully installed {}: {} {}.", this.getItemType(), this.installToken, postInstall.getVersion());
+            }
+
+            // Send out an event to let everyone know we updated stuff
+            if (preInstall == null)
+            {
+                this.getManager().dispatchEvent(WPInstallEvent.create(postInstall));
+            }
+            else
+            {
+                this.getManager().dispatchEvent(WPInstallEvent.create(postInstall, preInstall.getVersion()));
             }
         }
         catch (Throwable t)
