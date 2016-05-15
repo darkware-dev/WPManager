@@ -182,10 +182,10 @@ public class PostNotificationService extends WPService
     {
         try
         {
-            WPCLI post = this.createPost("Updated Theme: " + event.getItem().getName());
+            WPCLI post = this.createPost("Installed Theme: " + event.getItem().getName());
 
             PrintWriter postContent = post.getStdin();
-            postContent.printf("<h4>Theme Update: %s</h4>\n", event.getItem().getName());
+            postContent.printf("<h4>Theme Install: %s</h4>\n", event.getItem().getName());
             postContent.printf("<p><span style=\"color: #999999; font-size: 80%%;\">Installed Version:</span> %s</p>\n",
                                event.getItem().getVersion());
             postContent.printf("<p>%s</p>\n", event.getItem().getDescription());
