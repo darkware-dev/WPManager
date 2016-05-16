@@ -18,20 +18,36 @@
 package org.darkware.wpman.data;
 
 /**
+ * This enumeration tracks the status of a single {@link WPPlugin}'s enabled state with respect to a
+ * single blog.
+ *
  * @author jeff
  * @since 2016-01-23
  */
 public enum WPPluginStatus
 {
+    /** Enabled on the local blog. */
     ACTIVE("active"),
+    /** Not enabled. */
     INACTIVE("inactive"),
+    /** Enabled on the network level. */
     NETWORK_ACTIVE("active-network");
 
     private final String internal;
 
-    private WPPluginStatus(final String internal)
+    WPPluginStatus(final String internal)
     {
         this.internal = internal;
+    }
+
+    /**
+     * Checks to see if this status is currently enabled. This handles both local and network activations.
+     *
+     * @return {@code true} if the plugin is either {@link #ACTIVE} or {@link #NETWORK_ACTIVE}.
+     */
+    public boolean isEnabled()
+    {
+        return this != WPPluginStatus.INACTIVE;
     }
 
     @Override
