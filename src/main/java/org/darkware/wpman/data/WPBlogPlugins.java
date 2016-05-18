@@ -17,32 +17,81 @@
 
 package org.darkware.wpman.data;
 
-import java.util.ArrayList;
+import com.google.common.reflect.TypeToken;
+import org.darkware.lazylib.LazyLoaded;
+import org.darkware.wpman.wpcli.WPCLI;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- *
+ * A {@code WPBlogPlugins} object is a specialized collection of {@link WPPlugin} objects that are
+ * fetched specifically to reflect their relationship with a specific {@link WPBlog}.
  *
  * @author jeff
  * @since 2016-01-31
  */
-public class WPBlogPlugins extends WPDataComponent
+public class WPBlogPlugins extends WPComponent
 {
     private final WPBlog blog;
-    private final List<WPPlugin> plugins;
+    private final LazyLoaded<Map<String, WPPlugin>> plugins;
 
     public WPBlogPlugins(final WPBlog blog)
     {
         super();
 
         this.blog = blog;
-        this.plugins = new ArrayList<>();
+        this.plugins = new LazyLoaded<Map<String, WPPlugin>>(Duration.ofHours(1))
+        {
+            @Override
+            protected Map<String, WPPlugin> loadValue() throws Exception
+            {
+                WPCLI pluginListCmd = WPBlogPlugins.this.buildCommand("plugin", "list");
+                pluginListCmd.loadPlugins(false);
+                pluginListCmd.loadThemes(false);
+                pluginListCmd.setBlog(WPBlogPlugins.this.blog);
+                WPPlugin.setFields(pluginListCmd);
+
+                Map<String, WPPlugin> pluginMap = new HashMap<>();
+                pluginListCmd.readJSON(new TypeToken<List<WPPlugin>>(){}).forEach(p -> pluginMap.put(p.getId(), p));
+
+                return pluginMap;
+            }
+        };
     }
 
-    @Override
-    protected void refreshBaseData()
+    /**
+     * Fetch the list of plugins and their state for this blog.
+     *
+     * @return A {@code Set} of {@code WPPlugin} objects with their correct status for the targeted blog.
+     */
+    public Set<WPPlugin> getPlugins()
     {
-        this.plugins.clear();
-        this.plugins.addAll(this.getManager().getDataManager().getPluginsForBlog(this.blog));
+        return Collections.unmodifiableSet(this.plugins.value().values().stream().collect(Collectors.toSet()));
+    }
+
+    /**
+     * Fetch the record for the plugin matching the given ID. The plugin data will reflect the plugin's state
+     * with respect to the targeted blog.
+     *
+     * @param id The plugin ID to fetch.
+     * @return A {@code WPPlugin} object, or {@code null} if the plugin is not installed.
+     */
+    public WPPlugin get(final String id)
+    {
+        return this.plugins.value().get(id);
+    }
+
+    /**
+     *
+     */
+    public boolean isEnabled(final String id)
+    {
+        return this.get(id).getStatus().isEnabled();
     }
 }

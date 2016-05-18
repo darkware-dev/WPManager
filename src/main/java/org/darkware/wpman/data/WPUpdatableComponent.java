@@ -30,7 +30,7 @@ import org.darkware.wpman.config.UpdatableConfig;
  * @author jeff
  * @since 2016-01-25
  */
-public abstract class WPUpdatableComponent extends WPDataComponent
+public abstract class WPUpdatableComponent extends WPComponent
 {
     @JsonProperty("name") private String id;
     private Version version;
@@ -57,13 +57,6 @@ public abstract class WPUpdatableComponent extends WPDataComponent
     @Deprecated
     protected abstract String getConfigSection();
 
-    @Override
-    protected void refreshBaseData()
-    {
-        // Not currently supported.
-    }
-
-
     protected void readConfig()
     {
         UpdatableCollectionConfig<? extends UpdatableConfig> collectionConfig = this.getManager().getConfig().getUpdatableCollection(this.componentType);
@@ -83,6 +76,14 @@ public abstract class WPUpdatableComponent extends WPDataComponent
         this.id = id;
         this.readConfig();
     }
+
+    /**
+     * Fetch a pleasantly readable name for the item. This is often used for simple, human readable
+     * presentation, since the ID strings are not always so obvious.
+     *
+     * @return A name for the item.
+     */
+    public abstract String getName();
 
     public final Version getVersion()
     {

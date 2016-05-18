@@ -17,6 +17,12 @@
 
 package org.darkware.wpman.data;
 
+import com.google.common.eventbus.Subscribe;
+import com.google.common.reflect.TypeToken;
+import org.darkware.wpman.events.WPPluginInstallEvent;
+import org.darkware.wpman.events.WPPluginUpdateEvent;
+import org.darkware.wpman.wpcli.WPCLI;
+
 import java.util.List;
 
 /**
@@ -33,6 +39,33 @@ public class WPPlugins extends WPUpdatableCollection<WPPlugin> implements Iterab
     @Override
     protected List<WPPlugin> fetchNewItems()
     {
-        return this.getManager().getDataManager().getPlugins();
+        WPCLI pluginListCmd = this.buildCommand("plugin", "list");
+        pluginListCmd.loadPlugins(false);
+        pluginListCmd.loadThemes(false);
+        WPPlugin.setFields(pluginListCmd);
+
+        return pluginListCmd.readJSON(new TypeToken<List<WPPlugin>>(){});
+    }
+
+    /**
+     * This method is automatically triggered when a plugin is installed.
+     *
+     * @param event The installation event.
+     */
+    @Subscribe
+    public void onPluginInstall(final WPPluginInstallEvent event)
+    {
+        this.expire();
+    }
+
+    /**
+     * This method is automatically triggered when a plugin is updated.
+     *
+     * @param event The update event.
+     */
+    @Subscribe
+    public void onPluginUpdate(final WPPluginUpdateEvent event)
+    {
+        this.expire();
     }
 }

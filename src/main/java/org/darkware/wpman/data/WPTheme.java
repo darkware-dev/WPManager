@@ -20,6 +20,8 @@ package org.darkware.wpman.data;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.darkware.wpman.util.serialization.ThemeEnabledDeserializer;
+import org.darkware.wpman.wpcli.WPCLI;
+import org.darkware.wpman.wpcli.WPCLIFieldsOption;
 
 /**
  * @author jeff
@@ -27,6 +29,28 @@ import org.darkware.wpman.util.serialization.ThemeEnabledDeserializer;
  */
 public class WPTheme extends WPUpdatableComponent
 {
+    /**
+     * Set the required field options on the {@link WPCLI} command in order to support proper
+     * deserialization of JSON objects.
+     *
+     * @param command The command to set fields on.
+     * @return The command that was supplied, with field options now set.
+     */
+    public static WPCLI setFields(final WPCLI command)
+    {
+        WPCLIFieldsOption fields = new WPCLIFieldsOption();
+        fields.add("name");
+        fields.add("description");
+        fields.add("title");
+        fields.add("status");
+        fields.add("version");
+        fields.add("update_version");
+        fields.add("enabled");
+        command.setOption(fields);
+
+        return command;
+    }
+
     @JsonProperty("title") private String name;
     private String description;
     private WPThemeStatus status;

@@ -20,6 +20,7 @@ package org.darkware.wpman.actions;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.data.Version;
 import org.darkware.wpman.data.WPBlog;
+import org.darkware.wpman.events.WPCoreUpdateEvent;
 import org.darkware.wpman.wpcli.WPCLI;
 
 /**
@@ -58,7 +59,7 @@ public class WPCoreUpdate extends WPBasicAction<Boolean>
             update.execute();
 
             // Expire the core data.
-            this.getManager().getData().getCore().expire();
+            this.getManager().dispatchEvent(new WPCoreUpdateEvent());
 
             // Check that the update happened.
             Version newVersion = this.getManager().getData().getCore().getCoreVersion();

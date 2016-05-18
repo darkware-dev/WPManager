@@ -15,34 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.darkware.wpman.data;
+package org.darkware.wpman.events;
 
 /**
+ * This event is broadcast when the core software is updated.
+ *
  * @author jeff
- * @since 2016-01-31
+ * @since 2016-05-16
  */
-public class WPBlogTheme extends WPDataComponent
+public class WPCoreUpdateEvent implements WPEvent
 {
-    private final WPBlog blog;
-    private WPTheme theme;
-
-    public WPBlogTheme(final WPBlog blog)
-    {
-        super();
-
-        this.blog = blog;
-    }
-
-    public WPTheme activeTheme()
-    {
-        this.checkRefresh();
-        return this.theme;
-    }
-
-    @Override
-    protected void refreshBaseData()
-    {
-        WPData.log.info("Loading active theme for blog: {}", this.blog.getBlogId());
-        this.theme = this.getManager().getDataManager().getThemeForBlog(this.blog);
-    }
 }

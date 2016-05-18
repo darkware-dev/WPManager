@@ -17,56 +17,80 @@
 
 package org.darkware.wpman.data;
 
-import org.darkware.wpman.WPComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * A {@code WPInstance} is an abstraction of a single installation of WordPress.
+ * <p>
+ * This operates as something of a combination of model and controller in the classic MVC paradigm.
+ * Components include both their own internal data and the logic required to fetch or update it. The goal
+ * is to allow for fairly granular control over how often the data is fetched and to allow for internal
+ * references to fill in as much contextual data as possible.
+ * <p>
+ * For now, the instance is limited to representing multisite instances.
+ *
  * @author jeff
  * @since 2016-01-23
  */
-public class WPData extends WPComponent
+public class WPInstance extends WPComponent
 {
-    protected static final Logger log = LoggerFactory.getLogger("Data");
+    /** A shared logger for all instance objects. */
+    protected static final Logger log = LoggerFactory.getLogger("WordPress");
 
     private final WPCore core;
     private final WPBlogs blogs;
     private final WPPlugins plugins;
     private final WPThemes themes;
 
-    public WPData()
+    /**
+     * Create a new object to track and manipulate a WordPress instance.
+     */
+    public WPInstance()
     {
         super();
 
         this.core = new WPCore();
-        this.blogs = new WPBlogs();
         this.plugins = new WPPlugins();
         this.themes = new WPThemes();
+        this.blogs = new WPBlogs();
     }
 
-    public final void refresh()
-    {
-        this.core.refresh();
-        this.blogs.refresh();
-        this.plugins.refresh();
-        this.themes.refresh();
-    }
-
+    /**
+     * Fetch the model for the core WordPress software.
+     *
+     * @return A {@link WPCore} object for this instance.
+     */
     public WPCore getCore()
     {
         return core;
     }
 
+    /**
+     * Fetch the collection of blogs in this instance.
+     *
+     * @return A {@link WPBlogs} object ready to retrieve blog information.
+     */
     public WPBlogs getBlogs()
     {
-        return blogs;
+        return this.blogs;
     }
 
+    /**
+     * Fetch the collection of plugins currently installed on this instance.
+     *
+     * @return A {@link WPPlugins} object.
+     */
     public WPPlugins getPlugins()
     {
         return plugins;
     }
 
+    /**
+     * Fetch the collection of themes currently installed on this instance.
+     *
+     * @return A {@link WPThemes} object.
+     */
     public WPThemes getThemes()
     {
         return themes;

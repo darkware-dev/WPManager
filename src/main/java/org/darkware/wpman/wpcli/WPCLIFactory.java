@@ -41,7 +41,7 @@ public class WPCLIFactory
 
     /**
      * Create a new factory object based on the given configuration. This will pre-load some
-     * values from the configuration, and attempt to populate the command auto-loading tables.
+     * map from the configuration, and attempt to populate the command auto-loading tables.
      * Any changes to the configuration will trigger a reinitialization of the factory.
      *
      * @param config The configuration to attach the factory to.

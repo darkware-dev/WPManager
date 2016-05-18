@@ -17,10 +17,15 @@
 
 package org.darkware.wpman.data;
 
+import com.google.common.reflect.TypeToken;
+import org.darkware.lazylib.LazyLoadedMap;
+import org.darkware.wpman.wpcli.WPCLI;
+
+import java.time.Duration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Stream;
 
 /**
@@ -29,9 +34,10 @@ import java.util.stream.Stream;
  * @author jeff
  * @since 2016-01-23
  */
-public class WPBlogs extends WPDataComponent implements Iterable<WPBlog>
+public class WPBlogs extends WPComponent implements Iterable<WPBlog>
 {
-    private final Map<Integer, WPBlog> blogs;
+    private final LazyLoadedMap<Integer, WPBlog> blogs;
+    private final LazyLoadedMap<String, WPBlog> blogsByDomain;
 
     /**
      * Create a new {@code WPBlogs} collection. At creation time, the collection is empty.
@@ -40,7 +46,49 @@ public class WPBlogs extends WPDataComponent implements Iterable<WPBlog>
     {
         super();
 
-        this.blogs = new ConcurrentSkipListMap<>();
+        this.blogs = new LazyLoadedMap<Integer, WPBlog>(Duration.ofHours(24))
+        {
+            @Override
+            protected Map<Integer, WPBlog> loadValues() throws Exception
+            {
+                try
+                {
+                    WPCLI listCmd = WPBlogs.this.buildCommand("site", "list");
+                    listCmd.loadPlugins(false);
+                    listCmd.loadThemes(false);
+                    WPBlog.setFields(listCmd);
+
+                    List<WPBlog> rawBlogs = listCmd.readJSON(new TypeToken<List<WPBlog>>(){});
+                    if (rawBlogs == null) throw new RuntimeException("Failed to load the blog list.");
+
+                    Map<Integer, WPBlog> blogMap = new HashMap<>();
+                    rawBlogs.stream().forEach(b -> blogMap.put(b.getBlogId(), b));
+
+                    return blogMap;
+                }
+                finally
+                {
+                    WPBlogs.this.blogsByDomain.expire();
+                }
+            }
+        };
+
+        this.blogsByDomain = new LazyLoadedMap<String, WPBlog>()
+        {
+            @Override
+            protected Map<String, WPBlog> loadValues() throws Exception
+            {
+                Map<String, WPBlog> nameMap = new HashMap<>();
+
+                for (WPBlog blog : WPBlogs.this.blogs)
+                {
+                    nameMap.put(blog.getDomain(), blog);
+                    nameMap.put(blog.getSubDomain(), blog);
+                }
+
+                return nameMap;
+            }
+        };
     }
 
     /**
@@ -55,38 +103,21 @@ public class WPBlogs extends WPDataComponent implements Iterable<WPBlog>
      */
     public WPBlog get(final String identifier)
     {
-        this.checkRefresh();
-
-        for (WPBlog blog : this)
-        {
-            if (blog.getDomain().equals(identifier)) return blog;
-            if (blog.getSubDomain().equals(identifier)) return blog;
-        }
-        return null;
+        return this.blogsByDomain.map().get(identifier);
     }
 
-    @Override
-    protected void refreshBaseData()
-    {
-        List<WPBlog> rawBlogs = this.getManager().getDataManager().getBlogs();
-
-        for (WPBlog blog : rawBlogs)
-        {
-            WPData.log.debug("Loaded blog: #{}: {}", blog.getBlogId(), blog.getUrl());
-            this.blogs.put(blog.getBlogId(), blog);
-        }
-    }
-
-    @Override
     public Iterator<WPBlog> iterator()
     {
-        this.checkRefresh();
-        return this.blogs.values().iterator();
+        return this.blogs.iterator();
     }
 
+    /**
+     * Fetch a stream of the blogs in this instance.
+     *
+     * @return A {@link Stream} of {@code WPBlog} objects.
+     */
     public Stream<WPBlog> stream()
     {
-        this.checkRefresh();
-        return this.blogs.values().stream();
+        return this.blogs.stream();
     }
 }

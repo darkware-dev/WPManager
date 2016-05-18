@@ -17,9 +17,9 @@
 
 package org.darkware.wpman.actions;
 
-import org.darkware.wpman.WPComponent;
 import org.darkware.wpman.WPManager;
 import org.darkware.wpman.agents.WPPeriodicAgent;
+import org.darkware.wpman.data.WPComponent;
 import org.darkware.wpman.util.TimeWindow;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;

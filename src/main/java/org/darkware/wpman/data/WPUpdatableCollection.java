@@ -17,12 +17,12 @@
 
 package org.darkware.wpman.data;
 
+import org.darkware.lazylib.LazyLoadedMap;
+
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -31,10 +31,10 @@ import java.util.stream.Stream;
  * @author jeff
  * @since 2016-02-15
  */
-public abstract class WPUpdatableCollection<T extends WPUpdatableComponent> extends WPDataComponent implements Iterable<T>
+public abstract class WPUpdatableCollection<T extends WPUpdatableComponent> extends WPComponent implements Iterable<T>
 {
     private final String collectionName;
-    private final Map<String, T> internalList;
+    private final LazyLoadedMap<String, T> internalList;
 
     /**
      * Create a new collection of updatable items.
@@ -47,23 +47,28 @@ public abstract class WPUpdatableCollection<T extends WPUpdatableComponent> exte
         super();
 
         this.collectionName = collectionName;
-        this.internalList = new ConcurrentSkipListMap<>();
+        this.internalList = new LazyLoadedMap<String, T>()
+        {
+            @Override
+            protected Map<String, T> loadValues() throws Exception
+            {
+                WPInstance.log.info("Refreshing collection: {}", WPUpdatableCollection.this.collectionName);
+                List<T> rawList = WPUpdatableCollection.this.fetchNewItems();
+
+                Map<String, T> freshItems = new HashMap<>();
+                rawList.forEach(i -> freshItems.put(i.getId(), i));
+                return freshItems;
+            }
+        };
     }
 
-    @Override
-    protected final void refreshBaseData()
+    /**
+     * Declare that the current list is out-of-date, triggering a reload of the data the next time
+     * any code asks for the collection.
+     */
+    public final void expire()
     {
-        WPData.log.info("Refreshing collection: {}", this.collectionName);
-        List<T> rawList = this.fetchNewItems();
-
-        // Get a set of all new plugin ids
-        Set<String> newIds = rawList.stream().map(WPUpdatableComponent::getId).collect(Collectors.toSet());
-
-        // Remove all current plugins not in the new set
-        this.internalList.keySet().removeIf(id -> !newIds.contains(id));
-
-        // Update all new plugin data
-        rawList.stream().forEach(p -> this.internalList.put(p.getId(), p));
+        this.internalList.expire();
     }
 
     /**
@@ -81,8 +86,7 @@ public abstract class WPUpdatableCollection<T extends WPUpdatableComponent> exte
      */
     public final boolean isInstalled(final String pluginId)
     {
-        this.checkRefresh();
-        return this.internalList.containsKey(pluginId);
+        return this.internalList.map().containsKey(pluginId);
     }
 
     /**
@@ -93,16 +97,13 @@ public abstract class WPUpdatableCollection<T extends WPUpdatableComponent> exte
      */
     public final T get(final String pluginId)
     {
-        this.checkRefresh();
-        return this.internalList.get(pluginId);
+        return this.internalList.map().get(pluginId);
     }
-
 
     @Override
     public final Iterator<T> iterator()
     {
-        this.checkRefresh();
-        return this.internalList.values().iterator();
+        return this.internalList.iterator();
     }
 
     /**
@@ -112,7 +113,6 @@ public abstract class WPUpdatableCollection<T extends WPUpdatableComponent> exte
      */
     public final Stream<T> stream()
     {
-        this.checkRefresh();
-        return this.internalList.values().stream();
+        return this.internalList.stream();
     }
 }

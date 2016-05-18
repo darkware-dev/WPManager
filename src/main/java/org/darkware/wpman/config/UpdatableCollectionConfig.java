@@ -63,7 +63,7 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig> exten
     }
 
     /**
-     * Fetch the human-readable type token for this collection. Currently supported values are
+     * Fetch the human-readable type token for this collection. Currently supported map are
      * either "themes" or "plugins".
      *
      * @return The type as a simple {@code String}.

@@ -19,6 +19,8 @@ package org.darkware.wpman.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import org.darkware.wpman.wpcli.WPCLI;
+import org.darkware.wpman.wpcli.WPCLIFieldsOption;
 
 import java.time.LocalDateTime;
 
@@ -30,6 +32,27 @@ import java.time.LocalDateTime;
  */
 public class WPUser implements Comparable<WPUser>
 {
+    /**
+     * Set the required field options on the {@link WPCLI} command in order to support proper
+     * deserialization of JSON objects.
+     *
+     * @param command The command to set fields on.
+     * @return The command that was supplied, with field options now set.
+     */
+    public static WPCLI setFields(final WPCLI command)
+    {
+        WPCLIFieldsOption fields = new WPCLIFieldsOption();
+        fields.add("ID");
+        fields.add("user_login");
+        fields.add("display_name");
+        fields.add("user_email");
+        fields.add("registered");
+        fields.add("roles");
+        command.setOption(fields);
+
+        return command;
+    }
+
     @JsonProperty("ID")
     private int id;
 

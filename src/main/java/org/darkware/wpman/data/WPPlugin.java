@@ -18,6 +18,8 @@
 package org.darkware.wpman.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.darkware.wpman.wpcli.WPCLI;
+import org.darkware.wpman.wpcli.WPCLIFieldsOption;
 
 /**
  * @author jeff
@@ -25,7 +27,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class WPPlugin extends WPUpdatableComponent
 {
-     @JsonProperty("title") private String name;
+    /**
+     * Set the required field options on the {@link WPCLI} command in order to support proper
+     * deserialization of JSON objects.
+     *
+     * @param command The command to set fields on.
+     * @return The command that was supplied, with field options now set.
+     */
+    public static WPCLI setFields(final WPCLI command)
+    {
+        WPCLIFieldsOption fields = new WPCLIFieldsOption();
+        fields.add("name");
+        fields.add("description");
+        fields.add("title");
+        fields.add("status");
+        fields.add("version");
+        fields.add("update_version");
+        command.setOption(fields);
+
+        return command;
+    }
+
+    @JsonProperty("title") private String name;
     private String description;
     private WPPluginStatus status;
 

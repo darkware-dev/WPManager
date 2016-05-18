@@ -17,54 +17,100 @@
 
 package org.darkware.wpman.data;
 
+import com.google.common.eventbus.Subscribe;
+import com.google.common.reflect.TypeToken;
+import org.darkware.lazylib.LazyLoaded;
+import org.darkware.wpman.events.WPCoreUpdateEvent;
+import org.darkware.wpman.wpcli.WPCLI;
+import org.darkware.wpman.wpcli.WPCLIFieldsOption;
+import org.darkware.wpman.wpcli.WPCLIOption;
+
+import java.time.Duration;
+import java.util.List;
+
 /**
+ * The {@code WPCore} class models interactions with the core WordPress software installed for a
+ * given instance.
+ *
  * @author jeff
  * @since 2016-01-23
  */
-public class WPCore extends WPDataComponent
+public class WPCore extends WPComponent
 {
-    private Version version;
-    private Version updateVersion;
-    private WPLanguage language;
+    private LazyLoaded<Version> version;
+    private LazyLoaded<Version> updateVersion;
+    private LazyLoaded<WPLanguage> language;
 
     public WPCore()
     {
         super();
+
+        this.version = new LazyLoaded<Version>()
+        {
+            @Override
+            protected Version loadValue() throws Exception
+            {
+                return WPCore.this.loadVersion();
+            }
+        };
+
+        this.updateVersion = new LazyLoaded<Version>(Duration.ofHours(4))
+        {
+            @Override
+            protected Version loadValue() throws Exception
+            {
+                return WPCore.this.loadUpdateVersion();
+            }
+        };
+
+        this.language = new LazyLoaded<WPLanguage>()
+        {
+            @Override
+            protected WPLanguage loadValue() throws Exception
+            {
+                WPCLI languageCmd = WPCore.this.buildCommand("core", "language", "list");
+                languageCmd.loadPlugins(false);
+                languageCmd.loadThemes(false);
+                languageCmd.setOption(new WPCLIFieldsOption("language", "native_name"));
+                languageCmd.setOption(new WPCLIOption<>("status", "active"));
+
+                List<WPLanguage> languages = languageCmd.readJSON(new TypeToken<List<WPLanguage>>() {});
+
+                return languages.get(0);
+            }
+        };
+
+        this.getManager().registerForEvents(this);
     }
 
-    @Override
-    protected void refreshBaseData()
+    protected Version loadVersion()
     {
-        this.loadVersion();
-        this.loadUpdateVersion();
-
-        this.language = this.getManager().getDataManager().getLanguage();
+        WPCLI versionCmd = this.buildCommand("core", "version");
+        return new Version(versionCmd.readValue());
     }
 
-    protected void loadVersion()
+    protected Version loadUpdateVersion()
     {
-        this.version = this.getManager().getDataManager().getCoreVersion();
-        WPData.log.info("WordPress version is: {}", this.version);
-    }
+        WPInstance.log.debug("Checking for core update.");
 
-    protected void loadUpdateVersion()
-    {
-        WPData.log.debug("Checking for core update.");
-        this.updateVersion = this.getManager().getDataManager().getCoreUpdateVersion(this.version);
+        WPCLI updateCmd = this.buildCommand("core", "check-update");
+        updateCmd.loadPlugins(false);
+        updateCmd.loadThemes(false);
+
+        List<List<String>> updateData = updateCmd.readCSV();
+        if (updateData.size() < 2) return this.getCoreVersion();
+
+        return new Version(updateData.get(1).get(0));
     }
 
     public Version getCoreVersion()
     {
-        this.checkRefresh();
-        if (this.version == null) this.loadVersion();
-        return this.version;
+        return this.version.value();
     }
 
     public Version getUpdateVersion()
     {
-        this.checkRefresh();
-        if (this.updateVersion == null) this.loadUpdateVersion();
-        return this.updateVersion;
+        return this.updateVersion.value();
     }
 
     public boolean hasUpdate()
@@ -74,6 +120,19 @@ public class WPCore extends WPDataComponent
 
     public WPLanguage getLanguage()
     {
-        return language;
+        return language.value();
+    }
+
+    /**
+     * This method is invoked when the core software is updated. Normally, this is done naturally
+     * through the event queue.
+     *
+     * @param event The update event.
+     */
+    @Subscribe
+    public void onCoreUpdate(final WPCoreUpdateEvent event)
+    {
+        this.version.expire();
+        this.updateVersion.expire();
     }
 }

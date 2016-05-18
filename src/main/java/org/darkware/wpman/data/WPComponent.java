@@ -15,8 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.darkware.wpman;
+package org.darkware.wpman.data;
 
+import org.darkware.wpman.ContextManager;
+import org.darkware.wpman.WPManager;
+import org.darkware.wpman.WPManagerConfiguration;
 import org.darkware.wpman.wpcli.WPCLI;
 
 /**

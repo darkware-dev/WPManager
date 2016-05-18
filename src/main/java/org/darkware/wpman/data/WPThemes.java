@@ -17,6 +17,12 @@
 
 package org.darkware.wpman.data;
 
+import com.google.common.eventbus.Subscribe;
+import com.google.common.reflect.TypeToken;
+import org.darkware.wpman.events.WPThemeInstallEvent;
+import org.darkware.wpman.events.WPThemeUpdateEvent;
+import org.darkware.wpman.wpcli.WPCLI;
+
 import java.util.List;
 
 /**
@@ -33,6 +39,33 @@ public class WPThemes extends WPUpdatableCollection<WPTheme>
     @Override
     protected List<WPTheme> fetchNewItems()
     {
-        return this.getManager().getDataManager().getThemes();
+        WPCLI themeListCmd = this.buildCommand("theme", "list");
+        themeListCmd.loadThemes(false);
+        themeListCmd.loadPlugins(false);
+        WPTheme.setFields(themeListCmd);
+
+        return themeListCmd.readJSON(new TypeToken<List<WPTheme>>(){});
+    }
+
+    /**
+     * This method is automatically triggered when a theme is installed.
+     *
+     * @param event The installation event.
+     */
+    @Subscribe
+    public void onPluginInstall(final WPThemeInstallEvent event)
+    {
+        this.expire();
+    }
+
+    /**
+     * This method is automatically triggered when a theme is updated.
+     *
+     * @param event The update event.
+     */
+    @Subscribe
+    public void onPluginUpdate(final WPThemeUpdateEvent event)
+    {
+        this.expire();
     }
 }

@@ -17,10 +17,15 @@
 
 package org.darkware.wpman.data;
 
+import com.google.common.reflect.TypeToken;
+import org.darkware.lazylib.LazyLoadedMap;
+import org.darkware.wpman.wpcli.WPCLI;
+
+import java.time.Duration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Stream;
 
 /**
@@ -30,10 +35,10 @@ import java.util.stream.Stream;
  * @author jeff
  * @since 2016-04-15
  */
-public class WPBlogUsers extends WPDataComponent implements Iterable<WPUser>
+public class WPBlogUsers extends WPComponent implements Iterable<WPUser>
 {
     private final WPBlog blog;
-    private final Map<Integer, WPUser> users;
+    private final LazyLoadedMap<Integer, WPUser> users;
 
     /**
      * Creates a new collection of users attached to a {@code WPBlog}.
@@ -45,7 +50,24 @@ public class WPBlogUsers extends WPDataComponent implements Iterable<WPUser>
         super();
 
         this.blog = blog;
-        this.users = new ConcurrentSkipListMap<>();
+        this.users = new LazyLoadedMap<Integer, WPUser>(Duration.ofMinutes(20))
+        {
+            @Override
+            protected Map<Integer, WPUser> loadValues() throws Exception
+            {
+                WPCLI userListCmd = WPBlogUsers.this.buildCommand("user", "list");
+                userListCmd.loadPlugins(false);
+                userListCmd.loadThemes(false);
+                userListCmd.setBlog(WPBlogUsers.this.blog);
+                WPUser.setFields(userListCmd);
+
+                Set<WPUser> users = userListCmd.readJSON(new TypeToken<Set<WPUser>>() {});
+
+                Map<Integer, WPUser> userMap = new HashMap<>();
+                users.forEach(u -> userMap.put(u.getId(), u));
+                return userMap;
+            }
+        };
     }
 
     /**
@@ -55,26 +77,12 @@ public class WPBlogUsers extends WPDataComponent implements Iterable<WPUser>
      */
     public Stream<WPUser> stream()
     {
-        this.checkRefresh();
-        return this.users.values().stream();
+        return this.users.stream();
     }
 
     @Override
     public Iterator<WPUser> iterator()
     {
-        this.checkRefresh();
-        return this.users.values().iterator();
-    }
-
-    @Override
-    protected void refreshBaseData()
-    {
-        Set<WPUser> current = this.getManager().getDataManager().getUsersForBlog(this.blog);
-
-        // Remove all items not in the current set
-        this.users.entrySet().removeIf(e -> !current.contains(e.getValue()));
-
-        // Store all items in the set.
-        current.stream().forEach(u -> this.users.put(u.getId(), u));
+        return this.users.iterator();
     }
 }

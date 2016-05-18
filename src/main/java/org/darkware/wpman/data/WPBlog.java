@@ -19,17 +19,46 @@ package org.darkware.wpman.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
+import com.google.common.reflect.TypeToken;
+import org.darkware.lazylib.LazyLoaded;
 import org.darkware.wpman.WPManager;
+import org.darkware.wpman.util.serialization.MinimalUpdatableSerializer;
+import org.darkware.wpman.wpcli.WPCLI;
+import org.darkware.wpman.wpcli.WPCLIFieldsOption;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author jeff
  * @since 2016-01-23
  */
-public class WPBlog
+public class WPBlog extends WPComponent
 {
+    /**
+     * Set the required field options on the {@link WPCLI} command in order to support proper
+     * deserialization of JSON objects.
+     *
+     * @param blogCommand The command to set fields on.
+     * @return The command that was supplied, with field options now set.
+     */
+    public static WPCLI setFields(final WPCLI blogCommand)
+    {
+        WPCLIFieldsOption fields = new WPCLIFieldsOption();
+        fields.add("blog_id");
+        fields.add("domain");
+        fields.add("url");
+        fields.add("last_updated");
+        fields.add("registered");
+        fields.add("public");
+        fields.add("deleted");
+        blogCommand.setOption(fields);
+
+        return blogCommand;
+    }
+
     @JsonProperty("blog_id") private int blogId;
     @JsonProperty("domain") private String domain;
     @JsonProperty("url") private String url;
@@ -45,16 +74,34 @@ public class WPBlog
     private String subDomain;
     private final WPBlogPlugins plugins;
     private final WPCron cron;
-    private WPBlogTheme theme;
+    private LazyLoaded<WPTheme> theme;
 
     public WPBlog()
     {
         super();
 
         this.plugins = new WPBlogPlugins(this);
-        this.theme = new WPBlogTheme(this);
         this.cron = new WPCron(this);
         this.users = new WPBlogUsers(this);
+
+        this.theme = new LazyLoaded<WPTheme>()
+        {
+            @Override
+            protected WPTheme loadValue() throws Exception
+            {
+                WPCLI themeListCmd = WPBlog.this.buildCommand("theme", "list");
+                themeListCmd.loadThemes(false);
+                themeListCmd.loadPlugins(false);
+                WPTheme.setFields(themeListCmd);
+
+                themeListCmd.setBlog(WPBlog.this);
+                themeListCmd.restrictList("status", WPThemeStatus.ACTIVE);
+
+                List<WPTheme> activeThemes = themeListCmd.readJSON(new TypeToken<List<WPTheme>>(){});
+
+                return activeThemes.get(0);
+            }
+        };
     }
 
     public int getBlogId()
@@ -154,10 +201,11 @@ public class WPBlog
         return plugins;
     }
 
-    @JsonIgnore
-    public WPBlogTheme getTheme()
+    @JsonProperty("theme")
+    @JsonSerialize(using = MinimalUpdatableSerializer.class)
+    public WPTheme getTheme()
     {
-        return this.theme;
+        return this.theme.value();
     }
 
     @JsonIgnore

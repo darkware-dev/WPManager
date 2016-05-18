@@ -22,7 +22,7 @@ import org.darkware.wpman.actions.WPActionService;
 import org.darkware.wpman.agents.*;
 import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.data.Version;
-import org.darkware.wpman.data.WPData;
+import org.darkware.wpman.data.WPInstance;
 import org.darkware.wpman.events.WPEvent;
 import org.darkware.wpman.events.WPEventManager;
 import org.darkware.wpman.events.WPStartupEvent;
@@ -61,11 +61,10 @@ public class WPManager extends Thread
     private final ContextManager context;
 
     private final WordpressConfig config;
-    private final WPData data;
+    private final WPInstance data;
     private final WPCLIFactory builder;
     private final WPActionService actionService;
     private final WPCronAgent cron;
-    private final WPDataManager dataManager;
     private final WPEventManager eventManager;
 
     /**
@@ -93,10 +92,7 @@ public class WPManager extends Thread
         this.builder = new WPCLIFactory(this.config);
         context.registerInstance(this.builder);
 
-        this.dataManager = new WPDataManager();
-        context.registerInstance(this.dataManager);
-
-        this.data = new WPData();
+        this.data = new WPInstance();
         context.registerInstance(this.data);
 
         this.cron = new WPLowLatencyCronAgent();
@@ -105,7 +101,7 @@ public class WPManager extends Thread
 
     /**
      * Fetch the active configuration for this manager. This contains both translated configuration
-     * values and general facilities for reading the raw configuration.
+     * map and general facilities for reading the raw configuration.
      *
      * @return The current configuration.
      */
@@ -131,20 +127,9 @@ public class WPManager extends Thread
      * @return A {@code WPData} object tied to the WordPress instance described by the active
      * configuration.
      */
-    public WPData getData()
+    public WPInstance getData()
     {
         return this.data;
-    }
-
-    /**
-     * Fetch the attached {@link WPDataManager} for this manager. The data manager acts as a
-     * data-access and transformation controller.
-     *
-     * @return A {@code WPDataManager} object with pre-configured utilities for this manager.
-     */
-    public WPDataManager getDataManager()
-    {
-        return this.dataManager;
     }
 
     /**
@@ -191,7 +176,7 @@ public class WPManager extends Thread
         }
         WPManager.log.info("WP Root at: {}", this.config.getBasePath());
 
-        WPData report = new WPData();
+        WPInstance report = new WPInstance();
 
         WPManager.log.info("Starting action execution service.");
 
