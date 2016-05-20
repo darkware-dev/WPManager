@@ -27,13 +27,7 @@ import org.darkware.wpman.config.WordpressConfig;
 import org.darkware.wpman.rest.*;
 import org.darkware.wpman.rest.health.NoopHealthCheck;
 import org.darkware.wpman.util.JSONHelper;
-import org.darkware.wpman.util.serialization.PathModule;
-import org.darkware.wpman.util.serialization.PermissiveBooleanModule;
-import org.darkware.wpman.util.serialization.PluginStatusModule;
-import org.darkware.wpman.util.serialization.TimeWindowModule;
-import org.darkware.wpman.util.serialization.VersionModule;
-import org.darkware.wpman.util.serialization.WPActionModule;
-import org.darkware.wpman.util.serialization.WPDateModule;
+import org.darkware.wpman.util.serialization.*;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +79,7 @@ public class WPManagerApplication extends Application<WPManagerConfiguration>
         mapper.registerModule(new PluginStatusModule());
         mapper.registerModule(new WPDateModule());
         mapper.registerModule(new PermissiveBooleanModule());
+        mapper.registerModule(new WPObjectTypeModule());
         mapper.registerModule(new WPActionModule());
         mapper.registerModule(new TimeWindowModule());
     }
