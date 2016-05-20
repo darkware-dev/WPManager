@@ -18,14 +18,18 @@
 package org.darkware.wpman.services;
 
 import com.google.common.eventbus.Subscribe;
+import org.darkware.wpman.config.PostNotificationConfig;
 import org.darkware.wpman.data.WPBlog;
+import org.darkware.wpman.data.WPTaxonomy;
+import org.darkware.wpman.data.WPUser;
 import org.darkware.wpman.events.WPPluginInstallEvent;
 import org.darkware.wpman.events.WPPluginUpdateEvent;
-import org.darkware.wpman.events.WPStartupEvent;
 import org.darkware.wpman.events.WPThemeInstallEvent;
 import org.darkware.wpman.events.WPThemeUpdateEvent;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIOption;
+import org.darkware.wpman.wpcli.WPCLIPostCategories;
+import org.darkware.wpman.wpcli.WPCLIPostTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +47,10 @@ public class PostNotificationService extends WPService
 {
     protected static final Logger log = LoggerFactory.getLogger("PostNotify");
 
-    public WPBlog postBlog;
+    private WPBlog postBlog;
+    private PostNotificationConfig postConfig;
+    private WPTaxonomy postCategories;
+    private WPUser postUser;
 
     /**
      * Create a new {@code PostNotificationService} based on the current context.
@@ -58,11 +65,30 @@ public class PostNotificationService extends WPService
     {
         super.beforeActivation();
 
-        String postBlogName = this.getConfig().getNotification().getPostNotification().getBlog();
+        // Fetch a local copy of the config
+        this.postConfig = this.getConfig().getNotification().getPostNotification();
+
+        // Resolve the target blog
+        String postBlogName = this.postConfig.getBlog();
         this.postBlog = this.getManager().getData().getBlogs().get(postBlogName);
         if (this.postBlog == null) throw new IllegalStateException("Notification post blog does not exist.");
+
+        // Resolve the target blogs category taxonomy
+        this.postCategories = this.postBlog.getTaxonomy("category");
+
+        // Resolve the post author
+        this.postUser = this.postBlog.getUsers().get(this.postConfig.getNotificationUser());
+        if (this.postUser == null) throw new IllegalStateException("Could not resolve the user '" +
+            this.postConfig.getNotificationUser() + "' for the blog '" + this.postBlog.getSubDomain() + "'.");
     }
 
+    /**
+     * Create a new post with the given title. The post will be set to take the post content from an internal
+     * stream (via {@link WPCLI#getStdin()} and to immediately publish on submission.
+     *
+     * @param title The title of the post.
+     * @return A {@link WPCLI} command prepared to create a post.
+     */
     protected WPCLI createPost(final String title)
     {
         WPCLI poster = this.getManager().getBuilder().build("post", "create", "-");
@@ -71,21 +97,9 @@ public class PostNotificationService extends WPService
         //poster.setOption(new WPCLIOption<>("post_type", "page"));
         poster.setOption(new WPCLIOption<>("post_title", title));
         poster.setOption(new WPCLIOption<>("post_status", "publish"));
+        poster.setOption(new WPCLIOption<>("post_author", this.postUser.getId()));
 
         return poster;
-    }
-
-    @Subscribe()
-    public void onStartup(WPStartupEvent startup)
-    {
-        /*
-        WPCLI poster = this.createPost("WP Startup");
-
-        poster.getStdin().println("WPManager has started up.");
-
-        poster.execute();
-        PostNotificationService.log.info("Posted new notification: WP Startup");
-        */
     }
 
     /**
@@ -99,6 +113,9 @@ public class PostNotificationService extends WPService
         try
         {
             WPCLI post = this.createPost("Updated Plugin: " + event.getItem().getName());
+            post.setOption(new WPCLIPostCategories(this.postCategories.getTerm(this.postConfig.getPluginCategory()),
+                                                   this.postCategories.getTerm(this.postConfig.getUpdateCategory())));
+            post.setOption(new WPCLIPostTags(event.getItem().getId()));
 
             PrintWriter postContent = post.getStdin();
             postContent.printf("<h4>Plugin Update: %s</h4>\n", event.getItem().getName());
@@ -127,6 +144,9 @@ public class PostNotificationService extends WPService
         try
         {
             WPCLI post = this.createPost("Updated Theme: " + event.getItem().getName());
+            post.setOption(new WPCLIPostCategories(this.postCategories.getTerm(this.postConfig.getThemeCategory()),
+                                                   this.postCategories.getTerm(this.postConfig.getUpdateCategory())));
+            post.setOption(new WPCLIPostTags(event.getItem().getId()));
 
             PrintWriter postContent = post.getStdin();
             postContent.printf("<h4>Theme Update: %s</h4>\n", event.getItem().getName());
@@ -155,6 +175,9 @@ public class PostNotificationService extends WPService
         try
         {
             WPCLI post = this.createPost("Installed Plugin: " + event.getItem().getName());
+            post.setOption(new WPCLIPostCategories(this.postCategories.getTerm(this.postConfig.getPluginCategory()),
+                                                   this.postCategories.getTerm(this.postConfig.getInstallCategory())));
+            post.setOption(new WPCLIPostTags(event.getItem().getId()));
 
             PrintWriter postContent = post.getStdin();
             postContent.printf("<h4>Plugin Install: %s</h4>\n", event.getItem().getName());
@@ -183,6 +206,9 @@ public class PostNotificationService extends WPService
         try
         {
             WPCLI post = this.createPost("Installed Theme: " + event.getItem().getName());
+            post.setOption(new WPCLIPostCategories(this.postCategories.getTerm(this.postConfig.getThemeCategory()),
+                                                   this.postCategories.getTerm(this.postConfig.getInstallCategory())));
+            post.setOption(new WPCLIPostTags(event.getItem().getId()));
 
             PrintWriter postContent = post.getStdin();
             postContent.printf("<h4>Theme Install: %s</h4>\n", event.getItem().getName());
