@@ -39,6 +39,7 @@ public class WPBlogUsers extends WPComponent implements Iterable<WPUser>
 {
     private final WPBlog blog;
     private final LazyLoadedMap<Integer, WPUser> users;
+    private final LazyLoadedMap<String, WPUser> usersByLogin;
 
     /**
      * Creates a new collection of users attached to a {@code WPBlog}.
@@ -55,19 +56,49 @@ public class WPBlogUsers extends WPComponent implements Iterable<WPUser>
             @Override
             protected Map<Integer, WPUser> loadValues() throws Exception
             {
-                WPCLI userListCmd = WPBlogUsers.this.buildCommand("user", "list");
-                userListCmd.loadPlugins(false);
-                userListCmd.loadThemes(false);
-                userListCmd.setBlog(WPBlogUsers.this.blog);
-                WPUser.setFields(userListCmd);
+                try
+                {
+                    WPCLI userListCmd = WPBlogUsers.this.buildCommand("user", "list");
+                    userListCmd.loadPlugins(false);
+                    userListCmd.loadThemes(false);
+                    userListCmd.setBlog(WPBlogUsers.this.blog);
+                    WPUser.setFields(userListCmd);
 
-                Set<WPUser> users = userListCmd.readJSON(new TypeToken<Set<WPUser>>() {});
+                    Set<WPUser> users = userListCmd.readJSON(new TypeToken<Set<WPUser>>(){});
 
-                Map<Integer, WPUser> userMap = new HashMap<>();
-                users.forEach(u -> userMap.put(u.getId(), u));
-                return userMap;
+                    Map<Integer, WPUser> userMap = new HashMap<>();
+                    users.forEach(u -> userMap.put(u.getId(), u));
+                    return userMap;
+                }
+                finally
+                {
+                    // Force a reload of the login mapping
+                    WPBlogUsers.this.usersByLogin.expire();
+                }
             }
         };
+
+        this.usersByLogin = new LazyLoadedMap<String, WPUser>()
+        {
+            @Override
+            protected Map<String, WPUser> loadValues() throws Exception
+            {
+                Map<String, WPUser> byLogin = new HashMap<>();
+                WPBlogUsers.this.users.stream().forEach(u -> byLogin.put(u.getLogin(), u));
+                return byLogin;
+            }
+        };
+    }
+
+    /**
+     * Fetch the blog user with the given user login.
+     *
+     * @param username The login name of the user to fetch.
+     * @return The matching {@link WPUser}, or {@code null} if no matching user was found.
+     */
+    public WPUser get(final String username)
+    {
+        return this.usersByLogin.map().get(username);
     }
 
     /**
