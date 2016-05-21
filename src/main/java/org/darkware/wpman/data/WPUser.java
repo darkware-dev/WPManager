@@ -62,7 +62,7 @@ public class WPUser implements Comparable<WPUser>
     @JsonProperty("display_name")
     private String name;
 
-    @JsonProperty("user_email")
+    @JsonProperty(value = "user_email", access = JsonProperty.Access.WRITE_ONLY)
     private String email;
 
     @JsonProperty("registered")
