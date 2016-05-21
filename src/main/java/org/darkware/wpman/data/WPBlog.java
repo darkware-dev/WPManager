@@ -24,7 +24,6 @@ import com.google.common.base.Objects;
 import com.google.common.reflect.TypeToken;
 import org.darkware.lazylib.LazyLoaded;
 import org.darkware.lazylib.LazyLoadedMap;
-import org.darkware.wpman.WPManager;
 import org.darkware.wpman.util.serialization.MinimalUpdatableSerializer;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFieldsOption;
@@ -334,7 +333,6 @@ public class WPBlog extends WPComponent
      */
     public boolean isDeleted()
     {
-        WPManager.log.info("Blog:" + this.getBlogId() + " deleted=" + this.deleted);
         return this.deleted;
     }
 
