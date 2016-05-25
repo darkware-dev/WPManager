@@ -29,7 +29,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,9 +54,6 @@ public class WordpressConfigData implements WordpressConfig
     @NotEmpty
     private String defaultHost;
 
-    private String requirePermissions;
-    private String forbidPermissions;
-
     @Valid
     private TimeWindow coreUpdateWindow = new TimeWindow(0, 2);
 
@@ -67,16 +63,18 @@ public class WordpressConfigData implements WordpressConfig
     private ThemeListConfig themeListConfig = new ThemeListConfig();
     @Valid
     private UploadsConfig uploadsConfig = new UploadsConfig();
+    @Valid
+    private FilePermissionsConfig permissionsConfig = new FilePermissionsConfig();
 
     private NotificationConfig notification = new NotificationConfig();
     private Map<String, Path> dataFiles = new HashMap<>();
 
+    /**
+     * Create a new core configuration data container.
+     */
     public WordpressConfigData()
     {
         super();
-
-        this.requirePermissions = "rw-r-----";
-        this.forbidPermissions = "--x--xrwx";
 
         this.mapper = ContextManager.local().getContextualInstance(ObjectMapper.class);
     }
@@ -192,7 +190,6 @@ public class WordpressConfigData implements WordpressConfig
     {
         return this.uploadsConfig;
     }
-
     /**
      * Sets the uploads configuration object for this configuration container.
      *
@@ -201,6 +198,22 @@ public class WordpressConfigData implements WordpressConfig
     protected void setUploadsConfig(final UploadsConfig uploadsConfig)
     {
         this.uploadsConfig = uploadsConfig;
+    }
+
+    @Override
+    public FilePermissionsConfig getPermissionsConfig()
+    {
+        return this.permissionsConfig;
+    }
+
+    /**
+     * Set the file permissions config for this container.
+     *
+     * @param permissionsConfig A {@link FilePermissionsConfig} object.
+     */
+    public void setPermissionsConfig(final FilePermissionsConfig permissionsConfig)
+    {
+        this.permissionsConfig = permissionsConfig;
     }
 
     @Override
@@ -292,40 +305,6 @@ public class WordpressConfigData implements WordpressConfig
     public void setCoreUpdateWindow(final TimeWindow coreUpdateWindow)
     {
         this.coreUpdateWindow = coreUpdateWindow;
-    }
-
-    @Override
-    @JsonProperty("requirePermissions")
-    public String getRequirePermissions()
-    {
-        return this.requirePermissions;
-    }
-
-    /**
-     * Set the permissions to force on all filesystem items in the base directory.
-     *
-     * @param requirePermissions The set of permissions, formatted according to {@link PosixFilePermissions#fromString(String)}.
-     */
-    public void setRequirePermissions(final String requirePermissions)
-    {
-        this.requirePermissions = requirePermissions;
-    }
-
-    @Override
-    @JsonProperty("forbidPermissions")
-    public String getForbidPermissions()
-    {
-        return this.forbidPermissions;
-    }
-
-    /**
-     * Set the permissions to forbid on all filesystem items in the base directory.
-     *
-     * @param forbidPermissions The set of permissions, formatted according to {@link PosixFilePermissions#fromString(String)}.
-     */
-    public void setForbidPermissions(final String forbidPermissions)
-    {
-        this.forbidPermissions = forbidPermissions;
     }
 
     // Special Accessors

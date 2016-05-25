@@ -136,6 +136,13 @@ public class ReloadableWordpressConfig implements WordpressConfig
     }
 
     @Override
+    @JsonProperty("permissions")
+    public FilePermissionsConfig getPermissionsConfig()
+    {
+        return data.getPermissionsConfig();
+    }
+
+    @Override
     @JsonProperty("dataFiles")
     public Map<String, Path> getDataFiles()
     {
@@ -153,18 +160,6 @@ public class ReloadableWordpressConfig implements WordpressConfig
     public TimeWindow getCoreUpdateWindow()
     {
         return data.getCoreUpdateWindow();
-    }
-
-    @Override
-    public String getRequirePermissions()
-    {
-        return this.data.getRequirePermissions();
-    }
-
-    @Override
-    public String getForbidPermissions()
-    {
-        return this.data.getForbidPermissions();
     }
 
     @Override

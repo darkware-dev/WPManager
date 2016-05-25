@@ -123,6 +123,15 @@ public class StringTools
         return result;
     }
 
+    /**
+     * Insert a repeating pattern of characters before a given string.
+     *
+     * @param str The supplied "content" string to pad.
+     * @param width The final total width of the string.
+     * @param padding The string pattern to copy before the content string.
+     * @return A {@code String} of length {@code width} characters, containing zero or more copies of the padding string
+     * followed by the content string.
+     */
     public static String padBefore(String str, int width, String padding)
     {
         // Short circuit if there is no padding needed.

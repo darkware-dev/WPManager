@@ -18,7 +18,7 @@
 package org.darkware.wpman.agents;
 
 import org.darkware.wpman.WPManager;
-import org.darkware.wpman.config.WordpressConfig;
+import org.darkware.wpman.config.FilePermissionsConfig;
 
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
@@ -40,85 +40,80 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
+ * A {@code WPPermissionScanner} is a simple agent that periodically scans the WordPress install directories
+ * for directories and files that have improper filesystem permissions. It does this using a rather simple
+ * system based on a list of example directories.
+ * <p>
+ * For each example directory, the permissions of that directory will be cloned down to all the files and
+ * directories beneath it (clearing all execute bits for non-directories). Whenever other example directories
+ * are encountered, they are ignored for that round of scanning.
+ * <p>
+ * There are a few directories which are always included by default:
+ * <ul>
+ *   <li>The root directory of the WordPress install</li>
+ *   <li>The uploads directory</li>
+ *   <li>The plugins directory</li>
+ *   <li>The themes directory</li>
+ * </ul>
+ * <p>
+ * Additional directories can be enabled by adding them to the {@code exampleDirectories} list in the
+ * {@link FilePermissionsConfig} section of the profile. You can also populate a list of paths which should
+ * never be processed by adding entries to the {@code ignorePaths} list. These items will never be processed, and
+ * if they are directories, their contents will be ignored as well.
+ *
  * @author jeff
  * @since 2016-05-05
  */
 public class WPPermissionScanner extends WPPeriodicAgent
 {
+    /**
+     * Create a new permission scanner.
+     */
     public WPPermissionScanner()
     {
-        super("permission-scanner", Duration.ofMinutes(45));
+        super("permission-scanner", Duration.ofMinutes(30));
     }
 
 
     @Override
     public void executeAction()
     {
-        WordpressConfig config = this.getManager().getConfig();
+        final Path wpRoot = this.getManager().getConfig().getBasePath();
 
-        try
+        // Fetch the example directory set
+        Set<Path> exampleDirectories = this.getManager().getConfig().getPermissionsConfig().getExampleDirectories();
+        // Ensure all paths are absolute
+        exampleDirectories.stream().filter(p -> !p.isAbsolute()).forEach(p -> exampleDirectories.add(p.resolve(wpRoot)));
+        exampleDirectories.removeIf(p -> !p.isAbsolute());
+        // Add default entries
+        exampleDirectories.add(this.getManager().getConfig().getBasePath());
+        exampleDirectories.add(this.getManager().getConfig().getUploadDir());
+        exampleDirectories.add(this.getManager().getConfig().getPluginListConfig().getBaseDir());
+        exampleDirectories.add(this.getManager().getConfig().getThemeListConfig().getBaseDir());
+
+        // Fetch the ignored paths
+        Set<Path> ignoredPaths = this.getManager().getConfig().getPermissionsConfig().getIgnorePaths();
+        // Add all the example directories. They're ignored as well.
+        // When we pass the set to the processor, we will remove the top-level directory being processed.
+        ignoredPaths.addAll(exampleDirectories);
+
+        // Process each example directory
+        for (Path dir : exampleDirectories)
         {
-            // Enforce base directory permissions
-            PermissionCloner baseCloner = new PermissionCloner(config.getBasePath(),
-                                                               config.getRequirePermissions(),
-                                                               config.getForbidPermissions());
-            baseCloner.exclude(config.getPluginListConfig().getBaseDir());
-            baseCloner.exclude(config.getThemeListConfig().getBaseDir());
-            baseCloner.exclude(config.getUploadDir());
 
-            baseCloner.call();
-        }
-        catch (Exception e)
-        {
-            WPManager.log.error("Error while enforcing permissions for base directory: {}", e.getLocalizedMessage(), e);
-        }
 
-        try
-        {
-            // Enforce plugin directory permissions
-            PermissionCloner pluginCloner = new PermissionCloner(config.getPluginListConfig().getBaseDir(),
-                                                                 config.getPluginListConfig().getRequirePermissions(),
-                                                                 config.getPluginListConfig().getForbidPermissions());
-            pluginCloner.exclude(config.getThemeListConfig().getBaseDir());
-            pluginCloner.exclude(config.getUploadDir());
+            try
+            {
+                PermissionCloner cloner = new PermissionCloner(dir);
+                ignoredPaths.stream().filter(p -> !p.equals(dir)).forEach(cloner::exclude);
 
-            pluginCloner.call();
+                cloner.call();
+            }
+            catch (Exception e)
+            {
+                WPManager.log.error("Error while enforcing permissions under {}: {}", dir, e.getLocalizedMessage(), e);
+            }
         }
-        catch (Exception e)
-        {
-            WPManager.log.error("Error while enforcing permissions for plugin directory: {}", e.getLocalizedMessage(), e);
-        }
-
-        try
-        {
-            PermissionCloner themeCloner = new PermissionCloner(config.getThemeListConfig().getBaseDir(),
-                                                                config.getThemeListConfig().getRequirePermissions(),
-                                                                config.getThemeListConfig().getForbidPermissions());
-            themeCloner.exclude(config.getPluginListConfig().getBaseDir());
-            themeCloner.exclude(config.getUploadDir());
-
-            themeCloner.call();
-        }
-        catch (Exception e)
-        {
-            WPManager.log.error("Error while enforcing permissions for theme directory: {}", e.getLocalizedMessage(), e);
-        }
-
-        try
-        {
-            PermissionCloner uploadCloner = new PermissionCloner(config.getUploadDir(),
-                                                                 config.getUploadsConfig().getRequirePermissions(),
-                                                                 config.getUploadsConfig().getForbidPermissions());
-            uploadCloner.exclude(config.getPluginListConfig().getBaseDir());
-            uploadCloner.exclude(config.getThemeListConfig().getBaseDir());
-
-            uploadCloner.call();
-        }
-        catch (Exception e)
-        {
-            WPManager.log.error("Error while enforcing permissions for upload directory: {}", e.getLocalizedMessage(), e);
-        }
-
     }
 
     /**
@@ -135,35 +130,34 @@ public class WPPermissionScanner extends WPPeriodicAgent
         private final UserPrincipal baseDirectoryOwner;
         private final GroupPrincipal baseDirectoryGroup;
         private final Set<Path> excludedDirectories;
-        private final Set<PosixFilePermission> requirePermissions;
-        private final Set<PosixFilePermission> forbidPermissions;
+
+        private final Set<PosixFilePermission> filePermissions;
+        private final Set<PosixFilePermission> directoryPermissions;
 
         /**
-         * Create a new {@code PermissionCloner} to scan the given directory and enforce the required and
-         * forbidden permissions declared. User and group ownership will be copied from the base directory
-         * to all descendant entries.
+         * Create a new {@code PermissionCloner} to scan the given directory. It will take the permissions
+         * of the top level directory and clone those permissions down to the entries beneath it. All
+         * execute permissions are removed for non-directory entries.
          *
          * @param baseDirectory The {@link Path} of the base directory to scan.
-         * @param permSet The set of permissions to require on all entries, in the format required for
-         * {@link PosixFilePermissions#fromString(String)}.
-         * @param permMask The set of permissions to forbid on all entries, in the format required for
-         * {@link PosixFilePermissions#fromString(String)}.
          */
-        public PermissionCloner(final Path baseDirectory, final String permSet, final String permMask)
+        public PermissionCloner(final Path baseDirectory)
         {
             super();
 
             this.baseDirectory = baseDirectory;
-
-            // Setup permission sets
-            this.requirePermissions = PosixFilePermissions.fromString(permSet);
-            this.forbidPermissions = PosixFilePermissions.fromString(permMask);
-
             this.excludedDirectories = new HashSet<>();
 
             try
             {
                 PosixFileAttributes baseDirAttrs = Files.readAttributes(baseDirectory, PosixFileAttributes.class);
+
+                this.directoryPermissions = baseDirAttrs.permissions();
+                this.filePermissions = new HashSet<>(this.directoryPermissions);
+                this.filePermissions.remove(PosixFilePermission.OWNER_EXECUTE);
+                this.filePermissions.remove(PosixFilePermission.GROUP_EXECUTE);
+                this.filePermissions.remove(PosixFilePermission.OTHERS_EXECUTE);
+
                 this.baseDirectoryOwner = baseDirAttrs.owner();
                 this.baseDirectoryGroup = baseDirAttrs.group();
             }
@@ -196,15 +190,34 @@ public class WPPermissionScanner extends WPPeriodicAgent
         @Override
         public FileVisitResult preVisitDirectory(final Path dir, final BasicFileAttributes attrs) throws IOException
         {
-            if (this.excludedDirectories.contains(dir)) return FileVisitResult.SKIP_SUBTREE;
-            else return FileVisitResult.CONTINUE;
+            if (Files.isSameFile(dir, this.baseDirectory)) return FileVisitResult.CONTINUE;
+            else if (this.excludedDirectories.contains(dir)) return FileVisitResult.SKIP_SUBTREE;
+
+            this.syncOwnerAndPermissions(dir);
+
+            return FileVisitResult.CONTINUE;
         }
 
         @Override
         public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException
         {
             if (this.excludedDirectories.contains(file)) return FileVisitResult.CONTINUE;
+            if (Files.isSymbolicLink(file)) return FileVisitResult.CONTINUE;
 
+            this.syncOwnerAndPermissions(file);
+
+            return FileVisitResult.CONTINUE;
+        }
+
+        /**
+         * Checks the given path and updates its owner, group and permissions as needed according to the state
+         * of the base directory being clones.
+         *
+         * @param file The file to examine.
+         * @throws IOException If there is an error while retrieving or setting file attributes.
+         */
+        protected void syncOwnerAndPermissions(final Path file) throws IOException
+        {
             // Fetch file attributes
             PosixFileAttributes posixAttrs = Files.readAttributes(file, PosixFileAttributes.class);
 
@@ -222,83 +235,13 @@ public class WPPermissionScanner extends WPPeriodicAgent
 
             // Set permissions
             Set<PosixFilePermission> permissions = posixAttrs.permissions();
+            Set<PosixFilePermission> targetPermissions = (Files.isDirectory(file)) ? this.directoryPermissions : this.filePermissions;
 
-            // These are done separately to prevent logical short-circuiting from preventing the
-            // later call from being evaluated.
-            boolean changed = permissions.addAll(this.requirePermissions);
-            changed |= permissions.removeAll(this.forbidPermissions);
-            if (posixAttrs.isDirectory()) changed |= this.applyDirectoryPermissions(permissions);
-
-            if (changed)
+            if (permissions.size() != targetPermissions.size() || !permissions.containsAll(targetPermissions))
             {
-                WPManager.log.info("Updating permissions: {} -> {}", file, PosixFilePermissions.toString(permissions));
-                Files.setPosixFilePermissions(file, permissions);
+                Files.setPosixFilePermissions(file, targetPermissions);
+                WPManager.log.info("Updating permissions: {} -> {}", file, PosixFilePermissions.toString(targetPermissions));
             }
-
-            return FileVisitResult.CONTINUE;
-        }
-
-        /**
-         * Adjust the given set of {@link PosixFilePermission}s to ensure sane directory permissions. Directory
-         * owners are always allowed to use a directory (ie: {@link PosixFilePermission#OWNER_EXECUTE}). A
-         * group is allowed to use the directory if and only if it can also read the directory. Other users are
-         * allowed to use the directory if and only if they can also read the directory.
-         *
-         * @param permissions The set of permissions to adjust.
-         * @return {@code true} if the set of permissions was changed, {@code false} if it was not.
-         */
-        private boolean applyDirectoryPermissions(final Set<PosixFilePermission> permissions)
-        {
-            boolean changed = false;
-
-            // Force owner usability
-            if (!permissions.contains(PosixFilePermission.OWNER_EXECUTE))
-            {
-                permissions.add(PosixFilePermission.OWNER_EXECUTE);
-                changed = true;
-            }
-
-            // Make sure that group execute ability matches the group read ability
-            if (permissions.contains(PosixFilePermission.GROUP_READ))
-            {
-                // The group can read the directory
-                if (!permissions.contains(PosixFilePermission.GROUP_EXECUTE))
-                {
-                    permissions.add(PosixFilePermission.GROUP_EXECUTE);
-                    changed = true;
-                }
-            }
-            else
-            {
-                // Group cannot read the directory
-                if (permissions.contains(PosixFilePermission.GROUP_EXECUTE))
-                {
-                    permissions.remove(PosixFilePermission.GROUP_EXECUTE);
-                    changed = true;
-                }
-            }
-
-            // Make sure that global execute ability matches the global read ability
-            if (permissions.contains(PosixFilePermission.OTHERS_READ))
-            {
-                // Everyone can read the directory
-                if (!permissions.contains(PosixFilePermission.OTHERS_EXECUTE))
-                {
-                    permissions.add(PosixFilePermission.OTHERS_EXECUTE);
-                    changed = true;
-                }
-            }
-            else
-            {
-                // Everyone cannot read the directory
-                if (permissions.contains(PosixFilePermission.OTHERS_EXECUTE))
-                {
-                    permissions.remove(PosixFilePermission.OTHERS_EXECUTE);
-                    changed = true;
-                }
-            }
-
-            return changed;
         }
     }
 }
