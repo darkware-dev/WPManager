@@ -97,6 +97,9 @@ public class WPPermissionScanner extends WPPeriodicAgent
         // When we pass the set to the processor, we will remove the top-level directory being processed.
         ignoredPaths.addAll(exampleDirectories);
 
+        // Ignore some additional internal paths
+        ignoredPaths.add(this.getManager().getConfig().getContentDir().resolve("upgrade"));
+
         // Process each example directory
         for (Path dir : exampleDirectories)
         {
