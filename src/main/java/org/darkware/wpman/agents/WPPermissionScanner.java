@@ -103,7 +103,19 @@ public class WPPermissionScanner extends WPPeriodicAgent
         // Process each example directory
         for (Path dir : exampleDirectories)
         {
+            // Check if the directory exists before we even try to enforce it
+            if (Files.notExists(dir))
+            {
+                WPManager.log.warn("Skipping permissions enforcement for {}: Path does not exist.", dir);
+                continue;
+            }
 
+            // Check that its a directory
+            if (Files.isDirectory(dir))
+            {
+                WPManager.log.warn("Skipping permissions enforcement for {}: Not a directory", dir);
+                continue;
+            }
 
             try
             {
