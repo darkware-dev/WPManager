@@ -18,6 +18,7 @@
 package org.darkware.wpman.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.darkware.wpman.data.WPPluginStatus;
 
 /**
  * This class is a configuration container for an individual instance plugin.
@@ -27,8 +28,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class PluginConfig extends UpdatableConfig
 {
-    @JsonProperty("networkEnable")
-    private boolean networkEnabled;
+    @JsonProperty("status")
+    private WPPluginStatus status;
 
     /**
      * Create a new configuration container with default settings.
@@ -37,7 +38,7 @@ public class PluginConfig extends UpdatableConfig
     {
         super();
 
-        this.networkEnabled = false;
+        this.status = WPPluginStatus.UNDECLARED;
     }
 
     /**
@@ -45,28 +46,30 @@ public class PluginConfig extends UpdatableConfig
      *
      * @param id The plugin ID.
      */
+    @SuppressWarnings("unused")
     public PluginConfig(final String id)
     {
         this();
     }
 
     /**
-     * Check if this plugin should be enabled across the network.
+     * Fetches the target status of this plugin. Any processes checking or enforcing the status will use this
+     * as the "correct" status for comparisons or changes.
      *
-     * @return {@code true} if the plugin should be network enabled, {@code false} if it should not.
+     * @return A {@link WPPluginStatus}.
      */
-    public boolean isNetworkEnabled()
+    public WPPluginStatus getStatus()
     {
-        return this.networkEnabled;
+        return this.status;
     }
 
     /**
-     * Declare if this plugin should be network enabled.
+     * Set the target status for this plugin.
      *
-     * @param networkEnabled A flag declaring if the plugin should be enabled for all sites.
+     * @param status The target {@link WPPluginStatus}.
      */
-    protected void setNetworkEnabled(final boolean networkEnabled)
+    protected void setStatus(final WPPluginStatus status)
     {
-        this.networkEnabled = networkEnabled;
+        this.status = status;
     }
 }

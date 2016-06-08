@@ -43,6 +43,9 @@ public class WPNetworkPolicyAgent extends WPPeriodicAgent
     private final WPPlugins plugins;
     private final WPThemes themes;
 
+    /**
+     * Creates a new agent to enforce network plugin and theme policy.
+     */
     public WPNetworkPolicyAgent()
     {
         super("network-policy", Duration.ofMinutes(15));
@@ -85,36 +88,44 @@ public class WPNetworkPolicyAgent extends WPPeriodicAgent
      */
     private void examinePlugin(final WPPlugin plugin, final PluginConfig config)
     {
-        if (config.isNetworkEnabled() && plugin.getStatus() != WPPluginStatus.NETWORK_ACTIVE)
+        // We only enforce plugin status if the config declares a status
+        if (config.getStatus() != WPPluginStatus.UNDECLARED)
         {
-            WPCLI activatePlugin = this.getManager().getBuilder().build("plugin", "activate", plugin.getId());
-            activatePlugin.loadThemes(false);
-            activatePlugin.loadPlugins(false);
-            activatePlugin.setOption(new WPCLIFlag("network"));
+            // Check if the status is not what the config declares
+            if (config.getStatus() != plugin.getStatus())
+            {
+                if (config.getStatus() == WPPluginStatus.NETWORK_ACTIVE)
+                {
+                    WPCLI activatePlugin = this.getManager().getBuilder().build("plugin", "activate", plugin.getId());
+                    activatePlugin.loadThemes(false);
+                    activatePlugin.loadPlugins(false);
+                    activatePlugin.setOption(new WPCLIFlag("network"));
 
-            if (activatePlugin.checkSuccess())
-            {
-                WPManager.log.info("Activated the plugin '{}' on the network (via policy)", plugin.getName());
-            }
-            else
-            {
-                WPManager.log.error("Failed to network activate '{}'", plugin.getName());
-            }
-        }
-        else if (!config.isNetworkEnabled() && plugin.getStatus() == WPPluginStatus.NETWORK_ACTIVE)
-        {
-            WPCLI deactivatePlugin = this.getManager().getBuilder().build("plugin", "deactivate", plugin.getId());
-            deactivatePlugin.loadThemes(false);
-            deactivatePlugin.loadPlugins(false);
-            deactivatePlugin.setOption(new WPCLIFlag("network"));
+                    if (activatePlugin.checkSuccess())
+                    {
+                        WPManager.log.info("Activated the plugin '{}' on the network (via policy)", plugin.getName());
+                    }
+                    else
+                    {
+                        WPManager.log.error("Failed to network activate '{}'", plugin.getName());
+                    }
+                }
+                else if (config.getStatus() == WPPluginStatus.NETWORK_ACTIVE)
+                {
+                    WPCLI deactivatePlugin = this.getManager().getBuilder().build("plugin", "deactivate", plugin.getId());
+                    deactivatePlugin.loadThemes(false);
+                    deactivatePlugin.loadPlugins(false);
+                    deactivatePlugin.setOption(new WPCLIFlag("network"));
 
-            if (deactivatePlugin.checkSuccess())
-            {
-                WPManager.log.info("Deactivated the plugin '{}' on the network (via policy)", plugin.getName());
-            }
-            else
-            {
-                WPManager.log.error("Failed to deactivate '{}'", plugin.getName());
+                    if (deactivatePlugin.checkSuccess())
+                    {
+                        WPManager.log.info("Deactivated the plugin '{}' on the network (via policy)", plugin.getName());
+                    }
+                    else
+                    {
+                        WPManager.log.error("Failed to deactivate '{}'", plugin.getName());
+                    }
+                }
             }
         }
     }

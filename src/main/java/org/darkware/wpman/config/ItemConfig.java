@@ -18,6 +18,7 @@
 package org.darkware.wpman.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.nio.file.Path;
 
@@ -27,7 +28,7 @@ import java.nio.file.Path;
  */
 public class ItemConfig
 {
-    protected transient final Path src;
+    protected transient Path src;
 
     /**
      * Create a new item configuration.
@@ -57,10 +58,20 @@ public class ItemConfig
      * @return A {@link Path} to the configuration fragment, or {@code null} if the item is configured in the
      * master configuration.
      */
-    @JsonIgnore
+    @JsonProperty("srcFile")
     public Path getPolicyFile()
     {
         return this.src;
+    }
+
+    /**
+     * Sets the path to the file which provided the configuration for the item.
+     *
+     * @param src The {@link Path} to the originating file.
+     */
+    public void setPolicyFile(final Path src)
+    {
+        this.src = src;
     }
 
     /**

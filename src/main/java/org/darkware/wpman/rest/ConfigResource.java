@@ -18,23 +18,33 @@
 package org.darkware.wpman.rest;
 
 import org.darkware.wpman.WPManager;
+import org.darkware.wpman.config.PluginConfig;
 import org.darkware.wpman.config.WordpressConfig;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.Map;
 
 /**
+ * This is a simple REST interface for exposing configuration data.
+ *
  * @author jeff
  * @since 2016-04-11
  */
 @Path("config")
 public class ConfigResource
 {
+    @SuppressWarnings("unused")
     private final WPManager manager;
     private final WordpressConfig config;
 
+    /**
+     * Create a new Configuration REST resource attached to the given manager.
+     *
+     * @param manager The {@link WPManager} to report configuration data for.
+     */
     public ConfigResource(final WPManager manager)
     {
         super();
@@ -43,7 +53,11 @@ public class ConfigResource
         this.config = manager.getConfig();
     }
 
-
+    /**
+     * Fetch the entire active policy.
+     *
+     * @return The active policy as a {@link WordpressConfig} instance.
+     */
     @GET
     @Path("wpman")
     @Produces(MediaType.APPLICATION_JSON)
@@ -51,4 +65,18 @@ public class ConfigResource
     {
         return this.config;
     }
+
+    /**
+     * Fetch the set of policy fragments for plugins.
+     *
+     * @return A {@link Map} of plugin slugs to their {@link PluginConfig} fragments.
+     */
+    @GET
+    @Path("plugins")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, PluginConfig> getPluginPolicy()
+    {
+        return this.config.getPluginListConfig().getItems();
+    }
+
 }

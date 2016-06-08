@@ -84,7 +84,13 @@ public abstract class CollectionConfig<T>
     @JsonProperty("policyDir")
     public Path getPolicyRoot()
     {
-        if (this.policyRoot == null) return this.getWpConfig().getPolicyRoot().resolve(this.getDefaultPolicySubdirectory());
+        if (this.policyRoot == null)
+        {
+            Path wpPolicyRoot = this.getWpConfig().getPolicyRoot();
+            if (wpPolicyRoot == null) throw new RuntimeException("Base WP Policy Dir is null");
+            String subdirectory = this.getDefaultPolicySubdirectory();
+            return wpPolicyRoot.resolve(subdirectory);
+        }
         else return this.policyRoot;
     }
 
@@ -131,6 +137,17 @@ public abstract class CollectionConfig<T>
     }
 
     /**
+     * Overrides the current configuration for the given item with the new configuration data.
+     *
+     * @param id The ID of the item to override
+     * @param item The new configuration to store.
+     */
+    protected void overrideItem(final String id, final T item)
+    {
+        this.items.put(id, item);
+    }
+
+    /**
      * Fetch the configuration object for a given item.
      *
      * @param itemId The unique identifier for the item to fetch.
@@ -139,7 +156,7 @@ public abstract class CollectionConfig<T>
     @JsonIgnore
     public T getConfig(final String itemId)
     {
-        if (!this.getItems().containsKey(itemId)) this.getItems().put(itemId, this.defaultOverrides(itemId));
+        if (!this.getItems().containsKey(itemId)) return this.defaultOverrides(itemId);
         return this.getItems().get(itemId);
     }
 

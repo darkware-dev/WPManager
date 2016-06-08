@@ -18,6 +18,11 @@
 package org.darkware.wpman.events;
 
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A {@link WPEvent} sent when a configuration file has been modified.
@@ -25,17 +30,39 @@ import java.nio.file.Path;
  * @author jeff
  * @since 2016-02-09
  */
-public class ConfigurationFileChange
+public class ConfigurationFileChange implements WPEvent
 {
-    private final Path path;
+    private final Set<Path> changedFiles;
 
     /**
      * Create a new configuration file change event.
      *
-     * @param path A path to the file that changed, relative to the configuration root.
+     * @param paths One or more {@link Path}s to the files that changed, relative to the configuration root.
      */
-    public ConfigurationFileChange(final Path path)
+    public ConfigurationFileChange(final Set<Path> paths)
     {
-        this.path = path;
+        super();
+
+        this.changedFiles = Collections.unmodifiableSet(new HashSet<>(paths));
+    }
+
+    /**
+     * Create a new configuration file change event.
+     *
+     * @param paths One or more {@link Path}s to the files that changed, relative to the configuration root.
+     */
+    public ConfigurationFileChange(final Path ... paths)
+    {
+        this(new HashSet<>(Arrays.stream(paths).collect(Collectors.toSet())));
+    }
+
+    /**
+     * Fetch the set of files that triggered the event.
+     *
+     * @return The reported files, as a {@link Set} of {@link Path}s.
+     */
+    public Set<Path> getChangedFiles()
+    {
+        return this.changedFiles;
     }
 }

@@ -144,6 +144,7 @@ public interface WordpressConfig
      *
      * @return A {@code TimeWindow} to use, or {@code null} if no window is defined.
      */
+    @JsonProperty("coreUpdateWindow")
     TimeWindow getCoreUpdateWindow();
 
     /**

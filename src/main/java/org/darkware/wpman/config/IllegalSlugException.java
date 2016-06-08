@@ -17,33 +17,22 @@
 
 package org.darkware.wpman.config;
 
-import org.darkware.wpman.data.WPUpdatableType;
-
 /**
- * This is a configuration container for various configuration data controlling the plugins that
- * are installed and how the list should be managed. Individual plugin configuration is handled by
- * a collection of {@link PluginConfig} objects.
+ * An {@code IllegalSlugException} is thrown when code encounters a reference to a plugin or theme slug
+ * that doesn't conform to the required conventions for slugs.
  *
  * @author jeff
- * @since 2016-03-28
+ * @since 2016-05-30
  */
-public class PluginListConfig extends UpdatableCollectionConfig<PluginConfig>
+public class IllegalSlugException extends RuntimeException
 {
-    private final PluginConfig defaultConfig;
-
     /**
-     * Create a new plugin list configuration container.
+     * Creates a new {@code IllegalSlugException} reporting the problematic string.
+     *
+     * @param slug The {@code String} which was rejected as a slug.
      */
-    public PluginListConfig()
+    public IllegalSlugException(final String slug)
     {
-        super(WPUpdatableType.PLUGIN);
-
-        this.defaultConfig = new PluginConfig();
-    }
-
-    @Override
-    protected PluginConfig defaultOverrides(final String itemId)
-    {
-        return this.defaultConfig;
+        super("Encountered illegal slug: [" + slug + "]");
     }
 }

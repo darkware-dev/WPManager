@@ -42,19 +42,22 @@ import java.nio.file.Path;
  */
 public abstract class UpdatableCollectionConfig<T extends UpdatableConfig> extends CollectionConfig<T>
 {
-    protected final WPUpdatableType collectionType;
-
-    private Path autoInstallList;
-    private Path ignoreList;
+    private final WPUpdatableType collectionType;
     private Path baseDir;
     private Path gutterDir;
-    private boolean removeUnknown = false;
+    private boolean removeUnknown;
 
+    /**
+     * Creates a new collection of {@link UpdatableConfig} objects.
+     *
+     * @param collectionType The type of components being configured.
+     */
     public UpdatableCollectionConfig(final WPUpdatableType collectionType)
     {
         super();
 
         this.collectionType = collectionType;
+        this.removeUnknown = true;
     }
 
     /**
@@ -81,18 +84,6 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig> exten
         return this.getCollectionType().getPlural();
     }
 
-    @JsonProperty("autoInstallList")
-    public Path getAutoInstallList()
-    {
-        return autoInstallList;
-    }
-
-    @JsonProperty("autoInstallList")
-    public void setAutoInstallList(final Path autoInstallList)
-    {
-        this.autoInstallList = autoInstallList;
-    }
-
     /**
      * Check if unknown items should be removed from the instance.
      *
@@ -101,7 +92,7 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig> exten
      */
     @JsonProperty("removeUnknown")
     @JsonDeserialize(using = PermissiveBooleanModule.PermissiveBooleanDeserializer.class)
-    public boolean getRemoveUnknown()
+    public final boolean getRemoveUnknown()
     {
         return this.removeUnknown;
     }
@@ -112,46 +103,57 @@ public abstract class UpdatableCollectionConfig<T extends UpdatableConfig> exten
      * @param removeUnknown {@code true} if items that aren't in the list should be removed, {@code false} if
      * they should simply be ignored.
      */
-    protected void setRemoveUnknown(final boolean removeUnknown)
+    protected final void setRemoveUnknown(final boolean removeUnknown)
     {
         this.removeUnknown = removeUnknown;
     }
 
-    @JsonProperty("ignoreList")
-    public Path getIgnoreList()
-    {
-        return ignoreList;
-    }
-
-    @JsonProperty("ignoreList")
-    public void setIgnoreList(final Path ignoreList)
-    {
-        this.ignoreList = ignoreList;
-    }
-
+    /**
+     * Fetch the directory where the configured components are installed to.
+     *
+     * @return The directory as an absolute {@link Path}.
+     */
     @JsonProperty("dir")
-    public Path getBaseDir()
+    public final Path getBaseDir()
     {
         if (this.baseDir == null) this.baseDir = this.getWpConfig().getContentDir().resolve(this.collectionType.getPlural());
-        return baseDir;
+        return this.baseDir;
     }
 
+    /**
+     * Set the directory where the configured components are installed to.
+     *
+     * @param baseDir The directory as a {@link Path}, or {@code null} if the default path should be used.
+     */
     @JsonProperty("dir")
-    public void setBaseDir(final Path baseDir)
+    protected final void setBaseDir(final Path baseDir)
     {
-        this.baseDir = (baseDir.isAbsolute()) ? baseDir : this.getWpConfig().getContentDir().resolve(baseDir);
+        if (baseDir == null) this.baseDir = null;
+        else this.baseDir = (baseDir.isAbsolute()) ? baseDir : this.getWpConfig().getContentDir().resolve(baseDir);
     }
 
+    /**
+     * Fetch the directory where old or problematic installs are moved to while performing updates or re-installs.
+     *
+     * @return The gutter directory as a {@link Path}.
+     */
     @JsonProperty("gutterDir")
-    public Path getGutterDir()
+    public final Path getGutterDir()
     {
         if (this.gutterDir == null) this.gutterDir = this.getWpConfig().getContentDir().resolve(this.collectionType.getPlural() + ".gutter");
-        return gutterDir;
+        return this.gutterDir;
     }
 
+    /**
+     * Set the gutter directory for this set of components.
+     *
+     * @param gutterDir The gutter directory as a {@link Path}.
+     * @see #getGutterDir()
+     */
     @JsonProperty("gutterDir")
-    public void setGutterDir(final Path gutterDir)
+    public final void setGutterDir(final Path gutterDir)
     {
-        this.gutterDir = (gutterDir.isAbsolute()) ? gutterDir : this.getWpConfig().getContentDir().resolve(gutterDir);
+        if (gutterDir == null) this.gutterDir = null;
+        else this.gutterDir = (gutterDir.isAbsolute()) ? gutterDir : this.getWpConfig().getContentDir().resolve(gutterDir);
     }
 }

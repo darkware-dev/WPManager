@@ -17,6 +17,10 @@
 
 package org.darkware.wpman.data;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * This enumeration tracks the status of a single {@link WPPlugin}'s enabled state with respect to a
  * single blog.
@@ -27,17 +31,30 @@ package org.darkware.wpman.data;
 public enum WPPluginStatus
 {
     /** Enabled on the local blog. */
-    ACTIVE("active"),
+    ACTIVE("active", "enable"),
     /** Not enabled. */
-    INACTIVE("inactive"),
+    INACTIVE("inactive", "disable"),
     /** Enabled on the network level. */
-    NETWORK_ACTIVE("active-network");
+    NETWORK_ACTIVE("active-network", "network-active", "network-enable", "network"),
+    /** An undeclared status. */
+    UNDECLARED("undeclared");
 
     private final String internal;
+    private final Set<String> aliases;
 
-    WPPluginStatus(final String internal)
+    /**
+     * Initializes a status.
+     *
+     * @param internal The canonical internal name for this status.
+     * @param aliases Additional aliases this status is also known by.
+     */
+    WPPluginStatus(final String internal, final String ... aliases)
     {
         this.internal = internal;
+
+        Set<String> aliasSet = new HashSet<>();
+        Collections.addAll(aliasSet, aliases);
+        this.aliases = Collections.unmodifiableSet(aliasSet);
     }
 
     /**
@@ -48,6 +65,17 @@ public enum WPPluginStatus
     public boolean isEnabled()
     {
         return this != WPPluginStatus.INACTIVE;
+    }
+
+    /**
+     * Fetch an additional set of names this status is known as. Generally, these are used only for recognizing
+     * (eg: deserializing) a given status. They won't be used in reporting the status.
+     *
+     * @return An unmodifiable {@link Set} of alternative names for this status.
+     */
+    public Set<String> getAliases()
+    {
+        return this.aliases;
     }
 
     @Override

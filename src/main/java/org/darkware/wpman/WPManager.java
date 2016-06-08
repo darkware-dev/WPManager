@@ -26,6 +26,7 @@ import org.darkware.wpman.data.WPInstance;
 import org.darkware.wpman.events.WPEvent;
 import org.darkware.wpman.events.WPEventManager;
 import org.darkware.wpman.events.WPStartupEvent;
+import org.darkware.wpman.services.ConfigLoaderService;
 import org.darkware.wpman.services.PostNotificationService;
 import org.darkware.wpman.services.UpdateService;
 import org.darkware.wpman.util.TimeWindow;
@@ -34,6 +35,7 @@ import org.darkware.wpman.wpcli.WPCLIFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
@@ -81,19 +83,19 @@ public class WPManager extends Thread
         ContextManager.attach(this.context);
 
         // Register this manager
-        context.registerInstance(this);
+        this.context.registerInstance(this);
 
         this.config = config;
-        context.registerInstance(this.config, WordpressConfig.class);
+        this.context.registerInstance(this.config, WordpressConfig.class);
 
         this.eventManager = new WPEventManager();
-        context.registerInstance(this.eventManager);
+        this.context.registerInstance(this.eventManager);
 
         this.builder = new WPCLIFactory(this.config);
-        context.registerInstance(this.builder);
+        this.context.registerInstance(this.builder);
 
         this.data = new WPInstance();
-        context.registerInstance(this.data);
+        this.context.registerInstance(this.data);
 
         this.cron = new WPLowLatencyCronAgent();
         this.actionService = new WPActionService();
@@ -190,6 +192,8 @@ public class WPManager extends Thread
         postNotify.activate();
         UpdateService updateService = new UpdateService();
         updateService.activate();
+        ConfigLoaderService configService = new ConfigLoaderService();
+        configService.activate();
 
         // Starting up agents
         WPPluginSync pluginSync = new WPPluginSync();
@@ -204,6 +208,15 @@ public class WPManager extends Thread
         this.actionService.schedule(networkPolicy);
         WPPermissionScanner permScanner = new WPPermissionScanner();
         this.actionService.schedule(permScanner);
+        try
+        {
+            WPConfigWatcher configWatcher = new WPConfigWatcher();
+            this.actionService.schedule(configWatcher);
+        }
+        catch (IOException e)
+        {
+            WPManager.log.error("Error while starting up config file watcher: {}", e.getLocalizedMessage(), e);
+        }
 
         WPManager.log.info("Starting cron runner.");
         this.cron.startThread();

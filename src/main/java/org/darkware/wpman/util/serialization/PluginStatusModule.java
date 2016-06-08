@@ -22,19 +22,27 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.darkware.wpman.data.WPPluginStatus;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
+ * This is a Jackson {@link Module} for serializing and deserializing {@link WPPluginStatus} instances.
+ *
  * @author jeff
  * @since 2016-03-30
  */
 public class PluginStatusModule extends SimpleModule
 {
+    /**
+     * Create a new module for handling serialization of the {@link WPPluginStatus} enum.
+     */
     public PluginStatusModule()
     {
         super();
@@ -43,6 +51,9 @@ public class PluginStatusModule extends SimpleModule
         this.addDeserializer(WPPluginStatus.class, new PluginStatusDeserializer());
     }
 
+    /**
+     * A serializer for {@link WPPluginStatus} instances.
+     */
     public static class PluginStatusSerializer extends JsonSerializer<WPPluginStatus>
     {
         @Override
@@ -53,23 +64,38 @@ public class PluginStatusModule extends SimpleModule
         }
     }
 
+    /**
+     * A deserializer for {@link WPPluginStatus} instances.
+     */
     public static class PluginStatusDeserializer extends StdScalarDeserializer<WPPluginStatus>
     {
+        private final Map<String, WPPluginStatus> statusMap;
+
+        /**
+         * Creates a new deserializer. This builds a map of all statuses and the various strings that are associated
+         * with them.
+         */
         public PluginStatusDeserializer()
         {
             super(WPPluginStatus.class);
+
+            this.statusMap = new HashMap<>();
+
+            // Populate the name map
+            for (WPPluginStatus status : WPPluginStatus.values())
+            {
+                this.statusMap.put(status.toString(), status);
+                status.getAliases().forEach(a -> this.statusMap.put(a, status));
+            }
         }
 
         @Override
         public WPPluginStatus deserialize(final JsonParser jsonParser,
                                    final DeserializationContext deserializationContext) throws IOException, JsonProcessingException
         {
-            String versionString = jsonParser.getValueAsString().trim().toLowerCase();
-
-            if ("active".equals(versionString)) return WPPluginStatus.ACTIVE;
-            if ("active-network".equals(versionString)) return WPPluginStatus.NETWORK_ACTIVE;
-
-            return WPPluginStatus.INACTIVE;
+            String statusString = jsonParser.getValueAsString().trim().toLowerCase();
+            if (this.statusMap.containsKey(statusString)) return this.statusMap.get(statusString);
+            else return WPPluginStatus.UNDECLARED;
         }
     }
 }
