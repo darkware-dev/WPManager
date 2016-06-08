@@ -111,7 +111,7 @@ public class WPPermissionScanner extends WPPeriodicAgent
             }
 
             // Check that its a directory
-            if (Files.isDirectory(dir))
+            if (!Files.isDirectory(dir))
             {
                 WPManager.log.warn("Skipping permissions enforcement for {}: Not a directory", dir);
                 continue;
