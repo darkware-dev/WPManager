@@ -20,34 +20,43 @@ package org.darkware.wpman.agents;
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPThemeAutoInstall;
 import org.darkware.wpman.actions.WPThemeRemove;
+import org.darkware.wpman.config.ThemeConfig;
 import org.darkware.wpman.data.WPTheme;
 import org.darkware.wpman.data.WPUpdatableComponent;
 import org.darkware.wpman.data.WPUpdatableType;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- *
+ * This is an agent responsible for installing new themes, removing old themes and keeping existing themes
+ * up to date.
  *
  * @author jeff
  * @since 2016-02-09
  */
-public class WPThemeSync extends WPUpdatableSync<WPTheme>
+public class WPThemeSync extends WPUpdatableSync<WPTheme, ThemeConfig>
 {
     /**
      * Create a theme synchronization agent.
      */
     public WPThemeSync()
     {
-        super("Theme Sync", WPUpdatableType.THEME, Duration.ofMinutes(480));
+        super("Theme Sync", WPUpdatableType.THEME, Duration.ofMinutes(120));
     }
 
     protected Set<String> getInstalledItemIds()
     {
         return this.getManager().getData().getThemes().stream().map(WPUpdatableComponent::getId).collect(Collectors.toSet());
+    }
+
+    @Override
+    protected Map<String, ThemeConfig> getCollectionConfig()
+    {
+        return this.getManager().getConfig().getThemeListConfig().getItems();
     }
 
     @Override

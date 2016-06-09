@@ -17,19 +17,16 @@
 
 package org.darkware.wpman.agents;
 
-import org.darkware.cltools.utils.ListFile;
-import org.darkware.wpman.WPManager;
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.config.UpdatableCollectionConfig;
-import org.darkware.wpman.config.WordpressConfig;
+import org.darkware.wpman.config.UpdatableConfig;
 import org.darkware.wpman.data.WPUpdatableComponent;
 import org.darkware.wpman.data.WPUpdatableType;
 
-import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -39,7 +36,7 @@ import java.util.stream.Stream;
  * @author jeff
  * @since 2016-02-13
  */
-public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WPPeriodicAgent
+public abstract class WPUpdatableSync<T extends WPUpdatableComponent, C extends UpdatableConfig> extends WPPeriodicAgent
 {
     /** The type of updatable object being synchronized. */
     protected WPUpdatableType objectType;
@@ -105,36 +102,18 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
     }
 
     /**
-     * Fetch the path to the file declaring the list of items to synchronize to.
-     *
-     * @return The filesystem {@link Path} to the file.
-     */
-    protected final Path getAutoInstallListPath()
-    {
-        WordpressConfig config = this.getManager().getConfig();
-
-        return config.getUpdatableCollection(this.getObjectType()).getAutoInstallList();
-    }
-
-    /**
-     * Fetch the path to the file declaring the items which should be ignored. These items should be neither
-     * installed nor uninstalled.
-     *
-     * @return The filesystem {@link Path} to the ignore file.
-     */
-    protected final Path getIgnoreListPath()
-    {
-        WordpressConfig config = this.getManager().getConfig();
-
-        return config.getUpdatableCollection(this.getObjectType()).getIgnoreList();
-    }
-
-    /**
      * Fetch the set of all items which are already installed.
      *
      * @return A {@link Set} of item IDs which are installed.
      */
     protected abstract Set<String> getInstalledItemIds();
+
+    /**
+     * Fetch a map of updatable items and their configurations.
+     *
+     * @return A {@link Map} of item IDs to their {@link UpdatableConfig}s.
+     */
+    protected abstract Map<String, C> getCollectionConfig();
 
     /**
      * Fetch the stream of items to check for synchronization.
@@ -147,41 +126,43 @@ public abstract class WPUpdatableSync<T extends WPUpdatableComponent> extends WP
     public void executeAction()
     {
         UpdatableCollectionConfig collectionConfig = this.getManager().getConfig().getUpdatableCollection(this.getObjectType());
-
-        WPManager.log.info("Starting {} synchronization.", this.getObjectType());
-
-        ListFile ignoreFile = new ListFile(this.getIgnoreListPath());
-        ignoreFile.setCommentTokens("#", ";", "//");
-        Set<String> ignore = ignoreFile.stream().collect(Collectors.toSet());
-
-        ListFile autoInstallFile = new ListFile(this.getAutoInstallListPath());
-        autoInstallFile.setCommentTokens("#", ";", "//");
+        Map<String, C> configs = this.getCollectionConfig();
 
         // Collect the set of installed item ids
         Set<String> installedItems = new TreeSet<>(this.getInstalledItemIds());
 
-        // Collect the set of requested item ids
-        Set<String> requestedItems = new TreeSet<>();
-        autoInstallFile.stream().forEach(requestedItems::add);
+        // Install missing items, Update existing items
+        for (Map.Entry<String, C> configEntry: configs.entrySet())
+        {
+            final String id = configEntry.getKey();
+            final C config = configEntry.getValue();
 
-        // Install missing items
-        requestedItems.stream()
-                      .filter(i ->!ignore.contains(i))
-                      .filter(p -> !installedItems.contains(p))
-                      .forEach(this::installItem);
+            // If the item is already installed, mosey on down the road.
+            //     ... because we'll take care of updates later.
+            if (installedItems.contains(id)) continue;
+
+            // Ignore items that don't want to be installed
+            if (!config.isInstallable()) continue;
+
+            // Schedule an install
+            this.installItem(id);
+        }
 
         // Remove extraneous items
         if (collectionConfig.getRemoveUnknown())
         {
-            installedItems.stream()
-                          .filter(i -> !ignore.contains(i))
-                          .filter(p -> !requestedItems.contains(p))
-                          .forEach(this::removeItem);
+            for (String id : installedItems)
+            {
+                // Ignore items that are configured
+                if (configs.containsKey(id)) continue;
+
+                this.removeItem(id);
+            }
         }
 
         // Find items to update, ignoring any item scheduled for removal
         this.getUpdatableList()
-            .filter(i -> !ignore.contains(i.getId()))
+            .filter(i -> configs.containsKey(i.getId()) && configs.get(i.getId()).isUpdatable())
             .filter(WPUpdatableComponent::hasUpdate)
             .map(WPUpdatableComponent::getId).forEach(this::installItem);
     }

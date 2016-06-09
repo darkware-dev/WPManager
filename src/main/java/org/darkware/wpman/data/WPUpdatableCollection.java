@@ -19,6 +19,7 @@ package org.darkware.wpman.data;
 
 import org.darkware.lazylib.LazyLoadedMap;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -47,7 +48,7 @@ public abstract class WPUpdatableCollection<T extends WPUpdatableComponent> exte
         super();
 
         this.collectionName = collectionName;
-        this.internalList = new LazyLoadedMap<String, T>()
+        this.internalList = new LazyLoadedMap<String, T>(Duration.ofMinutes(30))
         {
             @Override
             protected Map<String, T> loadValues() throws Exception

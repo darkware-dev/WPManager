@@ -20,29 +20,32 @@ package org.darkware.wpman.agents;
 import org.darkware.wpman.actions.WPAction;
 import org.darkware.wpman.actions.WPPluginAutoInstall;
 import org.darkware.wpman.actions.WPPluginRemove;
+import org.darkware.wpman.config.PluginConfig;
 import org.darkware.wpman.data.WPPlugin;
 import org.darkware.wpman.data.WPUpdatableComponent;
 import org.darkware.wpman.data.WPUpdatableType;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- *
+ * This is an agent responsible for installing new plugins, removing old plugins and keeping existing plugins
+ * up to date.
  *
  * @author jeff
  * @since 2016-02-09
  */
-public class WPPluginSync extends WPUpdatableSync<WPPlugin>
+public class WPPluginSync extends WPUpdatableSync<WPPlugin, PluginConfig>
 {
     /**
      * Create a plugin synchronization agent.
      */
     public WPPluginSync()
     {
-        super("Plugin Sync", WPUpdatableType.PLUGIN, Duration.ofMinutes(360));
+        super("Plugin Sync", WPUpdatableType.PLUGIN, Duration.ofMinutes(30));
     }
 
     /**
@@ -67,6 +70,12 @@ public class WPPluginSync extends WPUpdatableSync<WPPlugin>
     protected Set<String> getInstalledItemIds()
     {
         return this.getManager().getData().getPlugins().stream().map(WPUpdatableComponent::getId).collect(Collectors.toSet());
+    }
+
+    @Override
+    protected Map<String, PluginConfig> getCollectionConfig()
+    {
+        return this.getManager().getConfig().getPluginListConfig().getItems();
     }
 
     @Override

@@ -19,21 +19,25 @@ package org.darkware.wpman.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.darkware.wpman.config.ThemeConfig;
 import org.darkware.wpman.util.serialization.ThemeEnabledDeserializer;
 import org.darkware.wpman.wpcli.WPCLI;
 import org.darkware.wpman.wpcli.WPCLIFieldsOption;
 
 /**
+ * This class models a WordPress theme and its associated relationship with the configured repositories.
+ *
  * @author jeff
  * @since 2016-01-23
  */
-public class WPTheme extends WPUpdatableComponent
+public class WPTheme extends WPUpdatableComponent<ThemeConfig> implements WPRepositoryItem
 {
     /**
-     * Set the required field options on the {@link WPCLI} command in order to support proper
-     * deserialization of JSON objects.
+     * Set the required field options on the {@link WPCLI} command in order to support proper deserialization of JSON
+     * objects.
      *
      * @param command The command to set fields on.
+     *
      * @return The command that was supplied, with field options now set.
      */
     public static WPCLI setFields(final WPCLI command)
@@ -51,58 +55,102 @@ public class WPTheme extends WPUpdatableComponent
         return command;
     }
 
-    @JsonProperty("title") private String name;
+    @JsonProperty("title")
+    private String name;
     private String description;
     private WPThemeStatus status;
     @JsonDeserialize(using = ThemeEnabledDeserializer.class)
     private boolean enabled;
 
-    public WPTheme()
+    /**
+     * Create a new, unconfigured theme. As created, this model will be essentially non-functional. Outside of
+     * serialization processes, calling code should favor {@link WPTheme#WPTheme(String, String)}.
+     */
+    protected WPTheme()
     {
         super(WPUpdatableType.THEME);
     }
 
-    @Override
-    protected String getConfigSection()
+    /**
+     * Create a new theme model.
+     *
+     * @param id The unique identifier ("slug") for this theme.
+     * @param name The human-readable name for this theme.
+     */
+    public WPTheme(final String id, final String name)
     {
-        return "theme";
+        this();
+
+        this.setId(id);
+        this.setName(name);
     }
 
+    @Override
     public String getName()
     {
-        return name;
+        return this.name;
     }
 
+    @Override
     public void setName(final String name)
     {
         this.name = name;
     }
 
+    @Override
     public String getDescription()
     {
-        return description;
+        return this.description;
     }
 
+    @Override
     public void setDescription(final String description)
     {
         this.description = description;
     }
 
+    /**
+     * Fetch the current activation status of this theme.
+     *
+     * @return The status as a {@link WPThemeStatus} instance.
+     */
     public WPThemeStatus getStatus()
     {
-        return status;
+        return this.status;
     }
 
+    /**
+     * Sets the reported status of this theme.
+     * <p>
+     * <em>Note:</em> (For now?) This is just for reporting. Changing the status of the model will not trigger a
+     * complementary change in the WordPress instance.
+     *
+     * @param status The new {@link WPThemeStatus} to report.
+     */
     public void setStatus(final WPThemeStatus status)
     {
         this.status = status;
     }
 
+    /**
+     * Checks to see if this theme is enabled for network usage.
+     *
+     * @return {@code true} if the theme is enabled for use across the network.
+     */
     public boolean isEnabled()
     {
         return this.enabled;
     }
 
+    /**
+     * Sets the reported enablement of this theme on the network.
+     * <p>
+     * <em>Note:</em> (For now?) This is just for reporting. Changing the status of the model will not trigger a
+     * complementary change in the WordPress instance.
+     *
+     * @param enabled {@code true} if the theme is configured for use on any blog in the network, {@code false} if use
+     * of the theme is prohibited on the network.
+     */
     public void setEnabled(final boolean enabled)
     {
         this.enabled = enabled;
