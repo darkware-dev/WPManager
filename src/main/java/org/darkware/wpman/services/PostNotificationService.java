@@ -121,7 +121,7 @@ public class PostNotificationService extends WPService
             postContent.printf("<h4>Plugin Update: %s</h4>\n", event.getItem().getName());
             postContent.printf("<p><span style=\"color: #999999; font-size: 80%%;\">Previous Version:</span> %s<br/>" +
                                "<span style=\"color: #999999; font-size: 80%%;\">Updated Version:</span> %s</p>\n",
-                               event.getItem().getVersion(), event.getPreviousVersion());
+                               event.getPreviousVersion(), event.getItem().getVersion());
             postContent.printf("<p>%s</p>\n", event.getItem().getDescription());
 
             post.execute();
@@ -152,7 +152,7 @@ public class PostNotificationService extends WPService
             postContent.printf("<h4>Theme Update: %s</h4>\n", event.getItem().getName());
             postContent.printf("<p><span style=\"color: #999999; font-size: 80%%;\">Previous Version:</span> %s<br/>" +
                                "<span style=\"color: #999999; font-size: 80%%;\">Updated Version:</span> %s</p>\n",
-                               event.getItem().getVersion(), event.getPreviousVersion());
+                               event.getPreviousVersion(), event.getItem().getVersion());
             postContent.printf("<p>%s</p>\n", event.getItem().getDescription());
 
             post.execute();
