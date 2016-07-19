@@ -1,0 +1,15 @@
+# Configure WP-CLI
+wpcli:
+    bin: /usr/local/bin/wpcli
+
+# Declare the profile path
+policyFile: /etc/profile.yml
+
+# Configure the REST server
+server:
+
+  maxThreads: 512
+
+  applicationConnectors:
+    - type: http
+      port: 8780

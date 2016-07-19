@@ -1,0 +1,9 @@
+# Normally, this file should be placed into a directory named "plugins" under the same
+# directory as the policy file. The contents will match all the options that are available
+# for a single block under the 'items' list in the plugin configuration. There is no need
+# to provide the plugin slug name, as that will be determined by the filename. In order
+# for the file to be loaded properly, it must be named [slug].yml
+
+status: network-enable
+maxVersion: 2.999
+updatable: yes

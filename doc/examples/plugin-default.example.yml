@@ -1,0 +1,4 @@
+# You can define a plugin using all the default settings by simply including a plugin
+# configuration file that is completely empty. The file will be loaded, defining the
+# plugin with all the default configurations, including automatic installation and
+# updates.

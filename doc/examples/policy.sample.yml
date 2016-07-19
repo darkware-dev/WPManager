@@ -1,0 +1,62 @@
+# This is a sample policy file
+
+# Set the default host name. This should be the primary domain name for the multihost
+# installation. It's used to issue WP method calls for methods that either target the
+# installation as a whole or don't really have a particular site target.
+defaultHost: wphost.mind-trick.net
+
+# Set the root directory of the WP installation
+root: /web/wordpress
+
+# The datafiles section holds some named paths to other files used within the
+# WPManager application. FOr now, its best to define everything in the example block,
+# changing the paths to whatever you feel you like.
+dataFiles:
+    integrityDb: /var/lib/wpmanager/integrity.db
+
+# Forcefully define a set of plugins. The items array contains a list of keyed sub-blocks.
+# These blocks are keyed on the official "slug" of the plugin.
+#
+# Plugins can also be defined with YAML pllugin blocks found in a 'plugins' directoy
+# in the same directory as the active policy file.
+plugins:
+    items:
+        'audit-syslog':
+            updatable: no # Do not allow updates (default is "yes")
+            status: network-enable # Ensure this plugin is network enabled
+        'fd-footnotes':
+            maxVersion: 1.36 # Allow updates, but not past the named version
+        'google-analytics-for-wordpress':
+            status: network # This is an alternate way of declaring "network-enable"
+        'jetpack':
+            status: network
+        'disable-xml-rpc-pingback':
+            status: network
+        'wordpress-mu-domain-mapping':
+            status: network
+
+# Forcefully define a set of themes. These are set up
+themes:
+    # Set the policy for enabling newly installed themes.
+    defaultEnabled: yes
+    items:
+        # No items defined here by default. Directory configuration is simpler.
+
+# Configure the permissions-controlling mechanism.
+#
+# This works by looking at exisiting permissions on important directories and cloning
+# those permissions down to items under them. The plugins, themes, uploads, and root
+# directories are automatically included in this list. If you want to add additional
+# "example" directories, include them here. Items under these directories will have
+# their permissions set similarly to the directory added.
+permissions:
+    exampleDirectories:
+        - /web/wordpress/wp-content/plugins/wordfence/tmp
+
+# Condigure notification behabiors.
+notification:
+    # Configure notifications via blog posts.
+    post:
+        # Define the blog that updates will be posted to. This will be the internal
+        # site identifier, ie: the subdomain of the blog, without the base domain name.
+        blog: updates

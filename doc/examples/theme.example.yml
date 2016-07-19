@@ -1,0 +1,10 @@
+# This is an example theme configuration file. Like the plugin config files, it's expected
+# to be found in a directory named 'themes' under the same directory as the policy file.
+
+# Allow the theme to be installed if its not found. The default is "yes". You might disable
+# this if the theme is a custom theme not available in the WP repository.
+installable: false
+# Allow automatic updates to the theme. The default is "yes"
+updatable: false
+# Set a maximum version to update to. By default, there is no limit.
+maxVersion: 1.22
