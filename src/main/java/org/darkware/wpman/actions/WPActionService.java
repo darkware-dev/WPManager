@@ -79,6 +79,7 @@ public class WPActionService extends WPComponent
     {
         this.execService.scheduleAtFixedRate(agent, 0, agent.getPeriod(), TimeUnit.SECONDS);
         this.periodicAgents.add(agent);
+        this.expireActions();
     }
 
     /**
@@ -91,8 +92,7 @@ public class WPActionService extends WPComponent
     public <T> Future<T> scheduleAction(final WPAction<T> action)
     {
         Future<T> future = this.execService.submit(action);
-        action.registerFuture(future);
-        this.scheduledActions.add(action);
+        this.registerAction(action, future);
 
         return future;
     }
@@ -109,8 +109,7 @@ public class WPActionService extends WPComponent
     public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, long delay)
     {
         ScheduledFuture<T> future = this.execService.schedule(action, delay, TimeUnit.SECONDS);
-        action.registerFuture(future);
-        this.scheduledActions.add(action);
+        this.registerAction(action, future);
 
         return future;
     }
@@ -142,6 +141,13 @@ public class WPActionService extends WPComponent
     public <T> ScheduledFuture<T> scheduleAction(final WPAction<T> action, final TimeWindow window)
     {
         return this.scheduleAction(action, window.getRandomOffset());
+    }
+
+    protected <T> void registerAction(final WPAction<T> action, Future<T> future)
+    {
+        action.registerFuture(future);
+        this.scheduledActions.add(action);
+        this.expireActions();
     }
 
     /**
@@ -185,11 +191,12 @@ public class WPActionService extends WPComponent
      */
     private void expireActions()
     {
-        int before = this.scheduledActions.size();
+        final int before = this.scheduledActions.size();
         this.scheduledActions.removeIf(this::isExpired);
-        int after = this.scheduledActions.size();
+        final int after = this.scheduledActions.size();
 
-        WPManager.log.info("Expired " + (before - after) + " actions.");
+        final int expiredCount = (before - after);
+        if (expiredCount > 0) WPManager.log.debug("Expired " + (before - after) + " actions.");
     }
 
     /**
