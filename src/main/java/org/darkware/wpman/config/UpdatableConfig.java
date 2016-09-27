@@ -96,12 +96,12 @@ public class UpdatableConfig extends ItemConfig
      * {@link #isUpdatable()}. If the component is already installed or is installed manually, the update policy will
      * still control whether additional updates are applied.
      *
-     * @param updatable {@code true} if the component should be installed if its not found.
+     * @param installable {@code true} if the component should be installed if its not found.
      */
     @JsonProperty("installable")
-    protected void setInstallable(final Boolean updatable)
+    protected void setInstallable(final Boolean installable)
     {
-        this.updatable = updatable;
+        this.installable = installable;
     }
 
     /**
