@@ -17,6 +17,7 @@
 
 package org.darkware.wpman.actions;
 
+import org.darkware.wpman.config.UpdatableConfig;
 import org.darkware.wpman.data.WPTheme;
 import org.darkware.wpman.data.WPUpdatableType;
 
@@ -47,6 +48,12 @@ public class WPThemeAutoInstall extends WPItemAutoInstall<WPTheme>
     protected WPTheme getItem()
     {
         return this.getManager().getData().getThemes().get(this.installToken);
+    }
+
+    @Override
+    protected UpdatableConfig getConfig()
+    {
+        return this.getManager().getConfig().getThemeListConfig().getConfig(this.installToken);
     }
 
     @Override

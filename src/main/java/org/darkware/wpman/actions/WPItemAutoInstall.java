@@ -20,6 +20,7 @@ package org.darkware.wpman.actions;
 import org.darkware.cltools.utils.FileSystemTools;
 import org.darkware.wpman.ContextManager;
 import org.darkware.wpman.WPManager;
+import org.darkware.wpman.config.UpdatableConfig;
 import org.darkware.wpman.data.WPUpdatableComponent;
 import org.darkware.wpman.data.WPUpdatableType;
 import org.darkware.wpman.events.WPInstallEvent;
@@ -102,11 +103,20 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
     {
         try
         {
+            final UpdatableConfig config = this.getConfig();
+
             // Check to see if the item is already installed.
             T preInstall = this.getItem();
 
             if (preInstall != null)
             {
+                // Do not attempt to update if the config disallows it.
+                if (!config.isUpdatable())
+                {
+                    WPManager.log.info("Skipping updates to {}: {}. Disallowed by config", this.getItemType(), this.installToken, preInstall.getVersion());
+                    return false;
+                }
+
                 // Attempt an update
                 if (preInstall.hasUpdate())
                 {
@@ -122,6 +132,13 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
             }
             else
             {
+                // Do not attempt to install if the config disallows it
+                if (!config.isInstallable())
+                {
+                    WPManager.log.info("Skipping installation of {}: {}. Disallowed by config", this.getItemType(), this.installToken, preInstall.getVersion());
+                    return false;
+                }
+
                 // Attempt an install
                 WPManager.log.info("Installing {}: {}", this.getItemType(), this.installToken);
                 this.doInstall();
@@ -300,6 +317,13 @@ public abstract class WPItemAutoInstall<T extends WPUpdatableComponent> extends 
      * currently installed.
      */
     protected abstract T getItem();
+
+    /**
+     * Attempt to retrieve configuration for the targeted item.
+     *
+     * @return An {@link UpdatableConfig} object.
+     */
+    protected abstract UpdatableConfig getConfig();
 
     /**
      * Expire the {@code WPData} container which holds records for this item. This should be

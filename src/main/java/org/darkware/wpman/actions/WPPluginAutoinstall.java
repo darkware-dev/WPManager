@@ -17,6 +17,7 @@
 
 package org.darkware.wpman.actions;
 
+import org.darkware.wpman.config.UpdatableConfig;
 import org.darkware.wpman.data.WPPlugin;
 import org.darkware.wpman.data.WPUpdatableType;
 
@@ -47,6 +48,12 @@ public class WPPluginAutoInstall extends WPItemAutoInstall<WPPlugin>
     protected WPPlugin getItem()
     {
         return this.getManager().getData().getPlugins().get(this.installToken);
+    }
+
+    @Override
+    protected UpdatableConfig getConfig()
+    {
+        return this.getManager().getConfig().getPluginListConfig().getConfig(this.installToken);
     }
 
     @Override
