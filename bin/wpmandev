@@ -3,6 +3,7 @@
 BINDIR="$(dirname "$(readlink -f "$0")")"
 BASEDIR="$(dirname "$BINDIR")"
 
+# Run the app
 java -classpath $BASEDIR/target/classes:$BASEDIR/target/dependencies.jar \
      -Dwpman.dir=$BASEDIR \
      org.darkware.wpman.WPManagerApplication \
