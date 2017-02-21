@@ -18,9 +18,9 @@
 package org.darkware.wpman.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sun.istack.internal.NotNull;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
 /**
